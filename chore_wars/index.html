@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chore Game - Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        #remove-column-btn:not(:disabled):hover {
+            background-color: #E24A4A !important;
+            color: white !important;
+        }
+        #add-column-btn:not(:disabled):hover {
+            background-color: #4CAF50 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<header class="site-header">
+  
+    <div class="container">
+        <a href="index.html">
+          <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
+        </a>
+        <div class="container-logo">
+          <a href="index.html">
+            <img class src="images/Logo_THE_GREAT_CHORE_OFF_Text.png" href = "index.html" alt="The Chore Game">
+          </a>
+        </div>
+          <nav class="main-nav">
+              <a class="header-btn" href="index.html">Home</a>
+              <a class ="header-btn" href="shop.html">Shop</a>
+          </nav>
+      </div>
+</header>
+<body>
+    
+<!-- ...existing code... -->
+    <main class="site-main container">
+        <section class="grid-3">
+            <div class="column" id="column-left">
+                <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;" aria-label="Column 1 header">Player 1</h3>
+
+                <!-- left points bank (display only) -->
+                <div class="points-bank">
+                  <div>Points: <strong id="left-points">0</strong></div>
+                </div>
+ 
+                 <!-- left column chores -->
+                 <div id="left-list">
+                     <article class="card chore-placeholder">No chores assigned.</article>
+                 </div>
+             </div>
+
+            <div class="column" id="chores-column">
+                <h3 class="column-header" aria-label="Unchoosen Chores">Unassigned Chores</h3>
+
+                <!-- random assign button -->
+                <div class="button-container">
+                    <button id="random-assign-btn" type="button" class="btn">Random</button>
+                    <button id="auction-btn" type="button" class="btn">Auction</button>
+                    <button id="draft-btn" type="button" class="btn">Draft</button>
+                </div>
+
+                <!-- unchosen chores list (rendered by JS) -->
+                <div id="chores-list">
+                    <article class="card chore-placeholder">No chores yet — add one below.</article>
+                </div>
+
+                <!-- add-chore form -->
+                <form id="add-chore-form" class="chore-form" aria-label="Add chore" novalidate style="max-width: 400px; margin: 0 auto;">
+                    <div class="form-row" style="display: flex; gap: 8px; align-items: center;">
+                        <input id="chore-name" name="name" type="text" required aria-required="true" placeholder="Chore Name" style="margin-top: 0; width: 200px;" />
+                        <button type="submit" id = "unchosen-button-add" class="btn">Add</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="column" id="column-right">
+                 <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;" aria-label="Column 3 header">Player 2</h3>
+ 
+                <!-- right points bank (display only) -->
+                <div class="points-bank" id="right-points-bank" style="text-align: right;">
+                  <div>Points: <strong id="right-points">0</strong></div>
+                </div>
+
+                <!-- right column chores -->
+                <div id="right-list">
+                    <article class="card chore-placeholder">No chores assigned.</article>
+                </div>
+             </div>
+         </section>
+         
+         <!-- Button bar above footer -->
+         <div style="display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 24px auto; padding: 0 20px;">
+             <button id="add-column-btn" type="button" class="btn">Add Player Column</button>
+             <button id="unassign-all-btn" type="button" class="btn">Unassign All</button>
+             <button id="remove-column-btn" type="button" class="btn" disabled>Remove Player Column</button>
+         </div>
+     </main>
+<!-- ...existing code... -->
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, & Kendall Olson!</p>
+            </p>
+        </div>
+    </footer>
+    
+<!-- vvvv Java Script vvvv -->
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+
+    <script>
+    // chores: add, render, persist (localStorage)
+    (function(){
+  const STORAGE_KEY = 'tcg_chores_v1';
+  const HEADERS_KEY = 'tcg_column_headers_v1';
+  const POINTS_KEY = 'tcg_points_v1';
+  const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
+  const HEADER_MAX = 8; // Max characters allowed for left/right headers
+
+      // points helpers
+      function loadPoints(){
+        try{
+          const raw = localStorage.getItem(POINTS_KEY);
+          const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
+          // ensure extra fields exist for compatibility
+          if(typeof parsed.left !== 'number') parsed.left = 0;
+          if(typeof parsed.right !== 'number') parsed.right = 0;
+          if(typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
+          if(typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
+          return parsed;
+        }catch(e){
+          return { left: 0, right: 0, extra1: 0, extra2: 0 };
+        }
+      }
+      function savePoints(p){ localStorage.setItem(POINTS_KEY, JSON.stringify(p)); }
+      function renderPoints(){
+        const p = loadPoints();
+        const leftEl = document.getElementById('left-points');
+        const rightEl = document.getElementById('right-points');
+        const extra1El = document.getElementById('extra-1-points');
+        const extra2El = document.getElementById('extra-2-points');
+        if(leftEl) leftEl.textContent = String(p.left || 0);
+        if(rightEl) rightEl.textContent = String(p.right || 0);
+        if(extra1El) extra1El.textContent = String(p.extra1 || 0);
+        if(extra2El) extra2El.textContent = String(p.extra2 || 0);
+      }
+
+      // extra columns presence helpers
+      function loadExtraState(){
+        try{
+          const raw = localStorage.getItem(EXTRA_STATE_KEY);
+          const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false };
+          return { extra1: !!parsed.extra1, extra2: !!parsed.extra2 };
+        }catch(e){
+          return { extra1: false, extra2: false };
+        }
+      }
+      function saveExtraState(s){ localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
+
+      // headers helpers for extras
+      function loadAllHeaders(){
+        try{
+          const raw = localStorage.getItem(HEADERS_KEY);
+          return raw ? JSON.parse(raw) : {};
+        }catch(e){ return {}; }
+      }
+      function saveHeaderField(field, value){
+        const obj = loadAllHeaders();
+        obj[field] = value;
+        localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
+      }
+
+      // wire up quick controls (left/right buttons exist for left/right columns)
+      document.addEventListener('DOMContentLoaded', () => {
+        const leftAdd = document.getElementById('left-add-10');
+        const leftReset = document.getElementById('left-reset');
+        const rightAdd = document.getElementById('right-add-10');
+        const rightReset = document.getElementById('right-reset');
+
+        if(leftAdd){
+          leftAdd.addEventListener('click', () => {
+            const p = loadPoints(); p.left = (p.left||0) + 10; savePoints(p); renderPoints();
+          });
+        }
+        if(leftReset){
+          leftReset.addEventListener('click', () => {
+            if(!confirm('Reset left points to 0?')) return;
+            const p = loadPoints(); p.left = 0; savePoints(p); renderPoints();
+          });
+        }
+        if(rightAdd){
+          rightAdd.addEventListener('click', () => {
+            const p = loadPoints(); p.right = (p.right||0) + 10; savePoints(p); renderPoints();
+          });
+        }
+        if(rightReset){
+          rightReset.addEventListener('click', () => {
+            if(!confirm('Reset right points to 0?')) return;
+            const p = loadPoints(); p.right = 0; savePoints(p); renderPoints();
+          });
+        }
+
+        renderPoints();
+      });
+
+
+      // header elements (editable)
+      const leftHeaderEl = document.querySelector('.grid-3 .column:nth-child(1) .column-header');
+      const rightHeaderEl = document.querySelector('.grid-3 .column:nth-child(3) .column-header');
+
+      function loadHeaders(){
+        try{
+          const raw = localStorage.getItem(HEADERS_KEY);
+          const parsed = raw ? JSON.parse(raw) : {};
+          return {
+            left: parsed.left ?? (leftHeaderEl ? leftHeaderEl.textContent.trim() : 'Enter Name Here'),
+            right: parsed.right ?? (rightHeaderEl ? rightHeaderEl.textContent.trim() : 'Enter Name Here')
+          };
+        }catch(e){
+          return {
+            left: leftHeaderEl ? leftHeaderEl.textContent.trim() : 'Enter Name Here',
+            right: rightHeaderEl ? rightHeaderEl.textContent.trim() : 'Enter Name Here'
+          };
+        }
+      }
+
+      function saveHeaders(){
+        if(!leftHeaderEl || !rightHeaderEl) return;
+        const leftText = (leftHeaderEl.textContent || '').replace(/[\r\n]+/g, '').trim().slice(0, HEADER_MAX);
+        const rightText = (rightHeaderEl.textContent || '').replace(/[\r\n]+/g, '').trim().slice(0, HEADER_MAX);
+        const existing = loadAllHeaders();
+        const payload = { ...existing, left: leftText, right: rightText };
+        localStorage.setItem(HEADERS_KEY, JSON.stringify(payload));
+      }
+
+      // apply saved headers immediately
+      const savedHeaders = loadHeaders();
+      if(leftHeaderEl) leftHeaderEl.textContent = savedHeaders.left;
+      if(rightHeaderEl) rightHeaderEl.textContent = savedHeaders.right;
+      // save any normalization (optional)
+      saveHeaders();
+
+      // DOM elements used by the chores logic (ensure these are wired up)
+      const leftListEl = document.getElementById('left-list');
+      const unchosenListEl = document.getElementById('chores-list');
+      const rightListEl = document.getElementById('right-list');
+      const form = document.getElementById('add-chore-form');
+      const nameInput = document.getElementById('chore-name');
+      const msgEl = document.getElementById('chore-msg');
+
+      // Track whether we're in draft mode (show manual assign buttons)
+      let draftMode = false;
+
+      // helper to show a transient message if msgEl exists
+      function notify(message, durationMs = 1800){
+        if(!msgEl) return;
+        msgEl.textContent = message || '';
+        if(message){
+          setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, durationMs);
+        }
+      }
+
+      // chores have shape: { id, name, points, loc } where loc is 'unchosen'|'left'|'right'
+      function loadChores(){
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        }catch(e){
+          return [];
+        }
+      }
+
+      function saveChores(chores){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
+      }
+
+      function makeChoreCard(chore){
+        const art = document.createElement('article');
+        art.className = 'card chore';
+        art.dataset.id = String(chore.id);
+        art.dataset.loc = chore.loc || 'unchosen';
+ 
+        const wrap = document.createElement('div');
+        wrap.style.width = '100%';
+        wrap.style.display = 'flex';
+        wrap.style.flexDirection = 'column';
+        wrap.style.alignItems = 'center';
+ 
+        const title = document.createElement('h4');
+        title.textContent = chore.name;
+        title.style.margin = '0 0 6px 0';
+        title.style.textAlign = 'center';
+        wrap.appendChild(title);
+ 
+        const pts = document.createElement('p');
+        pts.textContent = String(chore.points) + ' pts';
+        pts.style.margin = '0 0 8px 0';
+        pts.style.fontWeight = '600';
+        pts.style.textAlign = 'center';
+        wrap.appendChild(pts);
+ 
+        const actions = document.createElement('div');
+        actions.style.marginTop = '8px';
+        actions.style.display = 'flex';
+        actions.style.gap = '8px';
+        actions.style.flexWrap = 'wrap';
+        actions.style.justifyContent = 'center';
+        actions.style.width = '100%';
+ 
+        // read current column header text so labels match whatever the headers show
+        const leftHeaderText = document.querySelector('.grid-3 .column:nth-child(1) .column-header')?.textContent.trim() || 'Left';
+        const rightHeaderText = document.querySelector('.grid-3 .column:nth-child(3) .column-header')?.textContent.trim() || 'Right';
+        const extra1HeaderText = document.querySelector('#column-extra-1 .column-header')?.textContent.trim();
+        const extra2HeaderText = document.querySelector('#column-extra-2 .column-header')?.textContent.trim();
+ 
+        // action buttons depend on location
+        if(!chore.loc || chore.loc === 'unchosen'){
+          // Only show assign buttons if in draft mode
+          if(draftMode){
+            const assignLeft = document.createElement('button');
+            assignLeft.type = 'button';
+            assignLeft.className = 'btn';
+            assignLeft.innerHTML = `Assign → <span style="color: #66CED6; font-weight: bold;">${leftHeaderText.toUpperCase()}</span>`;
+            assignLeft.dataset.action = 'assign-left';
+            actions.appendChild(assignLeft);
+   
+            const assignRight = document.createElement('button');
+            assignRight.type = 'button';
+            assignRight.className = 'btn';
+            assignRight.innerHTML = `Assign → <span style="color: #FF4242; font-weight: bold;">${rightHeaderText.toUpperCase()}</span>`;
+            assignRight.dataset.action = 'assign-right';
+            actions.appendChild(assignRight);
+
+            // Add extra column buttons if they exist
+            if(extra1HeaderText){
+              const assignExtra1 = document.createElement('button');
+              assignExtra1.type = 'button';
+              assignExtra1.className = 'btn';
+              assignExtra1.innerHTML = `Assign → <span style="color: orange; font-weight: bold;">${extra1HeaderText.toUpperCase()}</span>`;
+              assignExtra1.dataset.action = 'assign-extra1';
+              actions.appendChild(assignExtra1);
+            }
+
+            if(extra2HeaderText){
+              const assignExtra2 = document.createElement('button');
+              assignExtra2.type = 'button';
+              assignExtra2.className = 'btn';
+              assignExtra2.innerHTML = `Assign → <span style="color: limegreen; font-weight: bold;">${extra2HeaderText.toUpperCase()}</span>`;
+              assignExtra2.dataset.action = 'assign-extra2';
+              actions.appendChild(assignExtra2);
+            }
+            
+            // In draft mode, show delete button separately at bottom center
+            wrap.appendChild(actions);
+            
+            const delWrap = document.createElement('div');
+            delWrap.style.marginTop = '12px';
+            delWrap.style.display = 'flex';
+            delWrap.style.justifyContent = 'center';
+            delWrap.style.width = '100%';
+            
+            const del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'btn btn-delete';
+            del.textContent = 'Delete';
+            del.dataset.action = 'delete';
+            delWrap.appendChild(del);
+            wrap.appendChild(delWrap);
+            
+            art.appendChild(wrap);
+            return art;
+          }
+        } else {
+          // show complete button for assigned chores
+          const completeBtn = document.createElement('button');
+          completeBtn.type = 'button';
+          completeBtn.className = 'btn btn-purchase';
+          completeBtn.textContent = 'Complete';
+          completeBtn.dataset.action = 'complete';
+          actions.appendChild(completeBtn);
+ 
+          const unassign = document.createElement('button');
+          unassign.type = 'button';
+          unassign.className = 'btn';
+          unassign.textContent = 'Unassign';
+          unassign.dataset.action = 'unassign';
+          actions.appendChild(unassign);
+        }
+ 
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn btn-delete';
+        del.textContent = 'Delete';
+        del.dataset.action = 'delete';
+        actions.appendChild(del);
+ 
+        wrap.appendChild(actions);
+        art.appendChild(wrap);
+        return art;
+      }
+
+      function render(){
+        const chores = loadChores();
+
+        leftListEl.innerHTML = '';
+        unchosenListEl.innerHTML = '';
+        rightListEl.innerHTML = '';
+
+        const left = chores.filter(c => c.loc === 'left');
+        const right = chores.filter(c => c.loc === 'right');
+        const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
+
+        if(!left.length){
+          const ph = document.createElement('article');
+          ph.className = 'card chore-placeholder';
+          ph.textContent = 'No chores assigned.';
+          leftListEl.appendChild(ph);
+        } else {
+          left.forEach(c => leftListEl.appendChild(makeChoreCard(c)));
+        }
+
+        if(!unchosen.length){
+          const ph = document.createElement('article');
+          ph.className = 'card chore-placeholder';
+          ph.textContent = 'No chores yet — add one below.';
+          unchosenListEl.appendChild(ph);
+        } else {
+          unchosen.forEach(c => unchosenListEl.appendChild(makeChoreCard(c)));
+        }
+
+        if(!right.length){
+          const ph = document.createElement('article');
+          ph.className = 'card chore-placeholder';
+          ph.textContent = 'No chores assigned.';
+          rightListEl.appendChild(ph);
+        } else {
+          right.forEach(c => rightListEl.appendChild(makeChoreCard(c)));
+        }
+
+        // Extra columns rendering if present
+        const extra1ListEl = document.getElementById('extra-1-list');
+        const extra2ListEl = document.getElementById('extra-2-list');
+        const extra1 = chores.filter(c => c.loc === 'extra1');
+        const extra2 = chores.filter(c => c.loc === 'extra2');
+        if(extra1ListEl){
+          extra1ListEl.innerHTML = '';
+          if(!extra1.length){
+            const ph = document.createElement('article');
+            ph.className = 'card chore-placeholder';
+            ph.textContent = 'No chores assigned.';
+            extra1ListEl.appendChild(ph);
+          } else {
+            extra1.forEach(c => extra1ListEl.appendChild(makeChoreCard(c)));
+          }
+        }
+        if(extra2ListEl){
+          extra2ListEl.innerHTML = '';
+          if(!extra2.length){
+            const ph = document.createElement('article');
+            ph.className = 'card chore-placeholder';
+            ph.textContent = 'No chores assigned.';
+            extra2ListEl.appendChild(ph);
+          } else {
+            extra2.forEach(c => extra2ListEl.appendChild(makeChoreCard(c)));
+          }
+        }
+      }
+
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        
+        const name = nameInput.value.trim();
+        const points = 10; // fixed starting value
+
+        if(!name){
+          nameInput.focus();
+          return;
+        }
+
+        const chores = loadChores();
+        const newChore = { id: Date.now(), name, points: Math.floor(points), loc: 'unchosen' };
+        chores.push(newChore);
+        saveChores(chores);
+        draftMode = false; // Disable manual assign buttons when adding new chore
+        render();
+        form.reset();
+      });
+
+      // delegated action handler for all three lists
+      document.querySelector('.grid-3').addEventListener('click', function(e){
+        const btn = e.target.closest('button[data-action]');
+        if(!btn) return;
+        const action = btn.dataset.action;
+        const card = btn.closest('.chore');
+        if(!card) return;
+        const id = Number(card.dataset.id);
+        let chores = loadChores();
+        const idx = chores.findIndex(c => c.id === id);
+        if(idx === -1) return;
+
+        // complete action: add chore.points to correct bank (left/right/extra1/extra2)
+        if(action === 'complete'){
+          const chore = chores[idx];
+          const loc = chore.loc;
+          if(!loc || !(['left','right','extra1','extra2'].includes(loc))){
+            notify('Chore must be assigned to a column to complete.', 1800);
+            return;
+          }
+          const points = loadPoints();
+          points[loc] = (points[loc] || 0) + Number(chore.points || 0);
+          savePoints(points);
+          renderPoints();
+
+          // remove the chore after completion
+          chores.splice(idx, 1);
+          saveChores(chores);
+          render();
+
+          // Friendly target name
+          let targetName = loc;
+          if(loc === 'left'){
+            targetName = (leftHeaderEl?.textContent || 'Left').trim();
+          } else if(loc === 'right'){
+            targetName = (rightHeaderEl?.textContent || 'Right').trim();
+          } else if(loc === 'extra1'){
+            const h = document.querySelector('#column-extra-1 .column-header');
+            targetName = (h?.textContent || 'Player 3').trim();
+          } else if(loc === 'extra2'){
+            const h = document.querySelector('#column-extra-2 .column-header');
+            targetName = (h?.textContent || 'Player 4').trim();
+          }
+
+          notify(`${chore.name} completed — added ${chore.points} pts to ${targetName}.`, 1800);
+          return;
+        }
+
+        if(action === 'assign-left'){
+          chores[idx].loc = 'left';
+          saveChores(chores);
+          render();
+          return;
+        }
+        if(action === 'assign-right'){
+          chores[idx].loc = 'right';
+          saveChores(chores);
+          render();
+          return;
+        }
+        if(action === 'assign-extra1'){
+          chores[idx].loc = 'extra1';
+          saveChores(chores);
+          render();
+          return;
+        }
+        if(action === 'assign-extra2'){
+          chores[idx].loc = 'extra2';
+          saveChores(chores);
+          render();
+          return;
+        }
+        if(action === 'unassign'){
+          chores[idx].loc = 'unchosen';
+          // After unassigning, enable draft mode so manual assign buttons appear in the unassigned list
+          draftMode = true;
+          saveChores(chores);
+          render();
+          return;
+        }
+        if(action === 'delete'){
+          // delete immediately without confirmation
+          chores.splice(idx, 1);
+          saveChores(chores);
+          render();
+          notify('Chore deleted.', 1400);
+          return;
+        }
+      });
+
+      // random assign button: distribute unchosen chores randomly to left or right
+      const randomAssignBtn = document.getElementById('random-assign-btn');
+      if(randomAssignBtn){
+        // balanced assignment: aim for equal counts (difference at most 1)
+        randomAssignBtn.addEventListener('click', function(){
+          const chores = loadChores();
+          const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
+          if(!unchosen.length){
+            notify('No unassigned chores to assign.', 1800);
+            return;
+          }
+
+          // determine available destinations based on DOM presence
+          const destinations = ['left','right'];
+          if(document.getElementById('column-extra-1')) destinations.push('extra1');
+          if(document.getElementById('column-extra-2')) destinations.push('extra2');
+
+          // counts per destination
+          const counts = Object.fromEntries(destinations.map(d => [d, 0]));
+          chores.forEach(c => { if(destinations.includes(c.loc)) counts[c.loc]++; });
+
+          // shuffle unchosen so distribution is not deterministic
+          for(let i = unchosen.length - 1; i > 0; i--){
+            const j = Math.floor(Math.random() * (i + 1));
+            [unchosen[i], unchosen[j]] = [unchosen[j], unchosen[i]];
+          }
+
+          // assign each unchosen chore to the destination with the fewest items
+          const idsToAssign = new Set(unchosen.map(c => c.id));
+          chores.forEach(c => {
+            if(!idsToAssign.has(c.id)) return;
+            let min = Infinity; destinations.forEach(d => { if(counts[d] < min) min = counts[d]; });
+            const mins = destinations.filter(d => counts[d] === min);
+            const pick = mins[Math.floor(Math.random()*mins.length)];
+            c.loc = pick; counts[pick]++;
+          });
+
+          // Calculate points based on assignment order
+          // First assigned chores get lower points, last assigned gets 50 points
+          const currentlyAssigning = Array.from(idsToAssign).length;
+
+          // Sort the IDs to assign so we process them in a consistent order
+          const sortedIdsToAssign = Array.from(idsToAssign).sort();
+
+          // Calculate points for each chore being assigned
+          sortedIdsToAssign.forEach((id, index) => {
+            const chore = chores.find(c => c.id === id);
+            if (!chore) return;
+
+            // For the very last chore being assigned
+            if (index === currentlyAssigning - 1) {
+              chore.points = 50;
+            } else {
+              // Scale points from 10 to 40 based on position
+              const progress = index / (currentlyAssigning - 1);  // 0 to 1
+              const basePoints = 10 + (progress * 30);  // 10 to 40
+              // Round up to nearest 5
+              chore.points = Math.ceil(basePoints / 5) * 5;
+            }
+          });
+
+          draftMode = false; // Disable manual assignment buttons
+          saveChores(chores);
+          render();
+          notify(`Assigned ${unchosen.length} chore(s) (balanced).`, 1800);
+        });
+      }
+
+      // Auction flow helpers
+      function askYesNo(message, yesLabel = 'Yes', noLabel = 'No'){
+        return new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+
+          const p = document.createElement('p');
+          p.textContent = message;
+          const actions = document.createElement('div');
+          actions.className = 'tcg-modal-actions';
+
+          const yesBtn = document.createElement('button');
+          yesBtn.textContent = yesLabel;
+          const noBtn = document.createElement('button');
+          noBtn.textContent = noLabel;
+
+          function cleanup(result){
+            document.removeEventListener('keydown', onKey);
+            overlay.remove();
+            resolve(result);
+          }
+          function onKey(e){
+            if(e.key === 'Escape') cleanup(false);
+            if(e.key === 'Enter') cleanup(true);
+          }
+
+          yesBtn.addEventListener('click', () => cleanup(true));
+          noBtn.addEventListener('click', () => cleanup(false));
+          document.addEventListener('keydown', onKey);
+
+          actions.appendChild(noBtn);
+          actions.appendChild(yesBtn);
+          modal.appendChild(p);
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+        });
+      }
+
+      // ask with Quit option: resolves 'yes' | 'no' | 'quit'
+      function askYesNoQuit(message, yesLabel = 'Yes', noLabel = 'No', quitLabel = 'Quit Auction'){
+        return new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+
+          const p = document.createElement('p');
+          p.innerHTML = message; // Changed to innerHTML to support colored text
+          const actions = document.createElement('div');
+          actions.className = 'tcg-modal-actions';
+
+          const quitBtn = document.createElement('button');
+          quitBtn.textContent = quitLabel;
+          quitBtn.className = 'btn-delete';
+          const noBtn = document.createElement('button');
+          noBtn.textContent = noLabel;
+          const yesBtn = document.createElement('button');
+          yesBtn.textContent = yesLabel;
+
+          function cleanup(result){
+            document.removeEventListener('keydown', onKey);
+            try{ overlay.remove(); }catch(e){}
+            resolve(result);
+          }
+          function onKey(e){
+            if(e.key === 'Escape') cleanup('no');
+            if(e.key === 'Enter') cleanup('yes');
+          }
+
+          quitBtn.addEventListener('click', () => cleanup('quit'));
+          noBtn.addEventListener('click', () => cleanup('no'));
+          yesBtn.addEventListener('click', () => cleanup('yes'));
+          document.addEventListener('keydown', onKey);
+
+          // Order buttons: Quit (left, destructive), No, Yes
+          actions.appendChild(quitBtn);
+          actions.appendChild(noBtn);
+          actions.appendChild(yesBtn);
+          modal.appendChild(p);
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+        });
+      }
+
+      // Helper for Draft: ask Easy or Hard
+      function askHighOrLow(choreName){
+        return new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+
+          const p = document.createElement('p');
+          p.textContent = `How difficult is: ${choreName}`;
+          const actions = document.createElement('div');
+          actions.className = 'tcg-modal-actions';
+
+          const highBtn = document.createElement('button');
+          highBtn.textContent = 'Hard';
+          const lowBtn = document.createElement('button');
+          lowBtn.textContent = 'Easy';
+
+          function cleanup(choice){
+            overlay.remove();
+            resolve(choice);
+          }
+
+          highBtn.addEventListener('click', () => cleanup('high'));
+          lowBtn.addEventListener('click', () => cleanup('low'));
+
+          actions.appendChild(lowBtn);
+          actions.appendChild(highBtn);
+          modal.appendChild(p);
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+        });
+      }
+
+      async function auctionSingle(chore, bidders){
+        // bidders is an array of {loc: 'left'|'right'|'extra1'|'extra2', name: 'Name'}
+        let currentPrice = 45;
+        let activeBidders = [...bidders]; // Track who can still bid
+
+        while(currentPrice >= 5 && activeBidders.length > 0){
+          // If we're at 5 points, randomly assign to one of the remaining bidders
+          if(currentPrice === 5){
+            const randomBidder = activeBidders[Math.floor(Math.random() * activeBidders.length)];
+            chore.loc = randomBidder.loc;
+            chore.points = 5;
+            return { abort: false };
+          }
+
+          // Ask each active bidder if they want to stay in the bidding
+          const responses = [];
+          
+          for(const bidder of activeBidders){
+            // Get player color based on location
+            let playerColor = '';
+            if(bidder.loc === 'left') playerColor = '#66CED6';
+            else if(bidder.loc === 'right') playerColor = '#FF4242';
+            else if(bidder.loc === 'extra1') playerColor = 'orange';
+            else if(bidder.loc === 'extra2') playerColor = 'limegreen';
+            
+            const decision = await askYesNoQuit(
+              `Will <span style="color: ${playerColor}; font-weight: bold;">${bidder.name.toUpperCase()}</span> stay in for "${chore.name}" at ${currentPrice} points?`,
+              'Yes',
+              'No',
+              'Quit Auction'
+            );
+            if(decision === 'quit'){
+              return { abort: true };
+            }
+            const accepted = (decision === 'yes');
+            responses.push({ bidder, accepted });
+          }
+          
+          // Filter to only bidders who said yes
+          activeBidders = responses.filter(r => r.accepted).map(r => r.bidder);
+          
+          // If only one bidder left, assign to them at current price
+          if(activeBidders.length === 1){
+            chore.loc = activeBidders[0].loc;
+            chore.points = currentPrice;
+            return { abort: false };
+          }
+          
+          // If no one left, assign to random original bidder at 5 points
+          if(activeBidders.length === 0){
+            const randomBidder = bidders[Math.floor(Math.random() * bidders.length)];
+            chore.loc = randomBidder.loc;
+            chore.points = 5;
+            return { abort: false };
+          }
+          
+          // Lower the price for next round
+          currentPrice -= 5;
+        }
+
+        // Fallback: assign to random remaining bidder at 5 points
+        if(activeBidders.length > 0){
+          const randomBidder = activeBidders[Math.floor(Math.random() * activeBidders.length)];
+          chore.loc = randomBidder.loc;
+          chore.points = 5;
+          return { abort: false };
+        } else {
+          const randomBidder = bidders[Math.floor(Math.random() * bidders.length)];
+          chore.loc = randomBidder.loc;
+          chore.points = 5;
+          return { abort: false };
+        }
+      }
+
+      async function runAuction(){
+        const chores = loadChores();
+        const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
+        if(!unchosen.length){
+          notify('No unassigned chores to auction.', 1800);
+          return;
+        }
+        
+        // Build list of bidders based on available columns
+        const headers = loadHeaders();
+        const bidders = [
+          { loc: 'left', name: headers.left || 'Left' },
+          { loc: 'right', name: headers.right || 'Right' }
+        ];
+        
+        // Add extra columns if they exist
+        const extra1El = document.getElementById('column-extra-1');
+        const extra2El = document.getElementById('column-extra-2');
+        if(extra1El){
+          const extra1Header = extra1El.querySelector('.column-header');
+          bidders.push({ loc: 'extra1', name: extra1Header?.textContent.trim() || 'Player 3' });
+        }
+        if(extra2El){
+          const extra2Header = extra2El.querySelector('.column-header');
+          bidders.push({ loc: 'extra2', name: extra2Header?.textContent.trim() || 'Player 4' });
+        }
+
+        let aborted = false;
+        for(const chore of unchosen){
+          const result = await auctionSingle(chore, bidders);
+          if(result && result.abort){
+            aborted = true;
+            break;
+          }
+          saveChores(chores);
+          render();
+        }
+        if(aborted){
+          try{ notify('Auction cancelled.'); }catch(e){}
+        }
+        draftMode = false; // Disable manual assignment buttons
+      }
+
+      const auctionBtn = document.getElementById('auction-btn');
+      if(auctionBtn){
+        auctionBtn.addEventListener('click', () => { runAuction(); });
+      }
+
+      // Draft flow: ask High/Low for each chore and assign random points
+      function randomInRange(min, max){
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function roundToNearest5(n){
+        return Math.round(n / 5) * 5;
+      }
+
+      async function runDraft(){
+        const chores = loadChores();
+        const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
+        if(!unchosen.length){
+          notify('No unassigned chores to draft.', 1800);
+          return;
+        }
+
+        for(const chore of unchosen){
+          const choice = await askHighOrLow(chore.name);
+          let points;
+          if(choice === 'high'){
+            points = randomInRange(35, 50);
+          } else {
+            points = randomInRange(10, 30);
+          }
+          chore.points = roundToNearest5(points);
+        }
+
+        draftMode = true; // Enable manual assignment buttons
+        saveChores(chores);
+        render();
+        notify(`Drafted ${unchosen.length} chore(s) with point values.`, 1800);
+      }
+
+      const draftBtn = document.getElementById('draft-btn');
+      if(draftBtn){
+        draftBtn.addEventListener('click', () => { runDraft(); });
+      }
+
+      // re-render when either column header text changes so button labels stay in sync
+      [leftHeaderEl, rightHeaderEl].forEach(h => {
+        if(!h) return;
+        // save header text and re-render as the user types / on blur
+        h.addEventListener('keydown', (e) => {
+          // Block Enter/new line in contenteditable
+          if(e.key === 'Enter'){
+            e.preventDefault();
+          }
+        });
+        h.addEventListener('input', () => {
+          // Remove any newlines and enforce 8-char limit live while typing/pasting
+          const raw = (h.textContent || '');
+          const noNewlines = raw.replace(/[\r\n]+/g, '');
+          const trimmed = noNewlines.trim();
+          const limited = trimmed.length > HEADER_MAX ? trimmed.slice(0, HEADER_MAX) : trimmed;
+          if(limited !== raw){
+            h.textContent = limited;
+          }
+          saveHeaders();
+          render();
+        });
+        h.addEventListener('blur', () => {
+          // Ensure no newlines and limit also on blur
+          const raw = (h.textContent || '');
+          const noNewlines = raw.replace(/[\r\n]+/g, '');
+          const trimmed = noNewlines.trim();
+          const limited = trimmed.length > HEADER_MAX ? trimmed.slice(0, HEADER_MAX) : trimmed;
+          if(limited !== raw){
+            h.textContent = limited;
+          }
+          saveHeaders();
+          render();
+        });
+      });
+
+      // initial render
+      render();
+      // ensure point display is correct now (in case script ran before DOMContentLoaded)
+      renderPoints();
+
+      // Re-render when extra columns are initialized from storage
+      window.addEventListener('extraColumnsReady', () => {
+        render();
+        renderPoints();
+      });
+
+      // Re-render when extra columns are removed to update assign buttons
+      window.addEventListener('extraColumnRemoved', () => {
+        render();
+      });
+
+      // Unassign All button functionality
+      const unassignAllBtn = document.getElementById('unassign-all-btn');
+      if(unassignAllBtn){
+        unassignAllBtn.addEventListener('click', async function(){
+          const chores = loadChores();
+          const assigned = chores.filter(c => c.loc && c.loc !== 'unchosen');
+          
+          if(!assigned.length){
+            notify('No assigned chores to unassign.', 1800);
+            return;
+          }
+
+          // Confirmation modal
+          const confirmed = await new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'tcg-modal-overlay';
+            const modal = document.createElement('div');
+            modal.className = 'tcg-modal';
+
+            const p = document.createElement('p');
+            p.textContent = `Unassign all ${assigned.length} chore(s)? They will be returned to unassigned.`;
+            const actions = document.createElement('div');
+            actions.className = 'tcg-modal-actions';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            const confirmBtn = document.createElement('button');
+            confirmBtn.textContent = 'Unassign All';
+
+            function cleanup(result){
+              cancelBtn.removeEventListener('click', onCancel);
+              confirmBtn.removeEventListener('click', onConfirm);
+              try{ overlay.remove(); }catch(e){}
+              resolve(result);
+            }
+            function onCancel(){ cleanup(false); }
+            function onConfirm(){ cleanup(true); }
+
+            cancelBtn.addEventListener('click', onCancel);
+            confirmBtn.addEventListener('click', onConfirm);
+
+            actions.appendChild(cancelBtn);
+            actions.appendChild(confirmBtn);
+            modal.appendChild(p);
+            modal.appendChild(actions);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+          });
+
+          if(!confirmed) return;
+
+          // Unassign all chores
+          chores.forEach(c => {
+            if(c.loc && c.loc !== 'unchosen'){
+              c.loc = 'unchosen';
+            }
+          });
+
+          draftMode = false; // Disable manual assignment buttons
+          saveChores(chores);
+          render();
+          notify(`Unassigned ${assigned.length} chore(s).`, 1800);
+        });
+      }
+    })();
+    </script>
+
+    <script>
+    // Add/Remove column functionality
+    (function(){
+      const addColumnBtn = document.getElementById('add-column-btn');
+      const removeColumnBtn = document.getElementById('remove-column-btn');
+      const gridSection = document.querySelector('.grid-3');
+      let clickCount = 0;
+
+      // Local storage keys (scoped here to avoid cross-IIFE references)
+      const HEADERS_KEY = 'tcg_column_headers_v1';
+      const POINTS_KEY = 'tcg_points_v1';
+      const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
+
+      // Minimal helpers replicated locally for this module
+      function loadAllHeaders(){
+        try{ const raw = localStorage.getItem(HEADERS_KEY); return raw ? JSON.parse(raw) : {}; }
+        catch(e){ return {}; }
+      }
+      function saveHeaderField(field, value){
+        const obj = loadAllHeaders(); obj[field] = value; localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
+      }
+      function loadExtraState(){
+        try{ const raw = localStorage.getItem(EXTRA_STATE_KEY); const p = raw ? JSON.parse(raw) : { extra1:false, extra2:false }; return { extra1:!!p.extra1, extra2:!!p.extra2 }; }
+        catch(e){ return { extra1:false, extra2:false }; }
+      }
+      function saveExtraState(s){ localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
+      function loadPoints(){
+        try{
+          const raw = localStorage.getItem(POINTS_KEY);
+          const parsed = raw ? JSON.parse(raw) : { left:0, right:0 };
+          if(typeof parsed.left !== 'number') parsed.left = 0;
+          if(typeof parsed.right !== 'number') parsed.right = 0;
+          if(typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
+          if(typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
+          return parsed;
+        }catch(e){ return { left:0, right:0, extra1:0, extra2:0 }; }
+      }
+      function renderPoints(){
+        const p = loadPoints();
+        const leftEl = document.getElementById('left-points');
+        const rightEl = document.getElementById('right-points');
+        const extra1El = document.getElementById('extra-1-points');
+        const extra2El = document.getElementById('extra-2-points');
+        if(leftEl) leftEl.textContent = String(p.left||0);
+        if(rightEl) rightEl.textContent = String(p.right||0);
+        if(extra1El) extra1El.textContent = String(p.extra1||0);
+        if(extra2El) extra2El.textContent = String(p.extra2||0);
+      }
+
+      function enableAddButton(){
+        if(!addColumnBtn) return;
+        addColumnBtn.disabled = false;
+        addColumnBtn.style.opacity = '';
+        addColumnBtn.style.cursor = '';
+      }
+
+      function disableAddButton(){
+        if(!addColumnBtn) return;
+        addColumnBtn.disabled = true;
+        addColumnBtn.style.opacity = '0.5';
+        addColumnBtn.style.cursor = 'not-allowed';
+      }
+
+      function updateRemoveButtonState(){
+        if(!removeColumnBtn) return;
+        const hasExtra1 = !!document.getElementById('column-extra-1');
+        const hasExtra2 = !!document.getElementById('column-extra-2');
+        const any = hasExtra1 || hasExtra2;
+        removeColumnBtn.disabled = !any;
+        removeColumnBtn.style.opacity = any ? '' : '0.5';
+        removeColumnBtn.style.cursor = any ? '' : 'not-allowed';
+      }
+
+      // Position the unassigned chores column so its extended height sits between extra-1 and extra-2 when both are present
+      function updateUnassignedPosition(){
+        const choresCol = document.getElementById('chores-column');
+        if(!choresCol) return;
+        const hasExtra1 = !!document.getElementById('column-extra-1');
+        const hasExtra2 = !!document.getElementById('column-extra-2');
+        if(hasExtra1 && hasExtra2){
+          // Keep it in the center column starting at row 1,
+          // but span down into row 2 so the extended list appears between the extras
+          choresCol.style.gridColumn = '2';
+          choresCol.style.gridRow = '1 / 3';
+        } else if(hasExtra1 && !hasExtra2){
+          // If only extra-1 exists, still let the center column span down so
+          // its extended height passes by extra-1 without pushing it down
+          choresCol.style.gridColumn = '2';
+          choresCol.style.gridRow = '1 / 3';
+        } else {
+          // Reset to default placement
+          choresCol.style.gridColumn = '';
+          choresCol.style.gridRow = '';
+        }
+      }
+
+      function attachExtraHeaderHandlers(headerEl, field){
+        if(!headerEl) return;
+        headerEl.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter') e.preventDefault();
+        });
+        const enforceAndSave = () => {
+          const raw = (headerEl.textContent || '');
+          const noNewlines = raw.replace(/[\r\n]+/g, '');
+          const trimmed = noNewlines.trim();
+          const limited = trimmed.length > 8 ? trimmed.slice(0, 8) : trimmed;
+          if(limited !== raw){ headerEl.textContent = limited; }
+          saveHeaderField(field, limited);
+        };
+        headerEl.addEventListener('input', enforceAndSave);
+        headerEl.addEventListener('blur', enforceAndSave);
+      }
+
+      function createExtra1(){
+        const columnLeft = document.getElementById('column-left');
+        if(!columnLeft) return null;
+        const newColumn = columnLeft.cloneNode(true);
+        newColumn.id = 'column-extra-1';
+        newColumn.style.gridColumn = '1';
+        newColumn.style.gridRow = '2';
+        // header
+        const header = newColumn.querySelector('.column-header');
+        if(header){
+          header.style.backgroundColor = 'orange';
+          header.style.textAlign = 'center';
+          header.style.fontSize = '4vw';
+          header.style.fontFamily = 'var(--names_font)';
+          const allHeaders = loadAllHeaders();
+          header.textContent = (allHeaders.extra1 && String(allHeaders.extra1).trim()) || 'Player 3';
+          attachExtraHeaderHandlers(header, 'extra1');
+        }
+        // points
+        const pointsBank = newColumn.querySelector('.points-bank');
+        if(pointsBank){
+          pointsBank.id = 'extra-1-points-bank';
+          const pointsStrong = pointsBank.querySelector('strong');
+          if(pointsStrong){
+            pointsStrong.id = 'extra-1-points';
+            const p = loadPoints();
+            pointsStrong.textContent = String(p.extra1 || 0);
+          }
+        }
+        // list id and clear cloned chores
+        const listDiv = newColumn.querySelector('#left-list');
+        if(listDiv){
+          listDiv.id = 'extra-1-list';
+          // Clear any cloned chores from column-left
+          listDiv.innerHTML = '<article class="card chore-placeholder">No chores assigned.</article>';
+        }
+        gridSection.appendChild(newColumn);
+        // save presence
+        const st = loadExtraState();
+        saveExtraState({ ...st, extra1: true });
+        // Reposition unassigned column if needed
+        updateUnassignedPosition();
+        return newColumn;
+      }
+
+      function createExtra2(){
+        const columnLeft = document.getElementById('column-left');
+        if(!columnLeft) return null;
+        const newColumn = columnLeft.cloneNode(true);
+        newColumn.id = 'column-extra-2';
+        newColumn.style.gridColumn = '3';
+        newColumn.style.gridRow = '2';
+        // header
+        const header = newColumn.querySelector('.column-header');
+        if(header){
+          header.style.backgroundColor = 'limegreen';
+          header.style.textAlign = 'center';
+          header.style.fontSize = '4vw';
+          header.style.fontFamily = 'var(--names_font)';
+          const allHeaders = loadAllHeaders();
+          header.textContent = (allHeaders.extra2 && String(allHeaders.extra2).trim()) || 'Player 4';
+          attachExtraHeaderHandlers(header, 'extra2');
+        }
+        // points
+        const pointsBank = newColumn.querySelector('.points-bank');
+        if(pointsBank){
+          pointsBank.id = 'extra-2-points-bank';
+          pointsBank.style.textAlign = 'right';
+          const pointsStrong = pointsBank.querySelector('strong');
+          if(pointsStrong){
+            pointsStrong.id = 'extra-2-points';
+            const p = loadPoints();
+            pointsStrong.textContent = String(p.extra2 || 0);
+          }
+        }
+        // list id and clear cloned chores
+        const listDiv = newColumn.querySelector('#left-list');
+        if(listDiv){
+          listDiv.id = 'extra-2-list';
+          // Clear any cloned chores from column-left
+          listDiv.innerHTML = '<article class="card chore-placeholder">No chores assigned.</article>';
+        }
+        gridSection.appendChild(newColumn);
+        // save presence
+        const st = loadExtraState();
+        saveExtraState({ ...st, extra2: true });
+        // Reposition unassigned column if needed
+        updateUnassignedPosition();
+        return newColumn;
+      }
+
+      function initFromStorage(){
+        const st = loadExtraState();
+        if(st.extra1){ createExtra1(); clickCount = 1; }
+        if(st.extra2){ createExtra2(); clickCount = 2; }
+        if(clickCount >= 2){ disableAddButton(); }
+        updateRemoveButtonState();
+        renderPoints();
+        // Dispatch event to notify chores script that extra columns are ready
+        window.dispatchEvent(new CustomEvent('extraColumnsReady'));
+        // Ensure unassigned column is placed correctly on load
+        updateUnassignedPosition();
+      }
+
+      if(!addColumnBtn || !gridSection) return;
+
+      // Helper to clear cached header + points for an extra column
+      function clearExtraStorage(which){
+        // which should be 'extra1' or 'extra2'
+        const headers = loadAllHeaders();
+        if(headers && Object.prototype.hasOwnProperty.call(headers, which)){
+          delete headers[which];
+          localStorage.setItem(HEADERS_KEY, JSON.stringify(headers));
+        }
+        const pts = loadPoints();
+        pts[which] = 0;
+        localStorage.setItem(POINTS_KEY, JSON.stringify(pts));
+      }
+
+      // Helper to reassign chores from a removed column back to unchosen
+      function reassignChoresFromColumn(loc){
+        const STORAGE_KEY = 'tcg_chores_v1';
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if(!raw) return;
+          const chores = JSON.parse(raw);
+          // Find all chores in this location and set them to unchosen
+          chores.forEach(c => {
+            if(c.loc === loc) c.loc = 'unchosen';
+          });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
+        }catch(e){
+          console.error('Error reassigning chores:', e);
+        }
+      }
+
+      // initialize from saved state (if any)
+      initFromStorage();
+
+      addColumnBtn.addEventListener('click', function(){
+        clickCount++;
+        
+        if(clickCount === 1){
+          // Clear cache for extra column 1 before creating it
+          clearExtraStorage('extra1');
+          // First click: create extra column 1
+          createExtra1();
+          // Enable remove button now that at least one extra column exists
+          updateRemoveButtonState();
+          
+        } else if(clickCount === 2){
+          // Clear cache for extra column 2 before creating it
+          clearExtraStorage('extra2');
+          // Second click: create extra column 2 (right side)
+          createExtra2();
+          
+          // Disable the add button after second click
+          disableAddButton();
+          // Ensure remove button is enabled
+          updateRemoveButtonState();
+        }
+      });
+
+      // Confirmation helper for removing player
+      function askConfirmRemove(playerName, playerColor){
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+
+          const p = document.createElement('p');
+          p.innerHTML = `Remove <span style="color: ${playerColor}; font-weight: bold;">${playerName.toUpperCase()}</span>? Their chores will be returned to unassigned.`;
+          const actions = document.createElement('div');
+          actions.className = 'tcg-modal-actions';
+
+          const cancelBtn = document.createElement('button');
+          cancelBtn.textContent = 'Cancel';
+          const confirmBtn = document.createElement('button');
+          confirmBtn.textContent = 'Remove';
+          confirmBtn.style.transition = 'background-color 0.2s';
+          
+          // Add hover effect to Remove button
+          confirmBtn.addEventListener('mouseenter', () => {
+            confirmBtn.style.backgroundColor = '#E24A4A';
+            confirmBtn.style.color = 'white';
+          });
+          confirmBtn.addEventListener('mouseleave', () => {
+            confirmBtn.style.backgroundColor = '';
+            confirmBtn.style.color = '';
+          });
+
+          function cleanup(result){
+            cancelBtn.removeEventListener('click', onCancel);
+            confirmBtn.removeEventListener('click', onConfirm);
+            try{ overlay.remove(); }catch(e){}
+            resolve(result);
+          }
+          function onCancel(){ cleanup(false); }
+          function onConfirm(){ cleanup(true); }
+
+          cancelBtn.addEventListener('click', onCancel);
+          confirmBtn.addEventListener('click', onConfirm);
+
+          actions.appendChild(cancelBtn);
+          actions.appendChild(confirmBtn);
+          modal.appendChild(p);
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+        });
+      }
+
+      // Remove extra columns: remove extra-2 first if present, else extra-1
+      if(removeColumnBtn){
+        removeColumnBtn.addEventListener('click', async function(){
+          const extra2 = document.getElementById('column-extra-2');
+          const extra1 = document.getElementById('column-extra-1');
+
+          let playerToRemove = null;
+          let playerName = '';
+          let playerColor = '';
+
+          if(extra2){
+            const header = extra2.querySelector('.column-header');
+            playerName = header?.textContent.trim() || 'Player 4';
+            playerColor = 'limegreen'; // Player 4 color
+            playerToRemove = 'extra2';
+          } else if(extra1){
+            const header = extra1.querySelector('.column-header');
+            playerName = header?.textContent.trim() || 'Player 3';
+            playerColor = 'orange'; // Player 3 color
+            playerToRemove = 'extra1';
+          } else {
+            // Nothing to remove
+            return;
+          }
+
+          // Ask for confirmation
+          const confirmed = await askConfirmRemove(playerName, playerColor);
+          if(!confirmed) return;
+
+          if(playerToRemove === 'extra2'){
+            extra2.remove();
+            const st = loadExtraState();
+            saveExtraState({ ...st, extra2: false });
+            clearExtraStorage('extra2');
+            reassignChoresFromColumn('extra2');
+            // After removing extra-2, next add should add extra-2 again
+            clickCount = 1;
+            // Re-enable add button since we now have room
+            enableAddButton();
+            // Trigger re-render to remove assign buttons for this column
+            window.dispatchEvent(new CustomEvent('extraColumnRemoved'));
+          } else if(playerToRemove === 'extra1'){
+            extra1.remove();
+            const st = loadExtraState();
+            saveExtraState({ ...st, extra1: false });
+            clearExtraStorage('extra1');
+            reassignChoresFromColumn('extra1');
+            // After removing last extra, reset sequence
+            clickCount = 0;
+            // Re-enable add button (it may already be enabled)
+            enableAddButton();
+            // Trigger re-render to remove assign buttons for this column
+            window.dispatchEvent(new CustomEvent('extraColumnRemoved'));
+            // Reposition unassigned column if needed
+            updateUnassignedPosition();
+          }
+
+          // Update remove button state: disable if no extras remain
+          updateRemoveButtonState();
+        });
+      }
+
+      // Initialize remove button visual state on load
+      updateRemoveButtonState();
+    })();
+    </script>
+</body>
+</html>

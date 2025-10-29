@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>The Chore Game - Shop</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+  
+    <div class="container">
+        <a href="index.html">
+          <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
+        </a>
+        <div class="container-logo">
+          <a href="index.html">
+            <img class src="images/Logo_THE_GREAT_CHORE_OFF_Text.png" href = "index.html" alt="The Chore Game">
+          </a>
+        </div>
+          <nav class="main-nav">
+              <a class="header-btn" href="index.html">Home</a>
+              <a class ="header-btn" href="shop.html">Shop</a>
+          </nav>
+      </div>
+</header>
+
+    <main class="site-main container">
+        <!-- points display with shop management in center -->
+        <div class="points-display grid-3">
+            <div class="points-box" id="left-points-box">
+                <h3 id="left-header" style="text-transform: uppercase;">Left Column</h3>
+                <div class="points-value"><strong id="shop-left-points">0</strong> pts</div>
+            </div>
+            
+            <!-- Shop management section (moved to center) -->
+            <section class="shop-management">
+                <div class="shop-header">
+                    <h2>Shop Management</h2>
+                    <button type="button" id="toggle-add-form" class="btn btn-add" aria-expanded="false" aria-controls="add-item-form">
+                        <span class="btn-text">Add Item</span>
+                        <span class="btn-icon">+</span>
+                    </button>
+                </div>
+
+                <!-- collapsible add-item form -->
+                <form id="add-item-form" class="shop-form hidden" aria-label="Add shop item" novalidate>
+                    <h3 class="shop-form-title">Add New Item</h3>
+                    <div class="form-row">
+                        <input id="item-name" name="name" type="text" required aria-required="true" aria-label="Name" placeholder="Name*" />
+                    </div>
+
+                    <div class="form-row">
+                        <textarea id="item-desc" name="description" rows="2" aria-label="Description (optional)" placeholder="Description (optional)"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <input id="item-price" name="price" type="text" inputmode="numeric" pattern="[0-9,]*" required aria-required="true" aria-label="Price (points)" placeholder="Price (points)*" />
+                    </div>
+
+                    <div class="form-row">
+                        <label for="item-one-time">One-time purchase</label>
+                        <input id="item-one-time" name="oneTime" type="checkbox" aria-label="Mark as one-time purchase" />
+                    </div>
+
+                    <div class="form-row">
+                        <button type="submit">Add Item</button>
+                        <span id="form-msg" class="form-msg" role="status" aria-live="polite"></span>
+                    </div>
+                </form>
+            </section>
+            
+            <div class="points-box" id="right-points-box">
+                <h3 id="right-header" style="text-transform: uppercase;">Right Column</h3>
+                <div class="points-value"><strong id="shop-right-points">0</strong> pts</div>
+            </div>
+
+            <!-- Extra player points boxes (row 2). Shown only if extras exist in index.html -->
+            <div class="points-box" id="extra1-points-box" style="display: none; grid-column: 1; grid-row: 2;">
+                <h3 id="extra1-header" style="text-transform: uppercase;">Player 3</h3>
+                <div class="points-value"><strong id="shop-extra1-points">0</strong> pts</div>
+            </div>
+            <div class="points-box" id="extra2-points-box" style="display: none; grid-column: 3; grid-row: 2;">
+                <h3 id="extra2-header" style="text-transform: uppercase;">Player 4</h3>
+                <div class="points-value" ><strong id="shop-extra2-points">0</strong> pts</div>
+            </div>
+        </div>
+
+        <!-- Available items section -->
+        <section class="shop-items">
+            <h2>Available Items</h2>
+            <div id="products" class="products-grid" aria-live="polite">
+                <!-- items rendered here -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year2"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, & Kendall Olson!</p>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // minimal shop logic: store items in localStorage, render them, allow adding + purchase/delete
+        (function(){
+            const STORAGE_KEY = 'tcg_shop_items_v1';
+            const defaultItems = [
+                { id: Date.now()+1, name: 'Example', description: 'Example item', price: 50, oneTime: false },
+                { id: Date.now()+2, name: 'Product 2', description: '', price: 30, oneTime: true },
+                { id: Date.now()+3, name: 'Product 3', description: '', price: 20, oneTime: false }
+            ];
+
+            const form = document.getElementById('add-item-form');
+            const nameInput = document.getElementById('item-name');
+            const descInput = document.getElementById('item-desc');
+            const priceInput = document.getElementById('item-price');
+            const oneTimeInput = document.getElementById('item-one-time');
+            const productsEl = document.getElementById('products');
+            const msgEl = document.getElementById('form-msg');
+
+            // helper: round to nearest 5 (clamped to >= 0)
+            function roundToNearest5(n){
+                if(!Number.isFinite(n)) return 0;
+                const r = Math.round(n / 5) * 5;
+                return Math.max(0, r);
+            }
+
+            // Price field behavior: allow typing commas/letters, but sanitize on Enter or submit
+            if(priceInput){
+                // On Enter key, strip all non-digits (keep integers only)
+                priceInput.addEventListener('keydown', (e) => {
+                    if(e.key === 'Enter'){
+                        const cleaned = (priceInput.value || '').replace(/[^0-9]/g, '');
+                        priceInput.value = cleaned;
+                    }
+                });
+            }
+
+            function loadItems(){
+                try{
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    return raw ? JSON.parse(raw) : defaultItems.slice();
+                }catch(e){
+                    return defaultItems.slice();
+                }
+            }
+
+            function saveItems(items){
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            }
+
+            function createCard(item){
+                const art = document.createElement('article');
+                art.className = 'card product';
+                art.dataset.id = String(item.id);
+
+                const titleWrap = document.createElement('div');
+                titleWrap.className = 'product-title-wrap';
+
+                const title = document.createElement('h3');
+                title.className = 'product-title';
+                title.textContent = item.name;
+                titleWrap.appendChild(title);
+
+                if(item.oneTime){
+                    const badge = document.createElement('span');
+                    badge.className = 'badge one-time';
+                    badge.textContent = 'One‑time';
+                    titleWrap.appendChild(badge);
+                }
+
+                art.appendChild(titleWrap);
+
+                if(item.description){
+                    const p = document.createElement('p');
+                    p.className = 'product-desc';
+                    p.textContent = item.description;
+                    art.appendChild(p);
+                }
+
+                const price = document.createElement('p');
+                price.className = 'product-price';
+                price.textContent = item.price + ' pts';
+                art.appendChild(price);
+
+                // actions: purchase + delete
+                const actions = document.createElement('div');
+                actions.className = 'product-actions';
+
+                const buyBtn = document.createElement('button');
+                buyBtn.type = 'button';
+                buyBtn.className = 'btn btn-purchase';
+                buyBtn.dataset.action = 'purchase';
+                buyBtn.textContent = 'Purchase';
+                actions.appendChild(buyBtn);
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'btn btn-delete';
+                delBtn.dataset.action = 'delete';
+                delBtn.textContent = 'Delete';
+                actions.appendChild(delBtn);
+
+                art.appendChild(actions);
+
+                return art;
+            }
+
+            function render(){
+                const items = loadItems();
+                productsEl.innerHTML = '';
+                items.forEach(it => productsEl.appendChild(createCard(it)));
+            }
+
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                msgEl.textContent = '';
+
+                const name = nameInput.value.trim();
+                const desc = descInput.value.trim();
+                // Strip commas and any letters; keep only digits before parsing
+                const cleanedPrice = (priceInput.value || '').replace(/[^0-9]/g, '');
+                priceInput.value = cleanedPrice; // reflect sanitized value in the UI
+                const price = Number(cleanedPrice);
+                const oneTime = !!oneTimeInput.checked;
+
+                if(!name){
+                    msgEl.textContent = 'Name is required.';
+                    nameInput.focus();
+                    return;
+                }
+                // Require at least one digit; treat empty/invalid as error
+                if(cleanedPrice === '' || Number.isNaN(price) || price < 0){
+                    msgEl.textContent = 'Enter a valid price (0 or more).';
+                    priceInput.focus();
+                    return;
+                }
+
+                const items = loadItems();
+                // round price to nearest multiple of 5 before saving
+                const roundedPrice = roundToNearest5(price);
+                const newItem = { id: Date.now(), name, description: desc, price: roundedPrice, oneTime };
+                items.push(newItem);
+                saveItems(items);
+                render();
+
+                form.reset();
+                msgEl.textContent = 'Item added.';
+                setTimeout(()=> msgEl.textContent = '', 2000);
+            });
+
+            // delegated click handler for purchase / delete
+            productsEl.addEventListener('click', function(e){
+                const btn = e.target.closest('button[data-action]');
+                if(!btn) return;
+                const action = btn.dataset.action;
+                const card = btn.closest('.product');
+                if(!card) return;
+                const id = Number(card.dataset.id);
+                if(action === 'purchase'){
+                    purchaseItem(id);
+                } else if(action === 'delete'){
+                    deleteItem(id);
+                }
+            });
+
+            // Combined purchase modal: shows all players and cancel button
+            function askPayerChoice(players, price, itemName){
+                // players is an array of {loc: 'left'|'right'|'extra1'|'extra2', name: 'Name'}
+                return new Promise((resolve)=>{
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tcg-modal-overlay';
+                    const modal = document.createElement('div');
+                    modal.className = 'tcg-modal';
+                    
+                    const p = document.createElement('p');
+                    p.textContent = `Purchase "${itemName}" for ${price} pts?`;
+                    modal.appendChild(p);
+                    
+                    // Player selection buttons
+                    const playerActions = document.createElement('div');
+                    playerActions.className = 'tcg-modal-actions';
+                    
+                    const buttons = [];
+                    players.forEach(player => {
+                        const btn = document.createElement('button');
+                        btn.textContent = player.name.toUpperCase();
+                        btn.dataset.loc = player.loc;
+                        
+                        // Apply background color based on player location
+                        if(player.loc === 'left'){
+                            btn.style.backgroundColor = '#66CED6'; // Blue for left
+                        } else if(player.loc === 'right'){
+                            btn.style.backgroundColor = '#FF4242'; // Red for right
+                        } else if(player.loc === 'extra1'){
+                            btn.style.backgroundColor = 'orange'; // Orange for Player 3
+                        } else if(player.loc === 'extra2'){
+                            btn.style.backgroundColor = 'limegreen'; // Limegreen for Player 4
+                        }
+                        btn.style.color = 'white'; // Ensure text is readable
+                        btn.style.border = 'none';
+                        
+                        playerActions.appendChild(btn);
+                        buttons.push(btn);
+                        
+                    });
+                    modal.appendChild(playerActions);
+                    
+                    // Centered cancel button below
+                    const cancelWrapper = document.createElement('div');
+                    cancelWrapper.style.marginTop = '12px';
+                    cancelWrapper.style.textAlign = 'center';
+                    
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.className = 'btn-cancel';
+                    cancelBtn.style.backgroundColor = '#E24A4A'; // Red
+                    cancelBtn.style.color = 'white';
+                    cancelBtn.style.border = 'none';
+                    cancelBtn.style.borderRadius = '8px';
+                    cancelBtn.style.cursor = 'pointer';
+                    cancelBtn.style.transition = 'background-color 0.2s';
+                    
+                    // Add hover effect
+                    cancelBtn.addEventListener('mouseenter', () => {
+                        cancelBtn.style.backgroundColor = '#C13838'; // Darker red
+                    });
+                    cancelBtn.addEventListener('mouseleave', () => {
+                        cancelBtn.style.backgroundColor = '#E24A4A'; // Original red
+                    });
+                    
+                    cancelWrapper.appendChild(cancelBtn);
+                    
+                    modal.appendChild(cancelWrapper);
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    
+                    function cleanup(choice){
+                        buttons.forEach(btn => btn.removeEventListener('click', onClick));
+                        cancelBtn.removeEventListener('click', onCancel);
+                        try{ document.body.removeChild(overlay); }catch(e){}
+                        resolve(choice);
+                    }
+                    
+                    function onClick(e){
+                        const loc = e.target.dataset.loc;
+                        cleanup(loc);
+                    }
+                    
+                    function onCancel(){
+                        cleanup(null);
+                    }
+                    
+                    buttons.forEach(btn => btn.addEventListener('click', onClick));
+                    cancelBtn.addEventListener('click', onCancel);
+                });
+            }
+
+                        // info helper: single-OK modal matching shop style
+                                    function showInfo(message, okLabel = 'OK'){
+                                return new Promise((resolve)=>{
+                                        const overlay = document.createElement('div');
+                                        overlay.className = 'tcg-modal-overlay';
+                                        overlay.innerHTML = `
+                                            <div class="tcg-modal">
+                                                <p>${message}</p>
+                                                <div class="tcg-modal-actions">
+                                                                <button class="btn-ok">${okLabel}</button>
+                                                </div>
+                                            </div>`;
+                                        document.body.appendChild(overlay);
+                                                    const okBtn = overlay.querySelector('button.btn-ok');
+                                        function cleanup(){
+                                                okBtn.removeEventListener('click', onOk);
+                                                try{ document.body.removeChild(overlay); }catch(e){}
+                                                resolve(true);
+                                        }
+                                        function onOk(){ cleanup(); }
+                                        okBtn.addEventListener('click', onOk);
+                                });
+                        }
+
+                        // confirm helper: show a purchase confirmation modal (Confirm / Cancel)
+                        function askConfirmPurchase(itemName, price){
+                                return new Promise((resolve)=>{
+                                        const overlay = document.createElement('div');
+                                        overlay.className = 'tcg-modal-overlay';
+                                        overlay.innerHTML = `
+                                            <div class="tcg-modal">
+                                                <p>Confirm purchase of "${itemName}" for ${price} pts?</p>
+                                                <div class="tcg-modal-actions">
+                                                    <button class="btn-cancel">Cancel</button>
+                                                    <button class="btn-confirm">Confirm</button>
+                                                </div>
+                                            </div>`;
+                                        document.body.appendChild(overlay);
+                                        const cancelBtn = overlay.querySelector('button.btn-cancel');
+                                        const confirmBtn = overlay.querySelector('button.btn-confirm');
+                                        function cleanup(choice){
+                                                cancelBtn.removeEventListener('click', onCancel);
+                                                confirmBtn.removeEventListener('click', onConfirm);
+                                                try{ document.body.removeChild(overlay); }catch(e){}
+                                                resolve(choice);
+                                        }
+                                        function onCancel(){ cleanup(false); }
+                                        function onConfirm(){ cleanup(true); }
+                                        cancelBtn.addEventListener('click', onCancel);
+                                        confirmBtn.addEventListener('click', onConfirm);
+                                });
+                        }
+
+            // purchase handler (uses combined askPayerChoice)
+            async function purchaseItem(id){
+                const items = loadItems();
+                const idx = items.findIndex(i => i.id === id);
+                if(idx === -1) return;
+                const item = items[idx];
+
+                // Build list of available payers
+                const headers = loadHeaders();
+                const extras = loadExtraState();
+                
+                const players = [
+                    { loc: 'left', name: headers.left },
+                    { loc: 'right', name: headers.right }
+                ];
+                
+                if(extras.extra1){
+                    players.push({ loc: 'extra1', name: headers.extra1 });
+                }
+                if(extras.extra2){
+                    players.push({ loc: 'extra2', name: headers.extra2 });
+                }
+
+                // Ask user which player should pay (combined modal with cancel)
+                let payerLoc;
+                try{
+                  payerLoc = await askPayerChoice(players, item.price, item.name);
+                }catch(e){ payerLoc = null; }
+                if(!payerLoc) return; // user cancelled
+
+                const payer = players.find(p => p.loc === payerLoc);
+                if(!payer) return;
+
+                // load point banks
+                const points = loadPoints();
+                const current = Number(points[payerLoc] || 0);
+                if(current < item.price){
+                    // Get player color based on location
+                    let playerColor = '';
+                    if(payerLoc === 'left') playerColor = '#66CED6';
+                    else if(payerLoc === 'right') playerColor = '#FF4242';
+                    else if(payerLoc === 'extra1') playerColor = 'orange';
+                    else if(payerLoc === 'extra2') playerColor = 'limegreen';
+                    
+                    await showInfo(`<span style="color: ${playerColor}; font-weight: bold;">${payer.name.toUpperCase()}</span> does not have enough points (${current} pts) <br> <span style="color: ${playerColor}; font-weight: bold;">${payer.name.toUpperCase()}</span> needs (${item.price} pts) to purchase this item.`, 'OK');
+                    return;
+                }
+
+                // deduct and save
+                points[payerLoc] = current - item.price;
+                try{ localStorage.setItem('tcg_points_v1', JSON.stringify(points)); }catch(e){}
+                // update the on-page point displays immediately
+                try{ renderPoints(); }catch(e){}
+
+                if(item.oneTime){
+                    // remove one-time items on purchase
+                    items.splice(idx, 1);
+                    saveItems(items);
+                    render();
+                    msgEl.textContent = `Purchased — ${item.name} removed. Charged ${payer.name}.`;
+                } else {
+                    msgEl.textContent = `Purchased. Charged ${payer.name}.`;
+                }
+                setTimeout(()=> msgEl.textContent = '', 2000);
+            }
+
+            function deleteItem(id){
+                const items = loadItems();
+                const idx = items.findIndex(i => i.id === id);
+                if(idx === -1) return;
+                const item = items[idx];
+                // delete immediately without confirmation
+                items.splice(idx, 1);
+                saveItems(items);
+                render();
+                msgEl.textContent = 'Item deleted.';
+                setTimeout(()=> msgEl.textContent = '', 2000);
+            }
+
+            // points display functions
+            function loadPoints(){
+                try{
+                    const raw = localStorage.getItem('tcg_points_v1');
+                    const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
+                    // ensure extras exist for compatibility
+                    if(typeof parsed.left !== 'number') parsed.left = 0;
+                    if(typeof parsed.right !== 'number') parsed.right = 0;
+                    if(typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
+                    if(typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
+                    return parsed;
+                }catch(e){
+                    return { left: 0, right: 0, extra1: 0, extra2: 0 };
+                }
+            }
+
+            function loadHeaders(){
+                try{
+                    const raw = localStorage.getItem('tcg_column_headers_v1');
+                    const parsed = raw ? JSON.parse(raw) : {};
+                    return {
+                        left: parsed.left || 'Left Column',
+                        right: parsed.right || 'Right Column',
+                        extra1: parsed.extra1 || 'Player 3',
+                        extra2: parsed.extra2 || 'Player 4'
+                    };
+                }catch(e){
+                    return { left: 'Left Column', right: 'Right Column', extra1: 'Player 3', extra2: 'Player 4' };
+                }
+            }
+
+            function loadExtraState(){
+                try{
+                    const raw = localStorage.getItem('tcg_extra_cols_v1');
+                    const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false };
+                    return { extra1: !!parsed.extra1, extra2: !!parsed.extra2 };
+                }catch(e){
+                    return { extra1: false, extra2: false };
+                }
+            }
+
+            // Position the center shop-management so its extended form passes between extra players
+            function updateShopManagementPosition(){
+                const shopSection = document.querySelector('.shop-management');
+                if(!shopSection) return;
+                const extras = loadExtraState();
+                if(extras.extra1 && extras.extra2){
+                    // Both extras: span center section across two rows so content flows between them
+                    shopSection.style.gridColumn = '2';
+                    shopSection.style.gridRow = '1 / 3';
+                } else if(extras.extra1 && !extras.extra2){
+                    // Only Player 3 present: still span so extended form passes by Player 3 without pushing it down
+                    shopSection.style.gridColumn = '2';
+                    shopSection.style.gridRow = '1 / 3';
+                } else {
+                    // Default placement
+                    shopSection.style.gridColumn = '';
+                    shopSection.style.gridRow = '';
+                }
+            }
+
+            function renderPoints(){
+                const points = loadPoints();
+                const headers = loadHeaders();
+                const extras = loadExtraState();
+                
+                // update base point values
+                document.getElementById('shop-left-points').textContent = String(points.left || 0);
+                document.getElementById('shop-right-points').textContent = String(points.right || 0);
+                
+                // update base headers
+                document.getElementById('left-header').textContent = headers.left;
+                document.getElementById('right-header').textContent = headers.right;
+
+                // toggle and update Extra 1
+                const extra1Box = document.getElementById('extra1-points-box');
+                if(extra1Box){
+                    if(extras.extra1){
+                        extra1Box.style.display = '';
+                        const h = document.getElementById('extra1-header');
+                        const v = document.getElementById('shop-extra1-points');
+                        if(h) h.textContent = headers.extra1 || 'Player 3';
+                        if(v) v.textContent = String(points.extra1 || 0);
+                    } else {
+                        extra1Box.style.display = 'none';
+                    }
+                }
+
+                // toggle and update Extra 2
+                const extra2Box = document.getElementById('extra2-points-box');
+                if(extra2Box){
+                    if(extras.extra2){
+                        extra2Box.style.display = '';
+                        const h = document.getElementById('extra2-header');
+                        const v = document.getElementById('shop-extra2-points');
+                        if(h) h.textContent = headers.extra2 || 'Player 4';
+                        if(v) v.textContent = String(points.extra2 || 0);
+                    } else {
+                        extra2Box.style.display = 'none';
+                    }
+                }
+
+                // Make sure the center section spans appropriately when extras are present
+                updateShopManagementPosition();
+            }
+
+            // set year and initial render
+            document.getElementById('year2').textContent = new Date().getFullYear();
+            render();
+            renderPoints(); // render initial points
+
+            // re-render points when storage changes (in case points are updated in another tab)
+            window.addEventListener('storage', (e) => {
+                if(e.key === 'tcg_points_v1' || e.key === 'tcg_column_headers_v1' || e.key === 'tcg_extra_cols_v1'){
+                    renderPoints();
+                    updateShopManagementPosition();
+                }
+            });
+
+            // Add Items form toggle functionality
+            const toggleBtn = document.getElementById('toggle-add-form');
+            if(toggleBtn){
+                toggleBtn.addEventListener('click', () => {
+                    const form = document.getElementById('add-item-form');
+                    const isHidden = form.classList.contains('hidden');
+                    
+                    // toggle form visibility
+                    form.classList.toggle('hidden');
+                    
+                    // update button state
+                    toggleBtn.setAttribute('aria-expanded', String(!isHidden));
+                    // ensure center section spans correctly relative to extras
+                    try{ updateShopManagementPosition(); }catch(e){}
+                    
+                    // if showing form, focus first input
+                    if(isHidden){
+                        nameInput.focus();
+                    }
+                });
+
+                // close form on successful add
+                const originalSubmitHandler = form.onsubmit;
+                form.addEventListener('submit', (e) => {
+                    if(e.defaultPrevented) return; // if validation failed
+                    form.classList.add('hidden');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                    try{ updateShopManagementPosition(); }catch(e){}
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
