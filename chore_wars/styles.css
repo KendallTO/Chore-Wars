@@ -14,6 +14,12 @@
   --header_btn_hover: #B8D0EB;
   --extra1-color: orange;
   --extra2-color: lime;
+  --extra3-color: purple;
+  --extra4-color: yellow;
+  --extra5-color: pink;
+  --extra6-color: brown;
+  --extra7-color: gray;
+  --extra8-color: teal;
 
   --names_font: "Yusei Magic", sans-serif;
   --header_font: "Montserrat", sans-serif;
@@ -346,6 +352,72 @@ body:has(.site-main .grid-3 #chores-column) #column-extra-2 .card{
 
 #extra2-points-box {
   background-color: var(--extra2-color);
+}
+
+#extra3-header {
+  text-align: center;
+  background-color: var(--extra3-color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#extra3-points-box {
+  background-color: var(--extra3-color);
+}
+
+#extra4-header {
+  text-align: center;
+  background-color: var(--extra4-color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#extra4-points-box {
+  background-color: var(--extra4-color);
+}
+
+#extra5-header {
+  text-align: center;
+  background-color: var(--extra5-color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#extra5-points-box {
+  background-color: var(--extra5-color);
+}
+
+#extra6-header {
+  text-align: center;
+  background-color: var(--extra6-color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#extra6-points-box {
+  background-color: var(--extra6-color);
+}
+
+#extra7-header {
+  text-align: center;
+  background-color: var(--extra7-color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#extra7-points-box {
+  background-color: var(--extra7-color);
+}
+
+#extra8-header {
+  text-align: center;
+  background-color: var(--extra8-color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#extra8-points-box {
+  background-color: var(--extra8-color);
 }
 
 
