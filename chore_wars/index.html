@@ -93,9 +93,9 @@
          
          <!-- Button bar above footer -->
          <div style="display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 24px auto; padding: 0 20px;">
-             <button id="add-column-btn" type="button" class="btn">Add Player Column</button>
+             <button id="add-column-btn" type="button" class="btn">Add Player</button>
              <button id="unassign-all-btn" type="button" class="btn">Unassign All</button>
-             <button id="remove-column-btn" type="button" class="btn" disabled>Remove Player Column</button>
+             <button id="remove-column-btn" type="button" class="btn" disabled>Remove Player</button>
          </div>
      </main>
 <!-- ...existing code... -->
@@ -1320,7 +1320,6 @@
       const addColumnBtn = document.getElementById('add-column-btn');
       const removeColumnBtn = document.getElementById('remove-column-btn');
       const gridSection = document.querySelector('.grid-3');
-      let clickCount = 0;
 
       // Local storage keys (scoped here to avoid cross-IIFE references)
       const HEADERS_KEY = 'tcg_column_headers_v1';
@@ -1364,6 +1363,19 @@
         catch(e){ return { extra1:false, extra2:false, extra3:false, extra4:false, extra5:false, extra6:false, extra7:false, extra8:false }; }
       }
       function saveExtraState(s){ localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
+      
+      // Base player state management
+      const BASE_STATE_KEY = 'base-player-state';
+      function loadBasePlayerState(){
+        try{ 
+          const raw = localStorage.getItem(BASE_STATE_KEY); 
+          const p = raw ? JSON.parse(raw) : { left: true, right: true }; 
+          return { left: p.left !== false, right: p.right !== false }; 
+        }
+        catch(e){ return { left: true, right: true }; }
+      }
+      function saveBasePlayerState(s){ localStorage.setItem(BASE_STATE_KEY, JSON.stringify(s)); }
+      
       function loadPoints(){
         try{
           const raw = localStorage.getItem(POINTS_KEY);
@@ -1405,38 +1417,387 @@
         if(extra8El) extra8El.textContent = String(p.extra8||0);
       }
 
-      function enableAddButton(){
+      function updateAddButtonState(){
         if(!addColumnBtn) return;
-        addColumnBtn.disabled = false;
-        addColumnBtn.style.opacity = '';
-        addColumnBtn.style.cursor = '';
+        const availablePlayers = getAvailablePlayersToAdd();
+        const canAdd = availablePlayers.length > 0;
+        addColumnBtn.disabled = !canAdd;
+        addColumnBtn.style.opacity = canAdd ? '' : '0.5';
+        addColumnBtn.style.cursor = canAdd ? '' : 'not-allowed';
+      }
+
+      function enableAddButton(){
+        updateAddButtonState();
       }
 
       function disableAddButton(){
-        if(!addColumnBtn) return;
-        addColumnBtn.disabled = true;
-        addColumnBtn.style.opacity = '0.5';
-        addColumnBtn.style.cursor = 'not-allowed';
+        updateAddButtonState();
       }
 
       function updateRemoveButtonState(){
         if(!removeColumnBtn) return;
-        const hasAnyExtra = clickCount > 0;
-        removeColumnBtn.disabled = !hasAnyExtra;
-        removeColumnBtn.style.opacity = hasAnyExtra ? '' : '0.5';
-        removeColumnBtn.style.cursor = hasAnyExtra ? '' : 'not-allowed';
+        // Count total active players (base + extras)
+        const baseState = loadBasePlayerState();
+        const st = loadExtraState();
+        const activeBases = Object.values(baseState).filter(Boolean).length;
+        const activeExtras = Object.values(st).filter(Boolean).length;
+        const totalPlayers = activeBases + activeExtras;
+        const canRemove = totalPlayers > 1; // Can't go below 1 player
+        removeColumnBtn.disabled = !canRemove;
+        removeColumnBtn.style.opacity = canRemove ? '' : '0.5';
+        removeColumnBtn.style.cursor = canRemove ? '' : 'not-allowed';
+      }
+
+      // Function to get all active players
+      function getActivePlayers(){
+        const headers = loadAllHeaders();
+        const st = loadExtraState();
+        const baseState = loadBasePlayerState();
+        const players = [];
+        
+        // Add base players only if they're active
+        if(baseState.left !== false){
+          players.push({ loc: 'left', name: headers.left || 'Player 1', isExtra: false, isBase: true });
+        }
+        if(baseState.right !== false){
+          players.push({ loc: 'right', name: headers.right || 'Player 2', isExtra: false, isBase: true });
+        }
+        
+        for(let i = 1; i <= 8; i++){
+          const extraKey = `extra${i}`;
+          if(st[extraKey]){
+            players.push({ 
+              loc: extraKey, 
+              name: headers[extraKey] || defaultNames[extraKey], 
+              isExtra: true,
+              isBase: false
+            });
+          }
+        }
+        
+        return players;
+      }
+
+      // Function to find the next available extra slot
+      function getNextAvailableExtraSlot(){
+        const st = loadExtraState();
+        for(let i = 1; i <= 8; i++){
+          const extraKey = `extra${i}`;
+          if(!st[extraKey]){
+            return i;
+          }
+        }
+        return null; // All slots taken
+      }
+
+      // Function to get current active extra players in position order
+      function getActiveExtraPlayers(){
+        const st = loadExtraState();
+        const activeExtras = [];
+        
+        for(let i = 1; i <= 8; i++){
+          const extraKey = `extra${i}`;
+          if(st[extraKey]){
+            activeExtras.push({
+              key: extraKey,
+              number: i,
+              isLeft: i % 2 === 1
+            });
+          }
+        }
+        
+        return activeExtras;
+      }
+
+      // Function to calculate optimal grid positions without gaps
+      function calculateOptimalPositions(){
+        const activeExtras = getActiveExtraPlayers();
+        const leftPlayers = activeExtras.filter(p => p.isLeft).sort((a, b) => a.number - b.number);
+        const rightPlayers = activeExtras.filter(p => p.isLeft === false).sort((a, b) => a.number - b.number);
+        
+        const positions = {};
+        
+        // Assign left side positions (starting from row 2)
+        leftPlayers.forEach((player, index) => {
+          positions[player.key] = {
+            column: 1,
+            row: index + 2 // Start from row 2 (row 1 has base players)
+          };
+        });
+        
+        // Assign right side positions (starting from row 2)
+        rightPlayers.forEach((player, index) => {
+          positions[player.key] = {
+            column: 3,
+            row: index + 2 // Start from row 2 (row 1 has base players)
+          };
+        });
+        
+        return positions;
+      }
+
+      // Function to reposition all extra columns to eliminate gaps
+      function repositionAllExtraColumns(){
+        const positions = calculateOptimalPositions();
+        
+        // Update all existing extra columns with their new positions
+        Object.keys(positions).forEach(extraKey => {
+          const column = document.getElementById(`column-${extraKey}`);
+          if(column){
+            const pos = positions[extraKey];
+            column.style.gridColumn = pos.column.toString();
+            column.style.gridRow = pos.row.toString();
+          }
+        });
+      }
+
+      // Function to balance players after removal
+      function rebalancePlayers(){
+        // Reposition all columns to eliminate gaps
+        repositionAllExtraColumns();
+        
+        // Update the unassigned column position
+        updateUnassignedPosition();
+      }
+
+      // Function to get available players that can be added
+      function getAvailablePlayersToAdd(){
+        const headers = loadAllHeaders();
+        const baseState = loadBasePlayerState();
+        const st = loadExtraState();
+        const availablePlayers = [];
+        
+        // Check for inactive base players
+        if(baseState.left === false){
+          availablePlayers.push({ 
+            loc: 'left', 
+            name: headers.left || 'Player 1', 
+            isExtra: false, 
+            isBase: true 
+          });
+        }
+        if(baseState.right === false){
+          availablePlayers.push({ 
+            loc: 'right', 
+            name: headers.right || 'Player 2', 
+            isExtra: false, 
+            isBase: true 
+          });
+        }
+        
+        // Check for inactive extra players
+        for(let i = 1; i <= 8; i++){
+          const extraKey = `extra${i}`;
+          if(!st[extraKey]){
+            availablePlayers.push({ 
+              loc: extraKey, 
+              name: headers[extraKey] || defaultNames[extraKey], 
+              isExtra: true,
+              isBase: false
+            });
+          }
+        }
+        
+        return availablePlayers;
+      }
+
+      // Player selection modal for addition
+      function askPlayerToAdd(availablePlayers){
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+          
+          const title = document.createElement('h3');
+          title.textContent = 'Select Player to Add';
+          title.style.margin = '0 0 16px 0';
+          title.style.textAlign = 'center';
+          modal.appendChild(title);
+          
+          const playerGrid = document.createElement('div');
+          playerGrid.style.display = 'grid';
+          playerGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
+          playerGrid.style.gap = '8px';
+          playerGrid.style.marginBottom = '16px';
+          
+          const buttons = [];
+          availablePlayers.forEach(player => {
+            const btn = document.createElement('button');
+            btn.textContent = player.name.toUpperCase();
+            btn.dataset.loc = player.loc;
+            btn.style.padding = '8px 12px';
+            btn.style.borderRadius = '6px';
+            btn.style.border = 'none';
+            btn.style.cursor = 'pointer';
+            btn.style.color = 'white';
+            btn.style.fontWeight = 'bold';
+            btn.style.fontSize = '0.9rem';
+            
+            // Apply player color
+            if(player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
+            else if(player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
+            else if(player.loc === 'extra1') btn.style.backgroundColor = 'orange';
+            else if(player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
+            else if(player.loc === 'extra3') btn.style.backgroundColor = 'purple';
+            else if(player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
+            else if(player.loc === 'extra5') btn.style.backgroundColor = 'pink';
+            else if(player.loc === 'extra6') btn.style.backgroundColor = 'brown';
+            else if(player.loc === 'extra7') btn.style.backgroundColor = 'gray';
+            else if(player.loc === 'extra8') btn.style.backgroundColor = 'teal';
+            
+            // Special styling for yellow text
+            if(player.loc === 'extra4') btn.style.color = 'black';
+            
+            playerGrid.appendChild(btn);
+            buttons.push(btn);
+            
+            btn.addEventListener('click', () => {
+              resolve(player.loc);
+              cleanup();
+            });
+          });
+          
+          modal.appendChild(playerGrid);
+          
+          const actions = document.createElement('div');
+          actions.style.display = 'flex';
+          actions.style.justifyContent = 'center';
+          actions.style.gap = '8px';
+          
+          const cancelBtn = document.createElement('button');
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.style.padding = '8px 16px';
+          cancelBtn.style.borderRadius = '6px';
+          cancelBtn.style.border = 'none';
+          cancelBtn.style.cursor = 'pointer';
+          cancelBtn.addEventListener('click', () => {
+            resolve(null);
+            cleanup();
+          });
+          
+          actions.appendChild(cancelBtn);
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          
+          function cleanup(){
+            try{ overlay.remove(); }catch(e){}
+          }
+        });
+      }
+
+      // Player selection modal for removal
+      function askPlayerToRemove(players){
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+          
+          const title = document.createElement('h3');
+          title.textContent = 'Select Player to Remove';
+          title.style.margin = '0 0 16px 0';
+          title.style.textAlign = 'center';
+          modal.appendChild(title);
+          
+          const playerGrid = document.createElement('div');
+          playerGrid.style.display = 'grid';
+          playerGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
+          playerGrid.style.gap = '8px';
+          playerGrid.style.marginBottom = '16px';
+          
+          const buttons = [];
+          players.forEach(player => {
+            const btn = document.createElement('button');
+            btn.textContent = player.name.toUpperCase();
+            btn.dataset.loc = player.loc;
+            btn.style.padding = '8px 12px';
+            btn.style.borderRadius = '6px';
+            btn.style.border = 'none';
+            btn.style.cursor = 'pointer';
+            btn.style.color = 'white';
+            btn.style.fontWeight = 'bold';
+            btn.style.fontSize = '0.9rem';
+            
+            // Apply player color
+            if(player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
+            else if(player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
+            else if(player.loc === 'extra1') btn.style.backgroundColor = 'orange';
+            else if(player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
+            else if(player.loc === 'extra3') btn.style.backgroundColor = 'purple';
+            else if(player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
+            else if(player.loc === 'extra5') btn.style.backgroundColor = 'pink';
+            else if(player.loc === 'extra6') btn.style.backgroundColor = 'brown';
+            else if(player.loc === 'extra7') btn.style.backgroundColor = 'gray';
+            else if(player.loc === 'extra8') btn.style.backgroundColor = 'teal';
+            
+            // Special styling for yellow text
+            if(player.loc === 'extra4') btn.style.color = 'black';
+            
+            playerGrid.appendChild(btn);
+            buttons.push(btn);
+          });
+          
+          modal.appendChild(playerGrid);
+          
+          // Cancel button
+          const cancelWrapper = document.createElement('div');
+          cancelWrapper.style.textAlign = 'center';
+          
+          const cancelBtn = document.createElement('button');
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.style.padding = '8px 16px';
+          cancelBtn.style.backgroundColor = '#E24A4A';
+          cancelBtn.style.color = 'white';
+          cancelBtn.style.border = 'none';
+          cancelBtn.style.borderRadius = '6px';
+          cancelBtn.style.cursor = 'pointer';
+          
+          cancelWrapper.appendChild(cancelBtn);
+          modal.appendChild(cancelWrapper);
+          
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          
+          function cleanup(choice){
+            buttons.forEach(btn => btn.removeEventListener('click', onClick));
+            cancelBtn.removeEventListener('click', onCancel);
+            try{ document.body.removeChild(overlay); }catch(e){}
+            resolve(choice);
+          }
+          
+          function onClick(e){
+            const loc = e.target.dataset.loc;
+            cleanup(loc);
+          }
+          
+          function onCancel(){
+            cleanup(null);
+          }
+          
+          buttons.forEach(btn => btn.addEventListener('click', onClick));
+          cancelBtn.addEventListener('click', onCancel);
+        });
       }
 
       // Position the unassigned chores column so its extended height sits between extra players
       function updateUnassignedPosition(){
         const choresCol = document.getElementById('chores-column');
         if(!choresCol) return;
-        const hasAnyExtras = clickCount > 0;
+        const st = loadExtraState();
+        const hasAnyExtras = Object.values(st).some(Boolean);
         if(hasAnyExtras){
+          // Calculate the maximum row needed based on active players
+          const activeExtras = getActiveExtraPlayers();
+          const leftPlayers = activeExtras.filter(p => p.isLeft);
+          const rightPlayers = activeExtras.filter(p => !p.isLeft);
+          const maxRowsNeeded = Math.max(leftPlayers.length, rightPlayers.length) + 1; // +1 for base row
+          
           // Keep it in the center column starting at row 1,
-          // but span down through all rows so the extended list appears between the extras
+          // but span down through all active rows so the extended list appears between the extras
           choresCol.style.gridColumn = '2';
-          choresCol.style.gridRow = '1 / 6'; // Span from row 1 to 6 to accommodate all extra players
+          choresCol.style.gridRow = `1 / ${maxRowsNeeded + 1}`; // Span from row 1 to accommodate all active players
         } else {
           // Reset to default placement
           choresCol.style.gridColumn = '';
@@ -1469,7 +1830,8 @@
         const newColumn = columnLeft.cloneNode(true);
         newColumn.id = `column-${extraKey}`;
         
-        // Calculate grid position: alternating left (1) and right (3) columns
+        // Initially position based on the original algorithm
+        // Will be repositioned by rebalancePlayers() after creation
         const isLeftSide = extraNum % 2 === 1;
         const row = Math.ceil(extraNum / 2) + 1;
         newColumn.style.gridColumn = isLeftSide ? '1' : '3';
@@ -1491,7 +1853,8 @@
         const pointsBank = newColumn.querySelector('.points-bank');
         if(pointsBank){
           pointsBank.id = `${extraKey}-points-bank`;
-          if(!isLeftSide) pointsBank.style.textAlign = 'right';
+          const isRightSide = extraNum % 2 === 0;
+          if(isRightSide) pointsBank.style.textAlign = 'right';
           const pointsStrong = pointsBank.querySelector('strong');
           if(pointsStrong){
             pointsStrong.id = `${extraKey}-points`;
@@ -1515,6 +1878,9 @@
         st[extraKey] = true;
         saveExtraState(st);
         
+        // Reposition all columns to eliminate gaps and maintain proper order
+        repositionAllExtraColumns();
+        
         // Reposition unassigned column if needed
         updateUnassignedPosition();
         return newColumn;
@@ -1522,15 +1888,35 @@
 
       function initFromStorage(){
         const st = loadExtraState();
+        const baseState = loadBasePlayerState();
+        let maxSlot = 0;
+        
+        // Handle base player visibility
+        if(baseState.left === false){
+          const leftColumn = document.getElementById('column-left');
+          if(leftColumn) leftColumn.style.display = 'none';
+        }
+        if(baseState.right === false){
+          const rightColumn = document.getElementById('column-right');
+          if(rightColumn) rightColumn.style.display = 'none';
+        }
+        
         // Count how many extras are enabled and create them
         for(let i = 1; i <= 8; i++){
           const extraKey = `extra${i}`;
           if(st[extraKey]){
             createExtraColumn(i);
-            clickCount = i;
+            maxSlot = i;
           }
         }
-        if(clickCount >= 8){ disableAddButton(); }
+        
+        // After all columns are created, reposition them to eliminate gaps
+        repositionAllExtraColumns();
+        
+        // Update button states
+        updateAddButtonState();
+        updateRemoveButtonState();
+        
         updateRemoveButtonState();
         renderPoints();
         // Dispatch event to notify chores script that extra columns are ready
@@ -1547,6 +1933,21 @@
         const headers = loadAllHeaders();
         if(headers && Object.prototype.hasOwnProperty.call(headers, which)){
           delete headers[which];
+          localStorage.setItem(HEADERS_KEY, JSON.stringify(headers));
+        }
+        const pts = loadPoints();
+        pts[which] = 0;
+        localStorage.setItem(POINTS_KEY, JSON.stringify(pts));
+      }
+
+      // Helper to clear cached header + points for a base player
+      function clearBaseStorage(which){
+        // which should be 'left' or 'right'
+        const headers = loadAllHeaders();
+        if(headers && Object.prototype.hasOwnProperty.call(headers, which)){
+          // Reset to default names instead of deleting
+          if(which === 'left') headers[which] = 'Player 1';
+          else if(which === 'right') headers[which] = 'Player 2';
           localStorage.setItem(HEADERS_KEY, JSON.stringify(headers));
         }
         const pts = loadPoints();
@@ -1574,22 +1975,44 @@
       // initialize from saved state (if any)
       initFromStorage();
 
-      addColumnBtn.addEventListener('click', function(){
-        if(clickCount >= 8) return; // Max 8 extra columns
+      addColumnBtn.addEventListener('click', async function(){
+        // Get available players to add
+        const availablePlayers = getAvailablePlayersToAdd();
+        if(availablePlayers.length === 0) return; // No players to add
         
-        clickCount++;
+        // Ask user which player to add
+        const playerLoc = await askPlayerToAdd(availablePlayers);
+        if(!playerLoc) return; // User cancelled
         
-        // Clear cache for the extra column before creating it
-        clearExtraStorage(`extra${clickCount}`);
-        // Create the extra column
-        createExtraColumn(clickCount);
-        // Enable remove button now that at least one extra column exists
-        updateRemoveButtonState();
+        const player = availablePlayers.find(p => p.loc === playerLoc);
+        if(!player) return; // Invalid selection
         
-        if(clickCount >= 8){
-          // Disable the add button after 8th extra column
-          disableAddButton();
+        if(player.isBase){
+          // Re-enable base player
+          const baseState = loadBasePlayerState();
+          baseState[playerLoc] = true;
+          saveBasePlayerState(baseState);
+          
+          // Show the column
+          const columnToShow = document.getElementById(`column-${playerLoc}`);
+          if(columnToShow){
+            columnToShow.style.display = '';
+          }
+        } else {
+          // Add extra player
+          // Clear cache for the extra column before creating it
+          clearExtraStorage(playerLoc);
+          // Create the extra column
+          const slotNumber = parseInt(playerLoc.replace('extra', ''));
+          createExtraColumn(slotNumber);
         }
+        
+        // Reposition all columns to eliminate gaps
+        repositionAllExtraColumns();
+        
+        // Update button states
+        updateRemoveButtonState();
+        updateAddButtonState();
       });
 
       // Confirmation helper for removing player
@@ -1642,42 +2065,67 @@
         });
       }
 
-      // Remove extra columns: remove the highest numbered extra column
+      // Remove player functionality: allow removing any player (but keep at least 1)
       if(removeColumnBtn){
         removeColumnBtn.addEventListener('click', async function(){
-          if(clickCount === 0) return; // Nothing to remove
+          const players = getActivePlayers();
           
-          const extraKey = `extra${clickCount}`;
-          const columnToRemove = document.getElementById(`column-${extraKey}`);
+          if(players.length <= 1) return; // Need at least 1 player
           
-          if(!columnToRemove) return;
+          // Ask user which player to remove
+          const playerLoc = await askPlayerToRemove(players);
+          if(!playerLoc) return; // User cancelled
           
-          let playerName = defaultNames[extraKey];
-          let playerColor = extraColors[extraKey];
+          const player = players.find(p => p.loc === playerLoc);
+          if(!player) return; // Invalid selection
           
-          const header = columnToRemove.querySelector('.column-header');
-          if(header){
-            playerName = header.textContent.trim() || playerName;
-          }
-
           // Ask for confirmation
-          const confirmed = await askConfirmRemove(playerName, playerColor);
+          let playerColor = 'gray';
+          if(player.loc === 'left') playerColor = '#2196F3';
+          else if(player.loc === 'right') playerColor = '#E53E3E';
+          else playerColor = extraColors[playerLoc] || 'gray';
+          
+          const confirmed = await askConfirmRemove(player.name, playerColor);
           if(!confirmed) return;
 
-          columnToRemove.remove();
-          const st = loadExtraState();
-          st[extraKey] = false;
-          saveExtraState(st);
-          clearExtraStorage(extraKey);
-          reassignChoresFromColumn(extraKey);
+          if(player.isBase){
+            // Handle base player removal - hide the column
+            const columnToHide = document.getElementById(`column-${playerLoc}`);
+            if(columnToHide){
+              columnToHide.style.display = 'none';
+            }
+            
+            // Update base player state
+            const baseState = loadBasePlayerState();
+            baseState[playerLoc] = false;
+            saveBasePlayerState(baseState);
+            
+            // Clear base player cached data
+            clearBaseStorage(playerLoc);
+          } else {
+            // Handle extra player removal - actually remove the column
+            const columnToRemove = document.getElementById(`column-${playerLoc}`);
+            if(columnToRemove){
+              columnToRemove.remove();
+            }
+            
+            // Update storage
+            const st = loadExtraState();
+            st[playerLoc] = false;
+            saveExtraState(st);
+            clearExtraStorage(playerLoc);
+          }
           
-          // Decrease click count
-          clickCount--;
+          // Reassign chores from removed player
+          reassignChoresFromColumn(playerLoc);
+          
+          // Reposition all columns to eliminate gaps
+          repositionAllExtraColumns();
           
           // Re-enable add button since we now have room
           enableAddButton();
           
-          // Update remove button state: disable if no extras remain
+          // Update remove button state
           updateRemoveButtonState();
           
           // Trigger re-render to remove assign buttons for this column
@@ -1690,6 +2138,7 @@
 
       // Initialize remove button visual state on load
       updateRemoveButtonState();
+      updateAddButtonState();
     })();
     </script>
 </body>
