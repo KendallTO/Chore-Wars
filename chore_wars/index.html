@@ -148,14 +148,14 @@
         const p = loadPoints();
         const leftEl = document.getElementById('left-points');
         const rightEl = document.getElementById('right-points');
-        const extra1El = document.getElementById('extra-1-points');
-        const extra2El = document.getElementById('extra-2-points');
-        const extra3El = document.getElementById('extra-3-points');
-        const extra4El = document.getElementById('extra-4-points');
-        const extra5El = document.getElementById('extra-5-points');
-        const extra6El = document.getElementById('extra-6-points');
-        const extra7El = document.getElementById('extra-7-points');
-        const extra8El = document.getElementById('extra-8-points');
+        const extra1El = document.getElementById('extra1-points');
+        const extra2El = document.getElementById('extra2-points');
+        const extra3El = document.getElementById('extra3-points');
+        const extra4El = document.getElementById('extra4-points');
+        const extra5El = document.getElementById('extra5-points');
+        const extra6El = document.getElementById('extra6-points');
+        const extra7El = document.getElementById('extra7-points');
+        const extra8El = document.getElementById('extra8-points');
         if(leftEl) leftEl.textContent = String(p.left || 0);
         if(rightEl) rightEl.textContent = String(p.right || 0);
         if(extra1El) extra1El.textContent = String(p.extra1 || 0);
@@ -342,14 +342,14 @@
         // read current column header text so labels match whatever the headers show
         const leftHeaderText = document.querySelector('.grid-3 .column:nth-child(1) .column-header')?.textContent.trim() || 'Left';
         const rightHeaderText = document.querySelector('.grid-3 .column:nth-child(3) .column-header')?.textContent.trim() || 'Right';
-        const extra1HeaderText = document.querySelector('#column-extra-1 .column-header')?.textContent.trim();
-        const extra2HeaderText = document.querySelector('#column-extra-2 .column-header')?.textContent.trim();
-        const extra3HeaderText = document.querySelector('#column-extra-3 .column-header')?.textContent.trim();
-        const extra4HeaderText = document.querySelector('#column-extra-4 .column-header')?.textContent.trim();
-        const extra5HeaderText = document.querySelector('#column-extra-5 .column-header')?.textContent.trim();
-        const extra6HeaderText = document.querySelector('#column-extra-6 .column-header')?.textContent.trim();
-        const extra7HeaderText = document.querySelector('#column-extra-7 .column-header')?.textContent.trim();
-        const extra8HeaderText = document.querySelector('#column-extra-8 .column-header')?.textContent.trim();
+        const extra1HeaderText = document.querySelector('#column-extra1 .column-header')?.textContent.trim();
+        const extra2HeaderText = document.querySelector('#column-extra2 .column-header')?.textContent.trim();
+        const extra3HeaderText = document.querySelector('#column-extra3 .column-header')?.textContent.trim();
+        const extra4HeaderText = document.querySelector('#column-extra4 .column-header')?.textContent.trim();
+        const extra5HeaderText = document.querySelector('#column-extra5 .column-header')?.textContent.trim();
+        const extra6HeaderText = document.querySelector('#column-extra6 .column-header')?.textContent.trim();
+        const extra7HeaderText = document.querySelector('#column-extra7 .column-header')?.textContent.trim();
+        const extra8HeaderText = document.querySelector('#column-extra8 .column-header')?.textContent.trim();
  
         // action buttons depend on location
         if(!chore.loc || chore.loc === 'unchosen'){
@@ -530,14 +530,14 @@
         }
 
         // Extra columns rendering if present
-        const extra1ListEl = document.getElementById('extra-1-list');
-        const extra2ListEl = document.getElementById('extra-2-list');
-        const extra3ListEl = document.getElementById('extra-3-list');
-        const extra4ListEl = document.getElementById('extra-4-list');
-        const extra5ListEl = document.getElementById('extra-5-list');
-        const extra6ListEl = document.getElementById('extra-6-list');
-        const extra7ListEl = document.getElementById('extra-7-list');
-        const extra8ListEl = document.getElementById('extra-8-list');
+        const extra1ListEl = document.getElementById('extra1-list');
+        const extra2ListEl = document.getElementById('extra2-list');
+        const extra3ListEl = document.getElementById('extra3-list');
+        const extra4ListEl = document.getElementById('extra4-list');
+        const extra5ListEl = document.getElementById('extra5-list');
+        const extra6ListEl = document.getElementById('extra6-list');
+        const extra7ListEl = document.getElementById('extra7-list');
+        const extra8ListEl = document.getElementById('extra8-list');
         const extra1 = chores.filter(c => c.loc === 'extra1');
         const extra2 = chores.filter(c => c.loc === 'extra2');
         const extra3 = chores.filter(c => c.loc === 'extra3');
@@ -694,28 +694,28 @@
           } else if(loc === 'right'){
             targetName = (rightHeaderEl?.textContent || 'Right').trim();
           } else if(loc === 'extra1'){
-            const h = document.querySelector('#column-extra-1 .column-header');
+            const h = document.querySelector('#column-extra1 .column-header');
             targetName = (h?.textContent || 'Player 3').trim();
           } else if(loc === 'extra2'){
-            const h = document.querySelector('#column-extra-2 .column-header');
+            const h = document.querySelector('#column-extra2 .column-header');
             targetName = (h?.textContent || 'Player 4').trim();
           } else if(loc === 'extra3'){
-            const h = document.querySelector('#column-extra-3 .column-header');
+            const h = document.querySelector('#column-extra3 .column-header');
             targetName = (h?.textContent || 'Player 5').trim();
           } else if(loc === 'extra4'){
-            const h = document.querySelector('#column-extra-4 .column-header');
+            const h = document.querySelector('#column-extra4 .column-header');
             targetName = (h?.textContent || 'Player 6').trim();
           } else if(loc === 'extra5'){
-            const h = document.querySelector('#column-extra-5 .column-header');
+            const h = document.querySelector('#column-extra5 .column-header');
             targetName = (h?.textContent || 'Player 7').trim();
           } else if(loc === 'extra6'){
-            const h = document.querySelector('#column-extra-6 .column-header');
+            const h = document.querySelector('#column-extra6 .column-header');
             targetName = (h?.textContent || 'Player 8').trim();
           } else if(loc === 'extra7'){
-            const h = document.querySelector('#column-extra-7 .column-header');
+            const h = document.querySelector('#column-extra7 .column-header');
             targetName = (h?.textContent || 'Player 9').trim();
           } else if(loc === 'extra8'){
-            const h = document.querySelector('#column-extra-8 .column-header');
+            const h = document.querySelector('#column-extra8 .column-header');
             targetName = (h?.textContent || 'Player 10').trim();
           }
 
@@ -801,52 +801,57 @@
         }
       });
 
-      // random assign button: distribute unchosen chores randomly to left or right
+      // random assign button: distribute unchosen chores randomly to all active players
       const randomAssignBtn = document.getElementById('random-assign-btn');
       if(randomAssignBtn){
         // balanced assignment: aim for equal counts (difference at most 1)
         randomAssignBtn.addEventListener('click', function(){
-          const chores = loadChores();
-          const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
-          if(!unchosen.length){
-            notify('No unassigned chores to assign.', 1800);
-            return;
-          }
+          try {
+            const chores = loadChores();
+            const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
+            if(!unchosen.length){
+              notify('No unassigned chores to assign.', 1800);
+              return;
+            }
 
-          // determine available destinations based on DOM presence
-          const destinations = ['left','right'];
-          if(document.getElementById('column-extra-1')) destinations.push('extra1');
-          if(document.getElementById('column-extra-2')) destinations.push('extra2');
-          if(document.getElementById('column-extra-3')) destinations.push('extra3');
-          if(document.getElementById('column-extra-4')) destinations.push('extra4');
-          if(document.getElementById('column-extra-5')) destinations.push('extra5');
-          if(document.getElementById('column-extra-6')) destinations.push('extra6');
-          if(document.getElementById('column-extra-7')) destinations.push('extra7');
-          if(document.getElementById('column-extra-8')) destinations.push('extra8');
+            // Get all currently active players
+            const activePlayers = getActivePlayers();
+            if(activePlayers.length === 0){
+              notify('No active players to assign chores to.', 1800);
+              return;
+            }
+            
+            // Extract destination locations from active players
+            const destinations = activePlayers.map(player => player.loc);
 
-          // counts per destination
-          const counts = Object.fromEntries(destinations.map(d => [d, 0]));
-          chores.forEach(c => { if(destinations.includes(c.loc)) counts[c.loc]++; });
+            // counts per destination
+            const counts = Object.fromEntries(destinations.map(d => [d, 0]));
+            chores.forEach(c => { if(destinations.includes(c.loc)) counts[c.loc]++; });
 
-          // shuffle unchosen so distribution is not deterministic
-          for(let i = unchosen.length - 1; i > 0; i--){
-            const j = Math.floor(Math.random() * (i + 1));
-            [unchosen[i], unchosen[j]] = [unchosen[j], unchosen[i]];
-          }
+            // shuffle unchosen so distribution is not deterministic
+            for(let i = unchosen.length - 1; i > 0; i--){
+              const j = Math.floor(Math.random() * (i + 1));
+              [unchosen[i], unchosen[j]] = [unchosen[j], unchosen[i]];
+            }
 
-          // assign each unchosen chore to the destination with the fewest items
-          const idsToAssign = new Set(unchosen.map(c => c.id));
-          chores.forEach(c => {
-            if(!idsToAssign.has(c.id)) return;
-            let min = Infinity; destinations.forEach(d => { if(counts[d] < min) min = counts[d]; });
-            const mins = destinations.filter(d => counts[d] === min);
-            const pick = mins[Math.floor(Math.random()*mins.length)];
-            c.loc = pick; counts[pick]++;
-          });
+            // assign each unchosen chore to the destination with the fewest items
+            const idsToAssign = new Set(unchosen.map(c => c.id));
+            console.log('About to assign chores:', unchosen.length, 'to destinations:', destinations);
+            chores.forEach(c => {
+              if(!idsToAssign.has(c.id)) return;
+              let min = Infinity; 
+              destinations.forEach(d => { if(counts[d] < min) min = counts[d]; });
+              const mins = destinations.filter(d => counts[d] === min);
+              const pick = mins[Math.floor(Math.random()*mins.length)];
+              console.log('Assigning chore', c.name, 'to', pick);
+              c.loc = pick; 
+              counts[pick]++;
+            });
+            console.log('Final assignment counts:', counts);
 
-          // Calculate points based on assignment order
-          // First assigned chores get lower points, last assigned gets 50 points
-          const currentlyAssigning = Array.from(idsToAssign).length;
+            // Calculate points based on assignment order
+            // First assigned chores get lower points, last assigned gets 50 points
+            const currentlyAssigning = Array.from(idsToAssign).length;
 
           // Sort the IDs to assign so we process them in a consistent order
           const sortedIdsToAssign = Array.from(idsToAssign).sort();
@@ -869,9 +874,15 @@
           });
 
           draftMode = false; // Disable manual assignment buttons
+          console.log('About to save chores. Total chores:', chores.length);
+          console.log('Chores by location:', chores.reduce((acc, c) => { acc[c.loc] = (acc[c.loc] || 0) + 1; return acc; }, {}));
           saveChores(chores);
           render();
           notify(`Assigned ${unchosen.length} chore(s) (balanced).`, 1800);
+          } catch (error) {
+            console.error('Error in random assign:', error);
+            notify('Error assigning chores. Please try again.', 1800);
+          }
         });
       }
 
@@ -1086,54 +1097,17 @@
           return;
         }
         
-        // Build list of bidders based on available columns
-        const headers = loadHeaders();
-        const bidders = [
-          { loc: 'left', name: headers.left || 'Left' },
-          { loc: 'right', name: headers.right || 'Right' }
-        ];
+        // Get all currently active players as bidders
+        const activePlayers = getActivePlayers();
+        if(activePlayers.length === 0){
+          notify('No active players to participate in auction.', 1800);
+          return;
+        }
         
-        // Add extra columns if they exist
-        const extra1El = document.getElementById('column-extra-1');
-        const extra2El = document.getElementById('column-extra-2');
-        const extra3El = document.getElementById('column-extra-3');
-        const extra4El = document.getElementById('column-extra-4');
-        const extra5El = document.getElementById('column-extra-5');
-        const extra6El = document.getElementById('column-extra-6');
-        const extra7El = document.getElementById('column-extra-7');
-        const extra8El = document.getElementById('column-extra-8');
-        if(extra1El){
-          const extra1Header = extra1El.querySelector('.column-header');
-          bidders.push({ loc: 'extra1', name: extra1Header?.textContent.trim() || 'Player 3' });
-        }
-        if(extra2El){
-          const extra2Header = extra2El.querySelector('.column-header');
-          bidders.push({ loc: 'extra2', name: extra2Header?.textContent.trim() || 'Player 4' });
-        }
-        if(extra3El){
-          const extra3Header = extra3El.querySelector('.column-header');
-          bidders.push({ loc: 'extra3', name: extra3Header?.textContent.trim() || 'Player 5' });
-        }
-        if(extra4El){
-          const extra4Header = extra4El.querySelector('.column-header');
-          bidders.push({ loc: 'extra4', name: extra4Header?.textContent.trim() || 'Player 6' });
-        }
-        if(extra5El){
-          const extra5Header = extra5El.querySelector('.column-header');
-          bidders.push({ loc: 'extra5', name: extra5Header?.textContent.trim() || 'Player 7' });
-        }
-        if(extra6El){
-          const extra6Header = extra6El.querySelector('.column-header');
-          bidders.push({ loc: 'extra6', name: extra6Header?.textContent.trim() || 'Player 8' });
-        }
-        if(extra7El){
-          const extra7Header = extra7El.querySelector('.column-header');
-          bidders.push({ loc: 'extra7', name: extra7Header?.textContent.trim() || 'Player 9' });
-        }
-        if(extra8El){
-          const extra8Header = extra8El.querySelector('.column-header');
-          bidders.push({ loc: 'extra8', name: extra8Header?.textContent.trim() || 'Player 10' });
-        }
+        const bidders = activePlayers.map(player => ({
+          loc: player.loc,
+          name: player.name
+        }));
 
         let aborted = false;
         for(const chore of unchosen){
@@ -1311,6 +1285,58 @@
           notify(`Unassigned ${assigned.length} chore(s).`, 1800);
         });
       }
+
+      // Constants and functions needed for getActivePlayers
+      const BASE_STATE_KEY = 'base-player-state';
+      const defaultNames = {
+        extra1: 'Player 3',
+        extra2: 'Player 4',
+        extra3: 'Player 5',
+        extra4: 'Player 6',
+        extra5: 'Player 7',
+        extra6: 'Player 8',
+        extra7: 'Player 9',
+        extra8: 'Player 10'
+      };
+
+      function loadBasePlayerState(){
+        try{ 
+          const raw = localStorage.getItem(BASE_STATE_KEY); 
+          const p = raw ? JSON.parse(raw) : { left: true, right: true }; 
+          return { left: p.left !== false, right: p.right !== false }; 
+        }
+        catch(e){ return { left: true, right: true }; }
+      }
+
+      // Function to get all active players
+      function getActivePlayers(){
+        const headers = loadAllHeaders();
+        const st = loadExtraState();
+        const baseState = loadBasePlayerState();
+        const players = [];
+        
+        // Add base players only if they're active
+        if(baseState.left !== false){
+          players.push({ loc: 'left', name: headers.left || 'Player 1', isExtra: false, isBase: true });
+        }
+        if(baseState.right !== false){
+          players.push({ loc: 'right', name: headers.right || 'Player 2', isExtra: false, isBase: true });
+        }
+        
+        for(let i = 1; i <= 8; i++){
+          const extraKey = `extra${i}`;
+          if(st[extraKey]){
+            players.push({ 
+              loc: extraKey, 
+              name: headers[extraKey] || defaultNames[extraKey], 
+              isExtra: true,
+              isBase: false
+            });
+          }
+        }
+        
+        return players;
+      }
     })();
     </script>
 
@@ -1397,14 +1423,14 @@
         const p = loadPoints();
         const leftEl = document.getElementById('left-points');
         const rightEl = document.getElementById('right-points');
-        const extra1El = document.getElementById('extra-1-points');
-        const extra2El = document.getElementById('extra-2-points');
-        const extra3El = document.getElementById('extra-3-points');
-        const extra4El = document.getElementById('extra-4-points');
-        const extra5El = document.getElementById('extra-5-points');
-        const extra6El = document.getElementById('extra-6-points');
-        const extra7El = document.getElementById('extra-7-points');
-        const extra8El = document.getElementById('extra-8-points');
+        const extra1El = document.getElementById('extra1-points');
+        const extra2El = document.getElementById('extra2-points');
+        const extra3El = document.getElementById('extra3-points');
+        const extra4El = document.getElementById('extra4-points');
+        const extra5El = document.getElementById('extra5-points');
+        const extra6El = document.getElementById('extra6-points');
+        const extra7El = document.getElementById('extra7-points');
+        const extra8El = document.getElementById('extra8-points');
         if(leftEl) leftEl.textContent = String(p.left||0);
         if(rightEl) rightEl.textContent = String(p.right||0);
         if(extra1El) extra1El.textContent = String(p.extra1||0);
@@ -1446,36 +1472,6 @@
         removeColumnBtn.disabled = !canRemove;
         removeColumnBtn.style.opacity = canRemove ? '' : '0.5';
         removeColumnBtn.style.cursor = canRemove ? '' : 'not-allowed';
-      }
-
-      // Function to get all active players
-      function getActivePlayers(){
-        const headers = loadAllHeaders();
-        const st = loadExtraState();
-        const baseState = loadBasePlayerState();
-        const players = [];
-        
-        // Add base players only if they're active
-        if(baseState.left !== false){
-          players.push({ loc: 'left', name: headers.left || 'Player 1', isExtra: false, isBase: true });
-        }
-        if(baseState.right !== false){
-          players.push({ loc: 'right', name: headers.right || 'Player 2', isExtra: false, isBase: true });
-        }
-        
-        for(let i = 1; i <= 8; i++){
-          const extraKey = `extra${i}`;
-          if(st[extraKey]){
-            players.push({ 
-              loc: extraKey, 
-              name: headers[extraKey] || defaultNames[extraKey], 
-              isExtra: true,
-              isBase: false
-            });
-          }
-        }
-        
-        return players;
       }
 
       // Function to find the next available extra slot
@@ -1599,6 +1595,36 @@
         }
         
         return availablePlayers;
+      }
+
+      // Function to get all active players (local copy for this script block)
+      function getActivePlayers(){
+        const headers = loadAllHeaders();
+        const st = loadExtraState();
+        const baseState = loadBasePlayerState();
+        const players = [];
+        
+        // Add base players only if they're active
+        if(baseState.left !== false){
+          players.push({ loc: 'left', name: headers.left || 'Player 1', isExtra: false, isBase: true });
+        }
+        if(baseState.right !== false){
+          players.push({ loc: 'right', name: headers.right || 'Player 2', isExtra: false, isBase: true });
+        }
+        
+        for(let i = 1; i <= 8; i++){
+          const extraKey = `extra${i}`;
+          if(st[extraKey]){
+            players.push({ 
+              loc: extraKey, 
+              name: headers[extraKey] || defaultNames[extraKey], 
+              isExtra: true,
+              isBase: false
+            });
+          }
+        }
+        
+        return players;
       }
 
       // Player selection modal for addition
@@ -2068,9 +2094,14 @@
       // Remove player functionality: allow removing any player (but keep at least 1)
       if(removeColumnBtn){
         removeColumnBtn.addEventListener('click', async function(){
+          console.log('Remove button clicked');
           const players = getActivePlayers();
+          console.log('Active players:', players);
           
-          if(players.length <= 1) return; // Need at least 1 player
+          if(players.length <= 1) {
+            console.log('Cannot remove - only 1 player left');
+            return; // Need at least 1 player
+          }
           
           // Ask user which player to remove
           const playerLoc = await askPlayerToRemove(players);
