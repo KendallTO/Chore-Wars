@@ -299,19 +299,48 @@
                     const modal = document.createElement('div');
                     modal.className = 'tcg-modal';
                     
-                    const p = document.createElement('p');
-                    p.textContent = `Purchase "${itemName}" for ${price} pts?`;
-                    modal.appendChild(p);
+                    // Make modal larger to accommodate all players
+                    modal.style.maxWidth = '600px';
+                    modal.style.width = '90vw';
+                    modal.style.padding = '24px';
                     
-                    // Player selection buttons
-                    const playerActions = document.createElement('div');
-                    playerActions.className = 'tcg-modal-actions';
+                    const title = document.createElement('h3');
+                    title.textContent = `Purchase "${itemName}" for ${price} pts?`;
+                    title.style.margin = '0 0 20px 0';
+                    title.style.textAlign = 'center';
+                    title.style.fontSize = '1.2rem';
+                    modal.appendChild(title);
+                    
+                    const subtitle = document.createElement('p');
+                    subtitle.textContent = 'Select which player will pay:';
+                    subtitle.style.margin = '0 0 16px 0';
+                    subtitle.style.textAlign = 'center';
+                    subtitle.style.color = '#666';
+                    subtitle.style.fontSize = '0.9rem';
+                    modal.appendChild(subtitle);
+                    
+                    // Player selection buttons in a grid
+                    const playerGrid = document.createElement('div');
+                    playerGrid.style.display = 'grid';
+                    playerGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(140px, 1fr))';
+                    playerGrid.style.gap = '12px';
+                    playerGrid.style.marginBottom = '20px';
                     
                     const buttons = [];
                     players.forEach(player => {
                         const btn = document.createElement('button');
                         btn.textContent = player.name.toUpperCase();
                         btn.dataset.loc = player.loc;
+                        btn.style.padding = '12px 8px';
+                        btn.style.borderRadius = '8px';
+                        btn.style.border = 'none';
+                        btn.style.cursor = 'pointer';
+                        btn.style.color = 'white';
+                        btn.style.fontWeight = 'bold';
+                        btn.style.fontSize = '0.9rem';
+                        btn.style.transition = 'transform 0.1s, box-shadow 0.1s';
+                        btn.style.textAlign = 'center';
+                        btn.style.wordWrap = 'break-word';
                         
                         // Apply background color based on player location
                         if(player.loc === 'left'){
@@ -325,56 +354,74 @@
                         } else if(player.loc === 'extra3'){
                             btn.style.backgroundColor = 'purple'; // Purple for Player 5
                         } else if(player.loc === 'extra4'){
-                            btn.style.backgroundColor = 'yellow'; // Yellow for Player 6
+                            btn.style.backgroundColor = 'gold'; // Gold for Player 6 (better contrast than yellow)
+                            btn.style.color = 'black'; // Better readability on gold
                         } else if(player.loc === 'extra5'){
-                            btn.style.backgroundColor = 'pink'; // Pink for Player 7
+                            btn.style.backgroundColor = 'hotpink'; // Hot pink for Player 7
                         } else if(player.loc === 'extra6'){
-                            btn.style.backgroundColor = 'brown'; // Brown for Player 8
+                            btn.style.backgroundColor = '#8B4513'; // Saddle brown for Player 8
                         } else if(player.loc === 'extra7'){
-                            btn.style.backgroundColor = 'gray'; // Gray for Player 9
+                            btn.style.backgroundColor = '#696969'; // Dim gray for Player 9
                         } else if(player.loc === 'extra8'){
                             btn.style.backgroundColor = 'teal'; // Teal for Player 10
                         }
-                        btn.style.color = 'white'; // Ensure text is readable
-                        btn.style.border = 'none';
                         
-                        playerActions.appendChild(btn);
+                        // Add hover effects
+                        btn.addEventListener('mouseenter', () => {
+                            btn.style.transform = 'scale(1.05)';
+                            btn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                        });
+                        btn.addEventListener('mouseleave', () => {
+                            btn.style.transform = 'scale(1)';
+                            btn.style.boxShadow = 'none';
+                        });
+                        
+                        playerGrid.appendChild(btn);
                         buttons.push(btn);
-                        
                     });
-                    modal.appendChild(playerActions);
+                    modal.appendChild(playerGrid);
                     
                     // Centered cancel button below
                     const cancelWrapper = document.createElement('div');
-                    cancelWrapper.style.marginTop = '12px';
                     cancelWrapper.style.textAlign = 'center';
+                    cancelWrapper.style.marginTop = '16px';
+                    cancelWrapper.style.borderTop = '1px solid #ddd';
+                    cancelWrapper.style.paddingTop = '16px';
                     
                     const cancelBtn = document.createElement('button');
                     cancelBtn.textContent = 'Cancel';
                     cancelBtn.className = 'btn-cancel';
-                    cancelBtn.style.backgroundColor = '#E24A4A'; // Red
+                    cancelBtn.style.backgroundColor = '#E24A4A';
                     cancelBtn.style.color = 'white';
                     cancelBtn.style.border = 'none';
                     cancelBtn.style.borderRadius = '8px';
+                    cancelBtn.style.padding = '10px 24px';
                     cancelBtn.style.cursor = 'pointer';
-                    cancelBtn.style.transition = 'background-color 0.2s';
+                    cancelBtn.style.fontSize = '0.9rem';
+                    cancelBtn.style.fontWeight = 'bold';
+                    cancelBtn.style.transition = 'background-color 0.2s, transform 0.1s';
                     
-                    // Add hover effect
+                    // Add hover effect for cancel button
                     cancelBtn.addEventListener('mouseenter', () => {
-                        cancelBtn.style.backgroundColor = '#C13838'; // Darker red
+                        cancelBtn.style.backgroundColor = '#C13838';
+                        cancelBtn.style.transform = 'scale(1.05)';
                     });
                     cancelBtn.addEventListener('mouseleave', () => {
-                        cancelBtn.style.backgroundColor = '#E24A4A'; // Original red
+                        cancelBtn.style.backgroundColor = '#E24A4A';
+                        cancelBtn.style.transform = 'scale(1)';
                     });
                     
                     cancelWrapper.appendChild(cancelBtn);
-                    
                     modal.appendChild(cancelWrapper);
                     overlay.appendChild(modal);
                     document.body.appendChild(overlay);
                     
                     function cleanup(choice){
-                        buttons.forEach(btn => btn.removeEventListener('click', onClick));
+                        buttons.forEach(btn => {
+                            btn.removeEventListener('click', onClick);
+                            btn.removeEventListener('mouseenter', () => {});
+                            btn.removeEventListener('mouseleave', () => {});
+                        });
                         cancelBtn.removeEventListener('click', onCancel);
                         try{ document.body.removeChild(overlay); }catch(e){}
                         resolve(choice);
@@ -454,38 +501,11 @@
                 if(idx === -1) return;
                 const item = items[idx];
 
-                // Build list of available payers
-                const headers = loadHeaders();
-                const extras = loadExtraState();
-                
-                const players = [
-                    { loc: 'left', name: headers.left },
-                    { loc: 'right', name: headers.right }
-                ];
-                
-                if(extras.extra1){
-                    players.push({ loc: 'extra1', name: headers.extra1 });
-                }
-                if(extras.extra2){
-                    players.push({ loc: 'extra2', name: headers.extra2 });
-                }
-                if(extras.extra3){
-                    players.push({ loc: 'extra3', name: headers.extra3 });
-                }
-                if(extras.extra4){
-                    players.push({ loc: 'extra4', name: headers.extra4 });
-                }
-                if(extras.extra5){
-                    players.push({ loc: 'extra5', name: headers.extra5 });
-                }
-                if(extras.extra6){
-                    players.push({ loc: 'extra6', name: headers.extra6 });
-                }
-                if(extras.extra7){
-                    players.push({ loc: 'extra7', name: headers.extra7 });
-                }
-                if(extras.extra8){
-                    players.push({ loc: 'extra8', name: headers.extra8 });
+                // Get all currently active players
+                const players = getActivePlayers();
+                if(players.length === 0){
+                    await showInfo('No active players to purchase items.', 'OK');
+                    return;
                 }
 
                 // Ask user which player should pay (combined modal with cancel)
@@ -623,6 +643,107 @@
                 }
             }
 
+            // Base player state management
+            function loadBasePlayerState(){
+                try{ 
+                    const raw = localStorage.getItem('base-player-state'); 
+                    const p = raw ? JSON.parse(raw) : { left: true, right: true }; 
+                    return { left: p.left !== false, right: p.right !== false }; 
+                }
+                catch(e){ return { left: true, right: true }; }
+            }
+
+            // Function to get all active players for shop
+            function getActivePlayers(){
+                const headers = loadHeaders();
+                const st = loadExtraState();
+                const baseState = loadBasePlayerState();
+                const players = [];
+                
+                // Add base players only if they're active
+                if(baseState.left !== false){
+                    players.push({ loc: 'left', name: headers.left || 'Player 1', isExtra: false, isBase: true });
+                }
+                if(baseState.right !== false){
+                    players.push({ loc: 'right', name: headers.right || 'Player 2', isExtra: false, isBase: true });
+                }
+                
+                for(let i = 1; i <= 8; i++){
+                    const extraKey = `extra${i}`;
+                    if(st[extraKey]){
+                        players.push({ 
+                            loc: extraKey, 
+                            name: headers[extraKey] || `Player ${i + 2}`, 
+                            isExtra: true,
+                            isBase: false
+                        });
+                    }
+                }
+                
+                return players;
+            }
+
+            // Function to get current active extra players in position order
+            function getActiveExtraPlayers(){
+                const st = loadExtraState();
+                const activeExtras = [];
+                
+                for(let i = 1; i <= 8; i++){
+                    const extraKey = `extra${i}`;
+                    if(st[extraKey]){
+                        activeExtras.push({
+                            key: extraKey,
+                            number: i,
+                            isLeft: i % 2 === 1
+                        });
+                    }
+                }
+                
+                return activeExtras;
+            }
+
+            // Function to calculate optimal grid positions without gaps
+            function calculateOptimalPositions(){
+                const activeExtras = getActiveExtraPlayers();
+                const leftPlayers = activeExtras.filter(p => p.isLeft).sort((a, b) => a.number - b.number);
+                const rightPlayers = activeExtras.filter(p => p.isLeft === false).sort((a, b) => a.number - b.number);
+                
+                const positions = {};
+                
+                // Assign left side positions (starting from row 2)
+                leftPlayers.forEach((player, index) => {
+                    positions[player.key] = {
+                        column: 1,
+                        row: index + 2 // Start from row 2 (row 1 has base players)
+                    };
+                });
+                
+                // Assign right side positions (starting from row 2)
+                rightPlayers.forEach((player, index) => {
+                    positions[player.key] = {
+                        column: 3,
+                        row: index + 2 // Start from row 2 (row 1 has base players)
+                    };
+                });
+                
+                return positions;
+            }
+
+            // Function to reposition all extra point boxes to eliminate gaps
+            function repositionAllExtraBoxes(){
+                const positions = calculateOptimalPositions();
+                
+                // Update all existing extra boxes with their new positions
+                Object.keys(positions).forEach(extraKey => {
+                    const box = document.getElementById(`${extraKey}-points-box`);
+                    if(box){
+                        const pos = positions[extraKey];
+                        box.style.gridColumn = pos.column.toString();
+                        box.style.gridRow = pos.row.toString();
+                    }
+                });
+            }
+
             // Position the center shop-management so its extended form passes between extra players
             function updateShopManagementPosition(){
                 const shopSection = document.querySelector('.shop-management');
@@ -644,126 +765,51 @@
                 const points = loadPoints();
                 const headers = loadHeaders();
                 const extras = loadExtraState();
+                const baseState = loadBasePlayerState();
                 
-                // update base point values
-                document.getElementById('shop-left-points').textContent = String(points.left || 0);
-                document.getElementById('shop-right-points').textContent = String(points.right || 0);
+                // Handle base player visibility and updates
+                const leftBox = document.getElementById('left-points-box');
+                const rightBox = document.getElementById('right-points-box');
                 
-                // update base headers
-                document.getElementById('left-header').textContent = headers.left;
-                document.getElementById('right-header').textContent = headers.right;
-
-                // toggle and update Extra 1
-                const extra1Box = document.getElementById('extra1-points-box');
-                if(extra1Box){
-                    if(extras.extra1){
-                        extra1Box.style.display = '';
-                        const h = document.getElementById('extra1-header');
-                        const v = document.getElementById('shop-extra1-points');
-                        if(h) h.textContent = headers.extra1 || 'Player 3';
-                        if(v) v.textContent = String(points.extra1 || 0);
+                if(leftBox){
+                    if(baseState.left !== false){
+                        leftBox.style.display = '';
+                        document.getElementById('shop-left-points').textContent = String(points.left || 0);
+                        document.getElementById('left-header').textContent = headers.left;
                     } else {
-                        extra1Box.style.display = 'none';
+                        leftBox.style.display = 'none';
+                    }
+                }
+                
+                if(rightBox){
+                    if(baseState.right !== false){
+                        rightBox.style.display = '';
+                        document.getElementById('shop-right-points').textContent = String(points.right || 0);
+                        document.getElementById('right-header').textContent = headers.right;
+                    } else {
+                        rightBox.style.display = 'none';
                     }
                 }
 
-                // toggle and update Extra 2
-                const extra2Box = document.getElementById('extra2-points-box');
-                if(extra2Box){
-                    if(extras.extra2){
-                        extra2Box.style.display = '';
-                        const h = document.getElementById('extra2-header');
-                        const v = document.getElementById('shop-extra2-points');
-                        if(h) h.textContent = headers.extra2 || 'Player 4';
-                        if(v) v.textContent = String(points.extra2 || 0);
-                    } else {
-                        extra2Box.style.display = 'none';
+                // Handle extra players with dynamic positioning
+                for(let i = 1; i <= 8; i++){
+                    const extraKey = `extra${i}`;
+                    const extraBox = document.getElementById(`${extraKey}-points-box`);
+                    if(extraBox){
+                        if(extras[extraKey]){
+                            extraBox.style.display = '';
+                            const h = document.getElementById(`${extraKey}-header`);
+                            const v = document.getElementById(`shop-${extraKey}-points`);
+                            if(h) h.textContent = headers[extraKey] || `Player ${i + 2}`;
+                            if(v) v.textContent = String(points[extraKey] || 0);
+                        } else {
+                            extraBox.style.display = 'none';
+                        }
                     }
                 }
 
-                // toggle and update Extra 3
-                const extra3Box = document.getElementById('extra3-points-box');
-                if(extra3Box){
-                    if(extras.extra3){
-                        extra3Box.style.display = '';
-                        const h = document.getElementById('extra3-header');
-                        const v = document.getElementById('shop-extra3-points');
-                        if(h) h.textContent = headers.extra3 || 'Player 5';
-                        if(v) v.textContent = String(points.extra3 || 0);
-                    } else {
-                        extra3Box.style.display = 'none';
-                    }
-                }
-
-                // toggle and update Extra 4
-                const extra4Box = document.getElementById('extra4-points-box');
-                if(extra4Box){
-                    if(extras.extra4){
-                        extra4Box.style.display = '';
-                        const h = document.getElementById('extra4-header');
-                        const v = document.getElementById('shop-extra4-points');
-                        if(h) h.textContent = headers.extra4 || 'Player 6';
-                        if(v) v.textContent = String(points.extra4 || 0);
-                    } else {
-                        extra4Box.style.display = 'none';
-                    }
-                }
-
-                // toggle and update Extra 5
-                const extra5Box = document.getElementById('extra5-points-box');
-                if(extra5Box){
-                    if(extras.extra5){
-                        extra5Box.style.display = '';
-                        const h = document.getElementById('extra5-header');
-                        const v = document.getElementById('shop-extra5-points');
-                        if(h) h.textContent = headers.extra5 || 'Player 7';
-                        if(v) v.textContent = String(points.extra5 || 0);
-                    } else {
-                        extra5Box.style.display = 'none';
-                    }
-                }
-
-                // toggle and update Extra 6
-                const extra6Box = document.getElementById('extra6-points-box');
-                if(extra6Box){
-                    if(extras.extra6){
-                        extra6Box.style.display = '';
-                        const h = document.getElementById('extra6-header');
-                        const v = document.getElementById('shop-extra6-points');
-                        if(h) h.textContent = headers.extra6 || 'Player 8';
-                        if(v) v.textContent = String(points.extra6 || 0);
-                    } else {
-                        extra6Box.style.display = 'none';
-                    }
-                }
-
-                // toggle and update Extra 7
-                const extra7Box = document.getElementById('extra7-points-box');
-                if(extra7Box){
-                    if(extras.extra7){
-                        extra7Box.style.display = '';
-                        const h = document.getElementById('extra7-header');
-                        const v = document.getElementById('shop-extra7-points');
-                        if(h) h.textContent = headers.extra7 || 'Player 9';
-                        if(v) v.textContent = String(points.extra7 || 0);
-                    } else {
-                        extra7Box.style.display = 'none';
-                    }
-                }
-
-                // toggle and update Extra 8
-                const extra8Box = document.getElementById('extra8-points-box');
-                if(extra8Box){
-                    if(extras.extra8){
-                        extra8Box.style.display = '';
-                        const h = document.getElementById('extra8-header');
-                        const v = document.getElementById('shop-extra8-points');
-                        if(h) h.textContent = headers.extra8 || 'Player 10';
-                        if(v) v.textContent = String(points.extra8 || 0);
-                    } else {
-                        extra8Box.style.display = 'none';
-                    }
-                }
+                // Reposition all extra boxes to eliminate gaps
+                repositionAllExtraBoxes();
 
                 // Make sure the center section spans appropriately when extras are present
                 updateShopManagementPosition();
@@ -776,7 +822,7 @@
 
             // re-render points when storage changes (in case points are updated in another tab)
             window.addEventListener('storage', (e) => {
-                if(e.key === 'tcg_points_v1' || e.key === 'tcg_column_headers_v1' || e.key === 'tcg_extra_cols_v1'){
+                if(e.key === 'tcg_points_v1' || e.key === 'tcg_column_headers_v1' || e.key === 'tcg_extra_cols_v1' || e.key === 'base-player-state'){
                     renderPoints();
                     updateShopManagementPosition();
                 }
