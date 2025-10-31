@@ -1,150 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Chore Game - Home</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        #remove-column-btn:not(:disabled):hover {
-            background-color: #E24A4A !important;
-            color: white !important;
-        }
-        #add-column-btn:not(:disabled):hover {
-            background-color: #4CAF50 !important;
-            color: white !important;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Chore Game - Home</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/index.css">
 </head>
 <header class="site-header">
-  
-    <div class="container">
-        <a href="index.html">
-          <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
-        </a>
-        <div class="container-logo">
-          <a href="index.html">
-            <img class src="images/Logo_THE_GREAT_CHORE_OFF_Text.png" href = "index.html" alt="The Chore Game">
-          </a>
-        </div>
-          <nav class="main-nav">
-              <a class="header-btn" href="index.html">Home</a>
-              <a class ="header-btn" href="shop.html">Shop</a>
-          </nav>
-      </div>
+
+  <div class="container">
+    <a href="index.html">
+      <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
+    </a>
+    <div class="container-logo">
+      <a href="index.html">
+        <img class src="images/Logo_THE_GREAT_CHORE_OFF_Text.png" href="index.html" alt="The Chore Game">
+      </a>
+    </div>
+    <nav class="main-nav">
+      <a class="header-btn" href="index.html">Home</a>
+      <a class="header-btn" href="shop.html">Shop</a>
+    </nav>
+  </div>
 </header>
+
 <body>
-    
-<!-- ...existing code... -->
-    <main class="site-main container">
-        <section class="grid-3">
-            <div class="column" id="column-left">
-                <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;" aria-label="Column 1 header">Player 1</h3>
 
-                <!-- left points bank (display only) -->
-                <div class="points-bank">
-                  <div>Points: <strong id="left-points">0</strong></div>
-                </div>
- 
-                 <!-- left column chores -->
-                 <div id="left-list">
-                     <article class="card chore-placeholder">No chores assigned.</article>
-                 </div>
-             </div>
+  <!-- ...existing code... -->
+  <main class="site-main container">
+    <section class="grid-3">
+      <div class="column" id="column-left">
+        <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;"
+          aria-label="Column 1 header">Player 1</h3>
 
-            <div class="column" id="chores-column">
-                <h3 class="column-header" aria-label="Unchoosen Chores">Unassigned Chores</h3>
-
-                <!-- random assign button -->
-                <div class="button-container">
-                    <button id="random-assign-btn" type="button" class="btn">Random</button>
-                    <button id="auction-btn" type="button" class="btn">Auction</button>
-                    <button id="draft-btn" type="button" class="btn">Draft</button>
-                </div>
-
-                <!-- unchosen chores list (rendered by JS) -->
-                <div id="chores-list">
-                    <article class="card chore-placeholder">No chores yet — add one below.</article>
-                </div>
-
-                <!-- add-chore form -->
-                <form id="add-chore-form" class="chore-form" aria-label="Add chore" novalidate style="max-width: 400px; margin: 0 auto;">
-                    <div class="form-row" style="display: flex; gap: 8px; align-items: center;">
-                        <input id="chore-name" name="name" type="text" required aria-required="true" placeholder="Chore Name" style="margin-top: 0; width: 200px;" />
-                        <button type="submit" id = "unchosen-button-add" class="btn">Add</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="column" id="column-right">
-                 <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;" aria-label="Column 3 header">Player 2</h3>
- 
-                <!-- right points bank (display only) -->
-                <div class="points-bank" id="right-points-bank" style="text-align: right;">
-                  <div>Points: <strong id="right-points">0</strong></div>
-                </div>
-
-                <!-- right column chores -->
-                <div id="right-list">
-                    <article class="card chore-placeholder">No chores assigned.</article>
-                </div>
-             </div>
-         </section>
-         
-         <!-- Button bar above footer -->
-         <div style="display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 24px auto; padding: 0 20px;">
-             <button id="add-column-btn" type="button" class="btn">Add Player</button>
-             <button id="unassign-all-btn" type="button" class="btn">Unassign All</button>
-             <button id="remove-column-btn" type="button" class="btn" disabled>Remove Player</button>
-         </div>
-     </main>
-<!-- ...existing code... -->
-
-    <footer class="site-footer">
-        <div class="container">
-            <p>© <span id="year"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, & Kendall Olson!</p>
-            </p>
+        <!-- left points bank (display only) -->
+        <div class="points-bank">
+          <div>Points: <strong id="left-points">0</strong></div>
         </div>
-    </footer>
-    
-<!-- vvvv Java Script vvvv -->
 
-    <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
+        <!-- left column chores -->
+        <div id="left-list">
+          <article class="card chore-placeholder">No chores assigned.</article>
+        </div>
+      </div>
 
-    <script>
+      <div class="column" id="chores-column">
+        <h3 class="column-header" aria-label="Unchoosen Chores">Unassigned Chores</h3>
+
+        <!-- random assign button -->
+        <div class="button-container">
+          <button id="random-assign-btn" type="button" class="btn">Random</button>
+          <button id="auction-btn" type="button" class="btn">Auction</button>
+          <button id="draft-btn" type="button" class="btn">Draft</button>
+        </div>
+
+        <!-- unchosen chores list (rendered by JS) -->
+        <div id="chores-list">
+          <article class="card chore-placeholder">No chores yet — add one below.</article>
+        </div>
+
+        <!-- add-chore form -->
+        <form id="add-chore-form" class="chore-form" aria-label="Add chore" novalidate
+          style="max-width: 400px; margin: 0 auto;">
+          <div class="form-row" style="display: flex; gap: 8px; align-items: center;">
+            <input id="chore-name" name="name" type="text" required aria-required="true" placeholder="Chore Name"
+              style="margin-top: 0; width: 200px;" />
+            <button type="submit" id="unchosen-button-add" class="btn">Add</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="column" id="column-right">
+        <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;"
+          aria-label="Column 3 header">Player 2</h3>
+
+        <!-- right points bank (display only) -->
+        <div class="points-bank" id="right-points-bank" style="text-align: right;">
+          <div>Points: <strong id="right-points">0</strong></div>
+        </div>
+
+        <!-- right column chores -->
+        <div id="right-list">
+          <article class="card chore-placeholder">No chores assigned.</article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button bar above footer -->
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 24px auto; padding: 0 20px;">
+      <button id="add-column-btn" type="button" class="btn">Add Player</button>
+      <button id="unassign-all-btn" type="button" class="btn">Unassign All</button>
+      <button id="remove-column-btn" type="button" class="btn" disabled>Remove Player</button>
+    </div>
+  </main>
+  <!-- ...existing code... -->
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span id="year"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, & Kendall Olson!</p>
+      </p>
+    </div>
+  </footer>
+
+  <!-- vvvv Java Script vvvv -->
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+  <script>
     // chores: add, render, persist (localStorage)
-    (function(){
-  const STORAGE_KEY = 'tcg_chores_v1';
-  const HEADERS_KEY = 'tcg_column_headers_v1';
-  const POINTS_KEY = 'tcg_points_v1';
-  const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
-  const HEADER_MAX = 8; // Max characters allowed for left/right headers
+    (function () {
+      const STORAGE_KEY = 'tcg_chores_v1';
+      const HEADERS_KEY = 'tcg_column_headers_v1';
+      const POINTS_KEY = 'tcg_points_v1';
+      const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
+      const HEADER_MAX = 8; // Max characters allowed for left/right headers
 
       // points helpers
-      function loadPoints(){
-        try{
+      function loadPoints() {
+        try {
           const raw = localStorage.getItem(POINTS_KEY);
           const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
           // ensure extra fields exist for compatibility
-          if(typeof parsed.left !== 'number') parsed.left = 0;
-          if(typeof parsed.right !== 'number') parsed.right = 0;
-          if(typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
-          if(typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
-          if(typeof parsed.extra3 !== 'number') parsed.extra3 = 0;
-          if(typeof parsed.extra4 !== 'number') parsed.extra4 = 0;
-          if(typeof parsed.extra5 !== 'number') parsed.extra5 = 0;
-          if(typeof parsed.extra6 !== 'number') parsed.extra6 = 0;
-          if(typeof parsed.extra7 !== 'number') parsed.extra7 = 0;
-          if(typeof parsed.extra8 !== 'number') parsed.extra8 = 0;
+          if (typeof parsed.left !== 'number') parsed.left = 0;
+          if (typeof parsed.right !== 'number') parsed.right = 0;
+          if (typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
+          if (typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
+          if (typeof parsed.extra3 !== 'number') parsed.extra3 = 0;
+          if (typeof parsed.extra4 !== 'number') parsed.extra4 = 0;
+          if (typeof parsed.extra5 !== 'number') parsed.extra5 = 0;
+          if (typeof parsed.extra6 !== 'number') parsed.extra6 = 0;
+          if (typeof parsed.extra7 !== 'number') parsed.extra7 = 0;
+          if (typeof parsed.extra8 !== 'number') parsed.extra8 = 0;
           return parsed;
-        }catch(e){
+        } catch (e) {
           return { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 };
         }
       }
-      function savePoints(p){ localStorage.setItem(POINTS_KEY, JSON.stringify(p)); }
-      function renderPoints(){
+      function savePoints(p) { localStorage.setItem(POINTS_KEY, JSON.stringify(p)); }
+      function renderPoints() {
         const p = loadPoints();
         const leftEl = document.getElementById('left-points');
         const rightEl = document.getElementById('right-points');
@@ -156,25 +154,25 @@
         const extra6El = document.getElementById('extra6-points');
         const extra7El = document.getElementById('extra7-points');
         const extra8El = document.getElementById('extra8-points');
-        if(leftEl) leftEl.textContent = String(p.left || 0);
-        if(rightEl) rightEl.textContent = String(p.right || 0);
-        if(extra1El) extra1El.textContent = String(p.extra1 || 0);
-        if(extra2El) extra2El.textContent = String(p.extra2 || 0);
-        if(extra3El) extra3El.textContent = String(p.extra3 || 0);
-        if(extra4El) extra4El.textContent = String(p.extra4 || 0);
-        if(extra5El) extra5El.textContent = String(p.extra5 || 0);
-        if(extra6El) extra6El.textContent = String(p.extra6 || 0);
-        if(extra7El) extra7El.textContent = String(p.extra7 || 0);
-        if(extra8El) extra8El.textContent = String(p.extra8 || 0);
+        if (leftEl) leftEl.textContent = String(p.left || 0);
+        if (rightEl) rightEl.textContent = String(p.right || 0);
+        if (extra1El) extra1El.textContent = String(p.extra1 || 0);
+        if (extra2El) extra2El.textContent = String(p.extra2 || 0);
+        if (extra3El) extra3El.textContent = String(p.extra3 || 0);
+        if (extra4El) extra4El.textContent = String(p.extra4 || 0);
+        if (extra5El) extra5El.textContent = String(p.extra5 || 0);
+        if (extra6El) extra6El.textContent = String(p.extra6 || 0);
+        if (extra7El) extra7El.textContent = String(p.extra7 || 0);
+        if (extra8El) extra8El.textContent = String(p.extra8 || 0);
       }
 
       // extra columns presence helpers
-      function loadExtraState(){
-        try{
+      function loadExtraState() {
+        try {
           const raw = localStorage.getItem(EXTRA_STATE_KEY);
           const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
-          return { 
-            extra1: !!parsed.extra1, 
+          return {
+            extra1: !!parsed.extra1,
             extra2: !!parsed.extra2,
             extra3: !!parsed.extra3,
             extra4: !!parsed.extra4,
@@ -183,20 +181,20 @@
             extra7: !!parsed.extra7,
             extra8: !!parsed.extra8
           };
-        }catch(e){
+        } catch (e) {
           return { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
         }
       }
-      function saveExtraState(s){ localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
+      function saveExtraState(s) { localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
 
       // headers helpers for extras
-      function loadAllHeaders(){
-        try{
+      function loadAllHeaders() {
+        try {
           const raw = localStorage.getItem(HEADERS_KEY);
           return raw ? JSON.parse(raw) : {};
-        }catch(e){ return {}; }
+        } catch (e) { return {}; }
       }
-      function saveHeaderField(field, value){
+      function saveHeaderField(field, value) {
         const obj = loadAllHeaders();
         obj[field] = value;
         localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
@@ -209,25 +207,25 @@
         const rightAdd = document.getElementById('right-add-10');
         const rightReset = document.getElementById('right-reset');
 
-        if(leftAdd){
+        if (leftAdd) {
           leftAdd.addEventListener('click', () => {
-            const p = loadPoints(); p.left = (p.left||0) + 10; savePoints(p); renderPoints();
+            const p = loadPoints(); p.left = (p.left || 0) + 10; savePoints(p); renderPoints();
           });
         }
-        if(leftReset){
+        if (leftReset) {
           leftReset.addEventListener('click', () => {
-            if(!confirm('Reset left points to 0?')) return;
+            if (!confirm('Reset left points to 0?')) return;
             const p = loadPoints(); p.left = 0; savePoints(p); renderPoints();
           });
         }
-        if(rightAdd){
+        if (rightAdd) {
           rightAdd.addEventListener('click', () => {
-            const p = loadPoints(); p.right = (p.right||0) + 10; savePoints(p); renderPoints();
+            const p = loadPoints(); p.right = (p.right || 0) + 10; savePoints(p); renderPoints();
           });
         }
-        if(rightReset){
+        if (rightReset) {
           rightReset.addEventListener('click', () => {
-            if(!confirm('Reset right points to 0?')) return;
+            if (!confirm('Reset right points to 0?')) return;
             const p = loadPoints(); p.right = 0; savePoints(p); renderPoints();
           });
         }
@@ -240,15 +238,15 @@
       const leftHeaderEl = document.querySelector('.grid-3 .column:nth-child(1) .column-header');
       const rightHeaderEl = document.querySelector('.grid-3 .column:nth-child(3) .column-header');
 
-      function loadHeaders(){
-        try{
+      function loadHeaders() {
+        try {
           const raw = localStorage.getItem(HEADERS_KEY);
           const parsed = raw ? JSON.parse(raw) : {};
           return {
             left: parsed.left ?? (leftHeaderEl ? leftHeaderEl.textContent.trim() : 'Enter Name Here'),
             right: parsed.right ?? (rightHeaderEl ? rightHeaderEl.textContent.trim() : 'Enter Name Here')
           };
-        }catch(e){
+        } catch (e) {
           return {
             left: leftHeaderEl ? leftHeaderEl.textContent.trim() : 'Enter Name Here',
             right: rightHeaderEl ? rightHeaderEl.textContent.trim() : 'Enter Name Here'
@@ -256,8 +254,8 @@
         }
       }
 
-      function saveHeaders(){
-        if(!leftHeaderEl || !rightHeaderEl) return;
+      function saveHeaders() {
+        if (!leftHeaderEl || !rightHeaderEl) return;
         const leftText = (leftHeaderEl.textContent || '').replace(/[\r\n]+/g, '').trim().slice(0, HEADER_MAX);
         const rightText = (rightHeaderEl.textContent || '').replace(/[\r\n]+/g, '').trim().slice(0, HEADER_MAX);
         const existing = loadAllHeaders();
@@ -267,8 +265,8 @@
 
       // apply saved headers immediately
       const savedHeaders = loadHeaders();
-      if(leftHeaderEl) leftHeaderEl.textContent = savedHeaders.left;
-      if(rightHeaderEl) rightHeaderEl.textContent = savedHeaders.right;
+      if (leftHeaderEl) leftHeaderEl.textContent = savedHeaders.left;
+      if (rightHeaderEl) rightHeaderEl.textContent = savedHeaders.right;
       // save any normalization (optional)
       saveHeaders();
 
@@ -284,53 +282,53 @@
       let draftMode = false;
 
       // helper to show a transient message if msgEl exists
-      function notify(message, durationMs = 1800){
-        if(!msgEl) return;
+      function notify(message, durationMs = 1800) {
+        if (!msgEl) return;
         msgEl.textContent = message || '';
-        if(message){
-          setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, durationMs);
+        if (message) {
+          setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, durationMs);
         }
       }
 
       // chores have shape: { id, name, points, loc } where loc is 'unchosen'|'left'|'right'
-      function loadChores(){
-        try{
+      function loadChores() {
+        try {
           const raw = localStorage.getItem(STORAGE_KEY);
           return raw ? JSON.parse(raw) : [];
-        }catch(e){
+        } catch (e) {
           return [];
         }
       }
 
-      function saveChores(chores){
+      function saveChores(chores) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
       }
 
-      function makeChoreCard(chore){
+      function makeChoreCard(chore) {
         const art = document.createElement('article');
         art.className = 'card chore';
         art.dataset.id = String(chore.id);
         art.dataset.loc = chore.loc || 'unchosen';
- 
+
         const wrap = document.createElement('div');
         wrap.style.width = '100%';
         wrap.style.display = 'flex';
         wrap.style.flexDirection = 'column';
         wrap.style.alignItems = 'center';
- 
+
         const title = document.createElement('h4');
         title.textContent = chore.name;
         title.style.margin = '0 0 6px 0';
         title.style.textAlign = 'center';
         wrap.appendChild(title);
- 
+
         const pts = document.createElement('p');
         pts.textContent = String(chore.points) + ' pts';
         pts.style.margin = '0 0 8px 0';
         pts.style.fontWeight = '600';
         pts.style.textAlign = 'center';
         wrap.appendChild(pts);
- 
+
         const actions = document.createElement('div');
         actions.style.marginTop = '8px';
         actions.style.display = 'flex';
@@ -338,7 +336,7 @@
         actions.style.flexWrap = 'wrap';
         actions.style.justifyContent = 'center';
         actions.style.width = '100%';
- 
+
         // read current column header text so labels match whatever the headers show
         const leftHeaderText = document.querySelector('.grid-3 .column:nth-child(1) .column-header')?.textContent.trim() || 'Left';
         const rightHeaderText = document.querySelector('.grid-3 .column:nth-child(3) .column-header')?.textContent.trim() || 'Right';
@@ -350,18 +348,18 @@
         const extra6HeaderText = document.querySelector('#column-extra6 .column-header')?.textContent.trim();
         const extra7HeaderText = document.querySelector('#column-extra7 .column-header')?.textContent.trim();
         const extra8HeaderText = document.querySelector('#column-extra8 .column-header')?.textContent.trim();
- 
+
         // action buttons depend on location
-        if(!chore.loc || chore.loc === 'unchosen'){
+        if (!chore.loc || chore.loc === 'unchosen') {
           // Only show assign buttons if in draft mode
-          if(draftMode){
+          if (draftMode) {
             const assignLeft = document.createElement('button');
             assignLeft.type = 'button';
             assignLeft.className = 'btn';
             assignLeft.innerHTML = `Assign → <span style="color: #66CED6; font-weight: bold;">${leftHeaderText.toUpperCase()}</span>`;
             assignLeft.dataset.action = 'assign-left';
             actions.appendChild(assignLeft);
-   
+
             const assignRight = document.createElement('button');
             assignRight.type = 'button';
             assignRight.className = 'btn';
@@ -370,7 +368,7 @@
             actions.appendChild(assignRight);
 
             // Add extra column buttons if they exist
-            if(extra1HeaderText){
+            if (extra1HeaderText) {
               const assignExtra1 = document.createElement('button');
               assignExtra1.type = 'button';
               assignExtra1.className = 'btn';
@@ -379,7 +377,7 @@
               actions.appendChild(assignExtra1);
             }
 
-            if(extra2HeaderText){
+            if (extra2HeaderText) {
               const assignExtra2 = document.createElement('button');
               assignExtra2.type = 'button';
               assignExtra2.className = 'btn';
@@ -388,7 +386,7 @@
               actions.appendChild(assignExtra2);
             }
 
-            if(extra3HeaderText){
+            if (extra3HeaderText) {
               const assignExtra3 = document.createElement('button');
               assignExtra3.type = 'button';
               assignExtra3.className = 'btn';
@@ -397,7 +395,7 @@
               actions.appendChild(assignExtra3);
             }
 
-            if(extra4HeaderText){
+            if (extra4HeaderText) {
               const assignExtra4 = document.createElement('button');
               assignExtra4.type = 'button';
               assignExtra4.className = 'btn';
@@ -406,7 +404,7 @@
               actions.appendChild(assignExtra4);
             }
 
-            if(extra5HeaderText){
+            if (extra5HeaderText) {
               const assignExtra5 = document.createElement('button');
               assignExtra5.type = 'button';
               assignExtra5.className = 'btn';
@@ -415,7 +413,7 @@
               actions.appendChild(assignExtra5);
             }
 
-            if(extra6HeaderText){
+            if (extra6HeaderText) {
               const assignExtra6 = document.createElement('button');
               assignExtra6.type = 'button';
               assignExtra6.className = 'btn';
@@ -424,7 +422,7 @@
               actions.appendChild(assignExtra6);
             }
 
-            if(extra7HeaderText){
+            if (extra7HeaderText) {
               const assignExtra7 = document.createElement('button');
               assignExtra7.type = 'button';
               assignExtra7.className = 'btn';
@@ -433,7 +431,7 @@
               actions.appendChild(assignExtra7);
             }
 
-            if(extra8HeaderText){
+            if (extra8HeaderText) {
               const assignExtra8 = document.createElement('button');
               assignExtra8.type = 'button';
               assignExtra8.className = 'btn';
@@ -441,16 +439,16 @@
               assignExtra8.dataset.action = 'assign-extra8';
               actions.appendChild(assignExtra8);
             }
-            
+
             // In draft mode, show delete button separately at bottom center
             wrap.appendChild(actions);
-            
+
             const delWrap = document.createElement('div');
             delWrap.style.marginTop = '12px';
             delWrap.style.display = 'flex';
             delWrap.style.justifyContent = 'center';
             delWrap.style.width = '100%';
-            
+
             const del = document.createElement('button');
             del.type = 'button';
             del.className = 'btn btn-delete';
@@ -458,7 +456,7 @@
             del.dataset.action = 'delete';
             delWrap.appendChild(del);
             wrap.appendChild(delWrap);
-            
+
             art.appendChild(wrap);
             return art;
           }
@@ -470,7 +468,7 @@
           completeBtn.textContent = 'Complete';
           completeBtn.dataset.action = 'complete';
           actions.appendChild(completeBtn);
- 
+
           const unassign = document.createElement('button');
           unassign.type = 'button';
           unassign.className = 'btn';
@@ -478,20 +476,20 @@
           unassign.dataset.action = 'unassign';
           actions.appendChild(unassign);
         }
- 
+
         const del = document.createElement('button');
         del.type = 'button';
         del.className = 'btn btn-delete';
         del.textContent = 'Delete';
         del.dataset.action = 'delete';
         actions.appendChild(del);
- 
+
         wrap.appendChild(actions);
         art.appendChild(wrap);
         return art;
       }
 
-      function render(){
+      function render() {
         const chores = loadChores();
 
         leftListEl.innerHTML = '';
@@ -502,7 +500,7 @@
         const right = chores.filter(c => c.loc === 'right');
         const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
 
-        if(!left.length){
+        if (!left.length) {
           const ph = document.createElement('article');
           ph.className = 'card chore-placeholder';
           ph.textContent = 'No chores assigned.';
@@ -511,7 +509,7 @@
           left.forEach(c => leftListEl.appendChild(makeChoreCard(c)));
         }
 
-        if(!unchosen.length){
+        if (!unchosen.length) {
           const ph = document.createElement('article');
           ph.className = 'card chore-placeholder';
           ph.textContent = 'No chores yet — add one below.';
@@ -520,7 +518,7 @@
           unchosen.forEach(c => unchosenListEl.appendChild(makeChoreCard(c)));
         }
 
-        if(!right.length){
+        if (!right.length) {
           const ph = document.createElement('article');
           ph.className = 'card chore-placeholder';
           ph.textContent = 'No chores assigned.';
@@ -546,10 +544,10 @@
         const extra6 = chores.filter(c => c.loc === 'extra6');
         const extra7 = chores.filter(c => c.loc === 'extra7');
         const extra8 = chores.filter(c => c.loc === 'extra8');
-        
-        if(extra1ListEl){
+
+        if (extra1ListEl) {
           extra1ListEl.innerHTML = '';
-          if(!extra1.length){
+          if (!extra1.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -558,9 +556,9 @@
             extra1.forEach(c => extra1ListEl.appendChild(makeChoreCard(c)));
           }
         }
-        if(extra2ListEl){
+        if (extra2ListEl) {
           extra2ListEl.innerHTML = '';
-          if(!extra2.length){
+          if (!extra2.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -569,9 +567,9 @@
             extra2.forEach(c => extra2ListEl.appendChild(makeChoreCard(c)));
           }
         }
-        if(extra3ListEl){
+        if (extra3ListEl) {
           extra3ListEl.innerHTML = '';
-          if(!extra3.length){
+          if (!extra3.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -580,9 +578,9 @@
             extra3.forEach(c => extra3ListEl.appendChild(makeChoreCard(c)));
           }
         }
-        if(extra4ListEl){
+        if (extra4ListEl) {
           extra4ListEl.innerHTML = '';
-          if(!extra4.length){
+          if (!extra4.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -591,9 +589,9 @@
             extra4.forEach(c => extra4ListEl.appendChild(makeChoreCard(c)));
           }
         }
-        if(extra5ListEl){
+        if (extra5ListEl) {
           extra5ListEl.innerHTML = '';
-          if(!extra5.length){
+          if (!extra5.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -602,9 +600,9 @@
             extra5.forEach(c => extra5ListEl.appendChild(makeChoreCard(c)));
           }
         }
-        if(extra6ListEl){
+        if (extra6ListEl) {
           extra6ListEl.innerHTML = '';
-          if(!extra6.length){
+          if (!extra6.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -613,9 +611,9 @@
             extra6.forEach(c => extra6ListEl.appendChild(makeChoreCard(c)));
           }
         }
-        if(extra7ListEl){
+        if (extra7ListEl) {
           extra7ListEl.innerHTML = '';
-          if(!extra7.length){
+          if (!extra7.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -624,9 +622,9 @@
             extra7.forEach(c => extra7ListEl.appendChild(makeChoreCard(c)));
           }
         }
-        if(extra8ListEl){
+        if (extra8ListEl) {
           extra8ListEl.innerHTML = '';
-          if(!extra8.length){
+          if (!extra8.length) {
             const ph = document.createElement('article');
             ph.className = 'card chore-placeholder';
             ph.textContent = 'No chores assigned.';
@@ -637,13 +635,13 @@
         }
       }
 
-      form.addEventListener('submit', function(e){
+      form.addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         const name = nameInput.value.trim();
         const points = 10; // fixed starting value
 
-        if(!name){
+        if (!name) {
           nameInput.focus();
           return;
         }
@@ -658,22 +656,22 @@
       });
 
       // delegated action handler for all three lists
-      document.querySelector('.grid-3').addEventListener('click', function(e){
+      document.querySelector('.grid-3').addEventListener('click', function (e) {
         const btn = e.target.closest('button[data-action]');
-        if(!btn) return;
+        if (!btn) return;
         const action = btn.dataset.action;
         const card = btn.closest('.chore');
-        if(!card) return;
+        if (!card) return;
         const id = Number(card.dataset.id);
         let chores = loadChores();
         const idx = chores.findIndex(c => c.id === id);
-        if(idx === -1) return;
+        if (idx === -1) return;
 
         // complete action: add chore.points to correct bank (left/right/extra1/extra2)
-        if(action === 'complete'){
+        if (action === 'complete') {
           const chore = chores[idx];
           const loc = chore.loc;
-          if(!loc || !(['left','right','extra1','extra2','extra3','extra4','extra5','extra6','extra7','extra8'].includes(loc))){
+          if (!loc || !(['left', 'right', 'extra1', 'extra2', 'extra3', 'extra4', 'extra5', 'extra6', 'extra7', 'extra8'].includes(loc))) {
             notify('Chore must be assigned to a column to complete.', 1800);
             return;
           }
@@ -689,32 +687,32 @@
 
           // Friendly target name
           let targetName = loc;
-          if(loc === 'left'){
+          if (loc === 'left') {
             targetName = (leftHeaderEl?.textContent || 'Left').trim();
-          } else if(loc === 'right'){
+          } else if (loc === 'right') {
             targetName = (rightHeaderEl?.textContent || 'Right').trim();
-          } else if(loc === 'extra1'){
+          } else if (loc === 'extra1') {
             const h = document.querySelector('#column-extra1 .column-header');
             targetName = (h?.textContent || 'Player 3').trim();
-          } else if(loc === 'extra2'){
+          } else if (loc === 'extra2') {
             const h = document.querySelector('#column-extra2 .column-header');
             targetName = (h?.textContent || 'Player 4').trim();
-          } else if(loc === 'extra3'){
+          } else if (loc === 'extra3') {
             const h = document.querySelector('#column-extra3 .column-header');
             targetName = (h?.textContent || 'Player 5').trim();
-          } else if(loc === 'extra4'){
+          } else if (loc === 'extra4') {
             const h = document.querySelector('#column-extra4 .column-header');
             targetName = (h?.textContent || 'Player 6').trim();
-          } else if(loc === 'extra5'){
+          } else if (loc === 'extra5') {
             const h = document.querySelector('#column-extra5 .column-header');
             targetName = (h?.textContent || 'Player 7').trim();
-          } else if(loc === 'extra6'){
+          } else if (loc === 'extra6') {
             const h = document.querySelector('#column-extra6 .column-header');
             targetName = (h?.textContent || 'Player 8').trim();
-          } else if(loc === 'extra7'){
+          } else if (loc === 'extra7') {
             const h = document.querySelector('#column-extra7 .column-header');
             targetName = (h?.textContent || 'Player 9').trim();
-          } else if(loc === 'extra8'){
+          } else if (loc === 'extra8') {
             const h = document.querySelector('#column-extra8 .column-header');
             targetName = (h?.textContent || 'Player 10').trim();
           }
@@ -723,67 +721,67 @@
           return;
         }
 
-        if(action === 'assign-left'){
+        if (action === 'assign-left') {
           chores[idx].loc = 'left';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-right'){
+        if (action === 'assign-right') {
           chores[idx].loc = 'right';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra1'){
+        if (action === 'assign-extra1') {
           chores[idx].loc = 'extra1';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra2'){
+        if (action === 'assign-extra2') {
           chores[idx].loc = 'extra2';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra3'){
+        if (action === 'assign-extra3') {
           chores[idx].loc = 'extra3';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra4'){
+        if (action === 'assign-extra4') {
           chores[idx].loc = 'extra4';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra5'){
+        if (action === 'assign-extra5') {
           chores[idx].loc = 'extra5';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra6'){
+        if (action === 'assign-extra6') {
           chores[idx].loc = 'extra6';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra7'){
+        if (action === 'assign-extra7') {
           chores[idx].loc = 'extra7';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'assign-extra8'){
+        if (action === 'assign-extra8') {
           chores[idx].loc = 'extra8';
           saveChores(chores);
           render();
           return;
         }
-        if(action === 'unassign'){
+        if (action === 'unassign') {
           chores[idx].loc = 'unchosen';
           // After unassigning, enable draft mode so manual assign buttons appear in the unassigned list
           draftMode = true;
@@ -791,7 +789,7 @@
           render();
           return;
         }
-        if(action === 'delete'){
+        if (action === 'delete') {
           // delete immediately without confirmation
           chores.splice(idx, 1);
           saveChores(chores);
@@ -803,33 +801,33 @@
 
       // random assign button: distribute unchosen chores randomly to all active players
       const randomAssignBtn = document.getElementById('random-assign-btn');
-      if(randomAssignBtn){
+      if (randomAssignBtn) {
         // balanced assignment: aim for equal counts (difference at most 1)
-        randomAssignBtn.addEventListener('click', function(){
+        randomAssignBtn.addEventListener('click', function () {
           try {
             const chores = loadChores();
             const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
-            if(!unchosen.length){
+            if (!unchosen.length) {
               notify('No unassigned chores to assign.', 1800);
               return;
             }
 
             // Get all currently active players
             const activePlayers = getActivePlayers();
-            if(activePlayers.length === 0){
+            if (activePlayers.length === 0) {
               notify('No active players to assign chores to.', 1800);
               return;
             }
-            
+
             // Extract destination locations from active players
             const destinations = activePlayers.map(player => player.loc);
 
             // counts per destination
             const counts = Object.fromEntries(destinations.map(d => [d, 0]));
-            chores.forEach(c => { if(destinations.includes(c.loc)) counts[c.loc]++; });
+            chores.forEach(c => { if (destinations.includes(c.loc)) counts[c.loc]++; });
 
             // shuffle unchosen so distribution is not deterministic
-            for(let i = unchosen.length - 1; i > 0; i--){
+            for (let i = unchosen.length - 1; i > 0; i--) {
               const j = Math.floor(Math.random() * (i + 1));
               [unchosen[i], unchosen[j]] = [unchosen[j], unchosen[i]];
             }
@@ -838,13 +836,13 @@
             const idsToAssign = new Set(unchosen.map(c => c.id));
             console.log('About to assign chores:', unchosen.length, 'to destinations:', destinations);
             chores.forEach(c => {
-              if(!idsToAssign.has(c.id)) return;
-              let min = Infinity; 
-              destinations.forEach(d => { if(counts[d] < min) min = counts[d]; });
+              if (!idsToAssign.has(c.id)) return;
+              let min = Infinity;
+              destinations.forEach(d => { if (counts[d] < min) min = counts[d]; });
               const mins = destinations.filter(d => counts[d] === min);
-              const pick = mins[Math.floor(Math.random()*mins.length)];
+              const pick = mins[Math.floor(Math.random() * mins.length)];
               console.log('Assigning chore', c.name, 'to', pick);
-              c.loc = pick; 
+              c.loc = pick;
               counts[pick]++;
             });
             console.log('Final assignment counts:', counts);
@@ -853,32 +851,32 @@
             // First assigned chores get lower points, last assigned gets 50 points
             const currentlyAssigning = Array.from(idsToAssign).length;
 
-          // Sort the IDs to assign so we process them in a consistent order
-          const sortedIdsToAssign = Array.from(idsToAssign).sort();
+            // Sort the IDs to assign so we process them in a consistent order
+            const sortedIdsToAssign = Array.from(idsToAssign).sort();
 
-          // Calculate points for each chore being assigned
-          sortedIdsToAssign.forEach((id, index) => {
-            const chore = chores.find(c => c.id === id);
-            if (!chore) return;
+            // Calculate points for each chore being assigned
+            sortedIdsToAssign.forEach((id, index) => {
+              const chore = chores.find(c => c.id === id);
+              if (!chore) return;
 
-            // For the very last chore being assigned
-            if (index === currentlyAssigning - 1) {
-              chore.points = 50;
-            } else {
-              // Scale points from 10 to 40 based on position
-              const progress = index / (currentlyAssigning - 1);  // 0 to 1
-              const basePoints = 10 + (progress * 30);  // 10 to 40
-              // Round up to nearest 5
-              chore.points = Math.ceil(basePoints / 5) * 5;
-            }
-          });
+              // For the very last chore being assigned
+              if (index === currentlyAssigning - 1) {
+                chore.points = 50;
+              } else {
+                // Scale points from 10 to 40 based on position
+                const progress = index / (currentlyAssigning - 1);  // 0 to 1
+                const basePoints = 10 + (progress * 30);  // 10 to 40
+                // Round up to nearest 5
+                chore.points = Math.ceil(basePoints / 5) * 5;
+              }
+            });
 
-          draftMode = false; // Disable manual assignment buttons
-          console.log('About to save chores. Total chores:', chores.length);
-          console.log('Chores by location:', chores.reduce((acc, c) => { acc[c.loc] = (acc[c.loc] || 0) + 1; return acc; }, {}));
-          saveChores(chores);
-          render();
-          notify(`Assigned ${unchosen.length} chore(s) (balanced).`, 1800);
+            draftMode = false; // Disable manual assignment buttons
+            console.log('About to save chores. Total chores:', chores.length);
+            console.log('Chores by location:', chores.reduce((acc, c) => { acc[c.loc] = (acc[c.loc] || 0) + 1; return acc; }, {}));
+            saveChores(chores);
+            render();
+            notify(`Assigned ${unchosen.length} chore(s) (balanced).`, 1800);
           } catch (error) {
             console.error('Error in random assign:', error);
             notify('Error assigning chores. Please try again.', 1800);
@@ -887,7 +885,7 @@
       }
 
       // Auction flow helpers
-      function askYesNo(message, yesLabel = 'Yes', noLabel = 'No'){
+      function askYesNo(message, yesLabel = 'Yes', noLabel = 'No') {
         return new Promise(resolve => {
           const overlay = document.createElement('div');
           overlay.className = 'tcg-modal-overlay';
@@ -904,14 +902,14 @@
           const noBtn = document.createElement('button');
           noBtn.textContent = noLabel;
 
-          function cleanup(result){
+          function cleanup(result) {
             document.removeEventListener('keydown', onKey);
             overlay.remove();
             resolve(result);
           }
-          function onKey(e){
-            if(e.key === 'Escape') cleanup(false);
-            if(e.key === 'Enter') cleanup(true);
+          function onKey(e) {
+            if (e.key === 'Escape') cleanup(false);
+            if (e.key === 'Enter') cleanup(true);
           }
 
           yesBtn.addEventListener('click', () => cleanup(true));
@@ -928,7 +926,7 @@
       }
 
       // ask with Quit option: resolves 'yes' | 'no' | 'quit'
-      function askYesNoQuit(message, yesLabel = 'Yes', noLabel = 'No', quitLabel = 'Quit Auction'){
+      function askYesNoQuit(message, yesLabel = 'Yes', noLabel = 'No', quitLabel = 'Quit Auction') {
         return new Promise(resolve => {
           const overlay = document.createElement('div');
           overlay.className = 'tcg-modal-overlay';
@@ -948,14 +946,14 @@
           const yesBtn = document.createElement('button');
           yesBtn.textContent = yesLabel;
 
-          function cleanup(result){
+          function cleanup(result) {
             document.removeEventListener('keydown', onKey);
-            try{ overlay.remove(); }catch(e){}
+            try { overlay.remove(); } catch (e) { }
             resolve(result);
           }
-          function onKey(e){
-            if(e.key === 'Escape') cleanup('no');
-            if(e.key === 'Enter') cleanup('yes');
+          function onKey(e) {
+            if (e.key === 'Escape') cleanup('no');
+            if (e.key === 'Enter') cleanup('yes');
           }
 
           quitBtn.addEventListener('click', () => cleanup('quit'));
@@ -975,7 +973,7 @@
       }
 
       // Helper for Draft: ask Easy or Hard
-      function askHighOrLow(choreName){
+      function askHighOrLow(choreName) {
         return new Promise(resolve => {
           const overlay = document.createElement('div');
           overlay.className = 'tcg-modal-overlay';
@@ -992,7 +990,7 @@
           const lowBtn = document.createElement('button');
           lowBtn.textContent = 'Easy';
 
-          function cleanup(choice){
+          function cleanup(choice) {
             overlay.remove();
             resolve(choice);
           }
@@ -1009,14 +1007,14 @@
         });
       }
 
-      async function auctionSingle(chore, bidders){
+      async function auctionSingle(chore, bidders) {
         // bidders is an array of {loc: 'left'|'right'|'extra1'|'extra2', name: 'Name'}
         let currentPrice = 45;
         let activeBidders = [...bidders]; // Track who can still bid
 
-        while(currentPrice >= 5 && activeBidders.length > 0){
+        while (currentPrice >= 5 && activeBidders.length > 0) {
           // If we're at 5 points, randomly assign to one of the remaining bidders
-          if(currentPrice === 5){
+          if (currentPrice === 5) {
             const randomBidder = activeBidders[Math.floor(Math.random() * activeBidders.length)];
             chore.loc = randomBidder.loc;
             chore.points = 5;
@@ -1025,58 +1023,58 @@
 
           // Ask each active bidder if they want to stay in the bidding
           const responses = [];
-          
-          for(const bidder of activeBidders){
+
+          for (const bidder of activeBidders) {
             // Get player color based on location
             let playerColor = '';
-            if(bidder.loc === 'left') playerColor = '#66CED6';
-            else if(bidder.loc === 'right') playerColor = '#FF4242';
-            else if(bidder.loc === 'extra1') playerColor = 'orange';
-            else if(bidder.loc === 'extra2') playerColor = 'limegreen';
-            else if(bidder.loc === 'extra3') playerColor = 'purple';
-            else if(bidder.loc === 'extra4') playerColor = 'yellow';
-            else if(bidder.loc === 'extra5') playerColor = 'pink';
-            else if(bidder.loc === 'extra6') playerColor = 'brown';
-            else if(bidder.loc === 'extra7') playerColor = 'gray';
-            else if(bidder.loc === 'extra8') playerColor = 'teal';
-            
+            if (bidder.loc === 'left') playerColor = '#66CED6';
+            else if (bidder.loc === 'right') playerColor = '#FF4242';
+            else if (bidder.loc === 'extra1') playerColor = 'orange';
+            else if (bidder.loc === 'extra2') playerColor = 'limegreen';
+            else if (bidder.loc === 'extra3') playerColor = 'purple';
+            else if (bidder.loc === 'extra4') playerColor = 'yellow';
+            else if (bidder.loc === 'extra5') playerColor = 'pink';
+            else if (bidder.loc === 'extra6') playerColor = 'brown';
+            else if (bidder.loc === 'extra7') playerColor = 'gray';
+            else if (bidder.loc === 'extra8') playerColor = 'teal';
+
             const decision = await askYesNoQuit(
               `Will <span style="color: ${playerColor}; font-weight: bold;">${bidder.name.toUpperCase()}</span> stay in for "${chore.name}" at ${currentPrice} points?`,
               'Yes',
               'No',
               'Quit Auction'
             );
-            if(decision === 'quit'){
+            if (decision === 'quit') {
               return { abort: true };
             }
             const accepted = (decision === 'yes');
             responses.push({ bidder, accepted });
           }
-          
+
           // Filter to only bidders who said yes
           activeBidders = responses.filter(r => r.accepted).map(r => r.bidder);
-          
+
           // If only one bidder left, assign to them at current price
-          if(activeBidders.length === 1){
+          if (activeBidders.length === 1) {
             chore.loc = activeBidders[0].loc;
             chore.points = currentPrice;
             return { abort: false };
           }
-          
+
           // If no one left, assign to random original bidder at 5 points
-          if(activeBidders.length === 0){
+          if (activeBidders.length === 0) {
             const randomBidder = bidders[Math.floor(Math.random() * bidders.length)];
             chore.loc = randomBidder.loc;
             chore.points = 5;
             return { abort: false };
           }
-          
+
           // Lower the price for next round
           currentPrice -= 5;
         }
 
         // Fallback: assign to random remaining bidder at 5 points
-        if(activeBidders.length > 0){
+        if (activeBidders.length > 0) {
           const randomBidder = activeBidders[Math.floor(Math.random() * activeBidders.length)];
           chore.loc = randomBidder.loc;
           chore.points = 5;
@@ -1089,68 +1087,68 @@
         }
       }
 
-      async function runAuction(){
+      async function runAuction() {
         const chores = loadChores();
         const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
-        if(!unchosen.length){
+        if (!unchosen.length) {
           notify('No unassigned chores to auction.', 1800);
           return;
         }
-        
+
         // Get all currently active players as bidders
         const activePlayers = getActivePlayers();
-        if(activePlayers.length === 0){
+        if (activePlayers.length === 0) {
           notify('No active players to participate in auction.', 1800);
           return;
         }
-        
+
         const bidders = activePlayers.map(player => ({
           loc: player.loc,
           name: player.name
         }));
 
         let aborted = false;
-        for(const chore of unchosen){
+        for (const chore of unchosen) {
           const result = await auctionSingle(chore, bidders);
-          if(result && result.abort){
+          if (result && result.abort) {
             aborted = true;
             break;
           }
           saveChores(chores);
           render();
         }
-        if(aborted){
-          try{ notify('Auction cancelled.'); }catch(e){}
+        if (aborted) {
+          try { notify('Auction cancelled.'); } catch (e) { }
         }
         draftMode = false; // Disable manual assignment buttons
       }
 
       const auctionBtn = document.getElementById('auction-btn');
-      if(auctionBtn){
+      if (auctionBtn) {
         auctionBtn.addEventListener('click', () => { runAuction(); });
       }
 
       // Draft flow: ask High/Low for each chore and assign random points
-      function randomInRange(min, max){
+      function randomInRange(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
 
-      function roundToNearest5(n){
+      function roundToNearest5(n) {
         return Math.round(n / 5) * 5;
       }
 
-      async function runDraft(){
+      async function runDraft() {
         const chores = loadChores();
         const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
-        if(!unchosen.length){
+        if (!unchosen.length) {
           notify('No unassigned chores to draft.', 1800);
           return;
         }
 
-        for(const chore of unchosen){
+        for (const chore of unchosen) {
           const choice = await askHighOrLow(chore.name);
           let points;
-          if(choice === 'high'){
+          if (choice === 'high') {
             points = randomInRange(35, 50);
           } else {
             points = randomInRange(10, 30);
@@ -1165,17 +1163,17 @@
       }
 
       const draftBtn = document.getElementById('draft-btn');
-      if(draftBtn){
+      if (draftBtn) {
         draftBtn.addEventListener('click', () => { runDraft(); });
       }
 
       // re-render when either column header text changes so button labels stay in sync
       [leftHeaderEl, rightHeaderEl].forEach(h => {
-        if(!h) return;
+        if (!h) return;
         // save header text and re-render as the user types / on blur
         h.addEventListener('keydown', (e) => {
           // Block Enter/new line in contenteditable
-          if(e.key === 'Enter'){
+          if (e.key === 'Enter') {
             e.preventDefault();
           }
         });
@@ -1185,7 +1183,7 @@
           const noNewlines = raw.replace(/[\r\n]+/g, '');
           const trimmed = noNewlines.trim();
           const limited = trimmed.length > HEADER_MAX ? trimmed.slice(0, HEADER_MAX) : trimmed;
-          if(limited !== raw){
+          if (limited !== raw) {
             h.textContent = limited;
           }
           saveHeaders();
@@ -1197,7 +1195,7 @@
           const noNewlines = raw.replace(/[\r\n]+/g, '');
           const trimmed = noNewlines.trim();
           const limited = trimmed.length > HEADER_MAX ? trimmed.slice(0, HEADER_MAX) : trimmed;
-          if(limited !== raw){
+          if (limited !== raw) {
             h.textContent = limited;
           }
           saveHeaders();
@@ -1223,12 +1221,12 @@
 
       // Unassign All button functionality
       const unassignAllBtn = document.getElementById('unassign-all-btn');
-      if(unassignAllBtn){
-        unassignAllBtn.addEventListener('click', async function(){
+      if (unassignAllBtn) {
+        unassignAllBtn.addEventListener('click', async function () {
           const chores = loadChores();
           const assigned = chores.filter(c => c.loc && c.loc !== 'unchosen');
-          
-          if(!assigned.length){
+
+          if (!assigned.length) {
             notify('No assigned chores to unassign.', 1800);
             return;
           }
@@ -1250,14 +1248,14 @@
             const confirmBtn = document.createElement('button');
             confirmBtn.textContent = 'Unassign All';
 
-            function cleanup(result){
+            function cleanup(result) {
               cancelBtn.removeEventListener('click', onCancel);
               confirmBtn.removeEventListener('click', onConfirm);
-              try{ overlay.remove(); }catch(e){}
+              try { overlay.remove(); } catch (e) { }
               resolve(result);
             }
-            function onCancel(){ cleanup(false); }
-            function onConfirm(){ cleanup(true); }
+            function onCancel() { cleanup(false); }
+            function onConfirm() { cleanup(true); }
 
             cancelBtn.addEventListener('click', onCancel);
             confirmBtn.addEventListener('click', onConfirm);
@@ -1270,11 +1268,11 @@
             document.body.appendChild(overlay);
           });
 
-          if(!confirmed) return;
+          if (!confirmed) return;
 
           // Unassign all chores
           chores.forEach(c => {
-            if(c.loc && c.loc !== 'unchosen'){
+            if (c.loc && c.loc !== 'unchosen') {
               c.loc = 'unchosen';
             }
           });
@@ -1299,50 +1297,50 @@
         extra8: 'Player 10'
       };
 
-      function loadBasePlayerState(){
-        try{ 
-          const raw = localStorage.getItem(BASE_STATE_KEY); 
-          const p = raw ? JSON.parse(raw) : { left: true, right: true }; 
-          return { left: p.left !== false, right: p.right !== false }; 
+      function loadBasePlayerState() {
+        try {
+          const raw = localStorage.getItem(BASE_STATE_KEY);
+          const p = raw ? JSON.parse(raw) : { left: true, right: true };
+          return { left: p.left !== false, right: p.right !== false };
         }
-        catch(e){ return { left: true, right: true }; }
+        catch (e) { return { left: true, right: true }; }
       }
 
       // Function to get all active players
-      function getActivePlayers(){
+      function getActivePlayers() {
         const headers = loadAllHeaders();
         const st = loadExtraState();
         const baseState = loadBasePlayerState();
         const players = [];
-        
+
         // Add base players only if they're active
-        if(baseState.left !== false){
+        if (baseState.left !== false) {
           players.push({ loc: 'left', name: headers.left || 'Player 1', isExtra: false, isBase: true });
         }
-        if(baseState.right !== false){
+        if (baseState.right !== false) {
           players.push({ loc: 'right', name: headers.right || 'Player 2', isExtra: false, isBase: true });
         }
-        
-        for(let i = 1; i <= 8; i++){
+
+        for (let i = 1; i <= 8; i++) {
           const extraKey = `extra${i}`;
-          if(st[extraKey]){
-            players.push({ 
-              loc: extraKey, 
-              name: headers[extraKey] || defaultNames[extraKey], 
+          if (st[extraKey]) {
+            players.push({
+              loc: extraKey,
+              name: headers[extraKey] || defaultNames[extraKey],
               isExtra: true,
               isBase: false
             });
           }
         }
-        
+
         return players;
       }
     })();
-    </script>
+  </script>
 
-    <script>
+  <script>
     // Add/Remove column functionality
-    (function(){
+    (function () {
       const addColumnBtn = document.getElementById('add-column-btn');
       const removeColumnBtn = document.getElementById('remove-column-btn');
       const gridSection = document.querySelector('.grid-3');
@@ -1377,49 +1375,49 @@
       };
 
       // Minimal helpers replicated locally for this module
-      function loadAllHeaders(){
-        try{ const raw = localStorage.getItem(HEADERS_KEY); return raw ? JSON.parse(raw) : {}; }
-        catch(e){ return {}; }
+      function loadAllHeaders() {
+        try { const raw = localStorage.getItem(HEADERS_KEY); return raw ? JSON.parse(raw) : {}; }
+        catch (e) { return {}; }
       }
-      function saveHeaderField(field, value){
+      function saveHeaderField(field, value) {
         const obj = loadAllHeaders(); obj[field] = value; localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
       }
-      function loadExtraState(){
-        try{ const raw = localStorage.getItem(EXTRA_STATE_KEY); const p = raw ? JSON.parse(raw) : { extra1:false, extra2:false, extra3:false, extra4:false, extra5:false, extra6:false, extra7:false, extra8:false }; return { extra1:!!p.extra1, extra2:!!p.extra2, extra3:!!p.extra3, extra4:!!p.extra4, extra5:!!p.extra5, extra6:!!p.extra6, extra7:!!p.extra7, extra8:!!p.extra8 }; }
-        catch(e){ return { extra1:false, extra2:false, extra3:false, extra4:false, extra5:false, extra6:false, extra7:false, extra8:false }; }
+      function loadExtraState() {
+        try { const raw = localStorage.getItem(EXTRA_STATE_KEY); const p = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }; return { extra1: !!p.extra1, extra2: !!p.extra2, extra3: !!p.extra3, extra4: !!p.extra4, extra5: !!p.extra5, extra6: !!p.extra6, extra7: !!p.extra7, extra8: !!p.extra8 }; }
+        catch (e) { return { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }; }
       }
-      function saveExtraState(s){ localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
-      
+      function saveExtraState(s) { localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
+
       // Base player state management
       const BASE_STATE_KEY = 'base-player-state';
-      function loadBasePlayerState(){
-        try{ 
-          const raw = localStorage.getItem(BASE_STATE_KEY); 
-          const p = raw ? JSON.parse(raw) : { left: true, right: true }; 
-          return { left: p.left !== false, right: p.right !== false }; 
+      function loadBasePlayerState() {
+        try {
+          const raw = localStorage.getItem(BASE_STATE_KEY);
+          const p = raw ? JSON.parse(raw) : { left: true, right: true };
+          return { left: p.left !== false, right: p.right !== false };
         }
-        catch(e){ return { left: true, right: true }; }
+        catch (e) { return { left: true, right: true }; }
       }
-      function saveBasePlayerState(s){ localStorage.setItem(BASE_STATE_KEY, JSON.stringify(s)); }
-      
-      function loadPoints(){
-        try{
+      function saveBasePlayerState(s) { localStorage.setItem(BASE_STATE_KEY, JSON.stringify(s)); }
+
+      function loadPoints() {
+        try {
           const raw = localStorage.getItem(POINTS_KEY);
-          const parsed = raw ? JSON.parse(raw) : { left:0, right:0 };
-          if(typeof parsed.left !== 'number') parsed.left = 0;
-          if(typeof parsed.right !== 'number') parsed.right = 0;
-          if(typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
-          if(typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
-          if(typeof parsed.extra3 !== 'number') parsed.extra3 = 0;
-          if(typeof parsed.extra4 !== 'number') parsed.extra4 = 0;
-          if(typeof parsed.extra5 !== 'number') parsed.extra5 = 0;
-          if(typeof parsed.extra6 !== 'number') parsed.extra6 = 0;
-          if(typeof parsed.extra7 !== 'number') parsed.extra7 = 0;
-          if(typeof parsed.extra8 !== 'number') parsed.extra8 = 0;
+          const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
+          if (typeof parsed.left !== 'number') parsed.left = 0;
+          if (typeof parsed.right !== 'number') parsed.right = 0;
+          if (typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
+          if (typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
+          if (typeof parsed.extra3 !== 'number') parsed.extra3 = 0;
+          if (typeof parsed.extra4 !== 'number') parsed.extra4 = 0;
+          if (typeof parsed.extra5 !== 'number') parsed.extra5 = 0;
+          if (typeof parsed.extra6 !== 'number') parsed.extra6 = 0;
+          if (typeof parsed.extra7 !== 'number') parsed.extra7 = 0;
+          if (typeof parsed.extra8 !== 'number') parsed.extra8 = 0;
           return parsed;
-        }catch(e){ return { left:0, right:0, extra1:0, extra2:0, extra3:0, extra4:0, extra5:0, extra6:0, extra7:0, extra8:0 }; }
+        } catch (e) { return { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }; }
       }
-      function renderPoints(){
+      function renderPoints() {
         const p = loadPoints();
         const leftEl = document.getElementById('left-points');
         const rightEl = document.getElementById('right-points');
@@ -1431,20 +1429,20 @@
         const extra6El = document.getElementById('extra6-points');
         const extra7El = document.getElementById('extra7-points');
         const extra8El = document.getElementById('extra8-points');
-        if(leftEl) leftEl.textContent = String(p.left||0);
-        if(rightEl) rightEl.textContent = String(p.right||0);
-        if(extra1El) extra1El.textContent = String(p.extra1||0);
-        if(extra2El) extra2El.textContent = String(p.extra2||0);
-        if(extra3El) extra3El.textContent = String(p.extra3||0);
-        if(extra4El) extra4El.textContent = String(p.extra4||0);
-        if(extra5El) extra5El.textContent = String(p.extra5||0);
-        if(extra6El) extra6El.textContent = String(p.extra6||0);
-        if(extra7El) extra7El.textContent = String(p.extra7||0);
-        if(extra8El) extra8El.textContent = String(p.extra8||0);
+        if (leftEl) leftEl.textContent = String(p.left || 0);
+        if (rightEl) rightEl.textContent = String(p.right || 0);
+        if (extra1El) extra1El.textContent = String(p.extra1 || 0);
+        if (extra2El) extra2El.textContent = String(p.extra2 || 0);
+        if (extra3El) extra3El.textContent = String(p.extra3 || 0);
+        if (extra4El) extra4El.textContent = String(p.extra4 || 0);
+        if (extra5El) extra5El.textContent = String(p.extra5 || 0);
+        if (extra6El) extra6El.textContent = String(p.extra6 || 0);
+        if (extra7El) extra7El.textContent = String(p.extra7 || 0);
+        if (extra8El) extra8El.textContent = String(p.extra8 || 0);
       }
 
-      function updateAddButtonState(){
-        if(!addColumnBtn) return;
+      function updateAddButtonState() {
+        if (!addColumnBtn) return;
         const availablePlayers = getAvailablePlayersToAdd();
         const canAdd = availablePlayers.length > 0;
         addColumnBtn.disabled = !canAdd;
@@ -1452,16 +1450,16 @@
         addColumnBtn.style.cursor = canAdd ? '' : 'not-allowed';
       }
 
-      function enableAddButton(){
+      function enableAddButton() {
         updateAddButtonState();
       }
 
-      function disableAddButton(){
+      function disableAddButton() {
         updateAddButtonState();
       }
 
-      function updateRemoveButtonState(){
-        if(!removeColumnBtn) return;
+      function updateRemoveButtonState() {
+        if (!removeColumnBtn) return;
         // Count total active players (base + extras)
         const baseState = loadBasePlayerState();
         const st = loadExtraState();
@@ -1475,11 +1473,11 @@
       }
 
       // Function to find the next available extra slot
-      function getNextAvailableExtraSlot(){
+      function getNextAvailableExtraSlot() {
         const st = loadExtraState();
-        for(let i = 1; i <= 8; i++){
+        for (let i = 1; i <= 8; i++) {
           const extraKey = `extra${i}`;
-          if(!st[extraKey]){
+          if (!st[extraKey]) {
             return i;
           }
         }
@@ -1487,13 +1485,13 @@
       }
 
       // Function to get current active extra players in position order
-      function getActiveExtraPlayers(){
+      function getActiveExtraPlayers() {
         const st = loadExtraState();
         const activeExtras = [];
-        
-        for(let i = 1; i <= 8; i++){
+
+        for (let i = 1; i <= 8; i++) {
           const extraKey = `extra${i}`;
-          if(st[extraKey]){
+          if (st[extraKey]) {
             activeExtras.push({
               key: extraKey,
               number: i,
@@ -1501,18 +1499,18 @@
             });
           }
         }
-        
+
         return activeExtras;
       }
 
       // Function to calculate optimal grid positions without gaps
-      function calculateOptimalPositions(){
+      function calculateOptimalPositions() {
         const activeExtras = getActiveExtraPlayers();
         const leftPlayers = activeExtras.filter(p => p.isLeft).sort((a, b) => a.number - b.number);
         const rightPlayers = activeExtras.filter(p => p.isLeft === false).sort((a, b) => a.number - b.number);
-        
+
         const positions = {};
-        
+
         // Assign left side positions (starting from row 2)
         leftPlayers.forEach((player, index) => {
           positions[player.key] = {
@@ -1520,7 +1518,7 @@
             row: index + 2 // Start from row 2 (row 1 has base players)
           };
         });
-        
+
         // Assign right side positions (starting from row 2)
         rightPlayers.forEach((player, index) => {
           positions[player.key] = {
@@ -1528,18 +1526,18 @@
             row: index + 2 // Start from row 2 (row 1 has base players)
           };
         });
-        
+
         return positions;
       }
 
       // Function to reposition all extra columns to eliminate gaps
-      function repositionAllExtraColumns(){
+      function repositionAllExtraColumns() {
         const positions = calculateOptimalPositions();
-        
+
         // Update all existing extra columns with their new positions
         Object.keys(positions).forEach(extraKey => {
           const column = document.getElementById(`column-${extraKey}`);
-          if(column){
+          if (column) {
             const pos = positions[extraKey];
             column.style.gridColumn = pos.column.toString();
             column.style.gridRow = pos.row.toString();
@@ -1548,105 +1546,105 @@
       }
 
       // Function to balance players after removal
-      function rebalancePlayers(){
+      function rebalancePlayers() {
         // Reposition all columns to eliminate gaps
         repositionAllExtraColumns();
-        
+
         // Update the unassigned column position
         updateUnassignedPosition();
       }
 
       // Function to get available players that can be added
-      function getAvailablePlayersToAdd(){
+      function getAvailablePlayersToAdd() {
         const headers = loadAllHeaders();
         const baseState = loadBasePlayerState();
         const st = loadExtraState();
         const availablePlayers = [];
-        
+
         // Check for inactive base players
-        if(baseState.left === false){
-          availablePlayers.push({ 
-            loc: 'left', 
-            name: headers.left || 'Player 1', 
-            isExtra: false, 
-            isBase: true 
+        if (baseState.left === false) {
+          availablePlayers.push({
+            loc: 'left',
+            name: headers.left || 'Player 1',
+            isExtra: false,
+            isBase: true
           });
         }
-        if(baseState.right === false){
-          availablePlayers.push({ 
-            loc: 'right', 
-            name: headers.right || 'Player 2', 
-            isExtra: false, 
-            isBase: true 
+        if (baseState.right === false) {
+          availablePlayers.push({
+            loc: 'right',
+            name: headers.right || 'Player 2',
+            isExtra: false,
+            isBase: true
           });
         }
-        
+
         // Check for inactive extra players
-        for(let i = 1; i <= 8; i++){
+        for (let i = 1; i <= 8; i++) {
           const extraKey = `extra${i}`;
-          if(!st[extraKey]){
-            availablePlayers.push({ 
-              loc: extraKey, 
-              name: headers[extraKey] || defaultNames[extraKey], 
+          if (!st[extraKey]) {
+            availablePlayers.push({
+              loc: extraKey,
+              name: headers[extraKey] || defaultNames[extraKey],
               isExtra: true,
               isBase: false
             });
           }
         }
-        
+
         return availablePlayers;
       }
 
       // Function to get all active players (local copy for this script block)
-      function getActivePlayers(){
+      function getActivePlayers() {
         const headers = loadAllHeaders();
         const st = loadExtraState();
         const baseState = loadBasePlayerState();
         const players = [];
-        
+
         // Add base players only if they're active
-        if(baseState.left !== false){
+        if (baseState.left !== false) {
           players.push({ loc: 'left', name: headers.left || 'Player 1', isExtra: false, isBase: true });
         }
-        if(baseState.right !== false){
+        if (baseState.right !== false) {
           players.push({ loc: 'right', name: headers.right || 'Player 2', isExtra: false, isBase: true });
         }
-        
-        for(let i = 1; i <= 8; i++){
+
+        for (let i = 1; i <= 8; i++) {
           const extraKey = `extra${i}`;
-          if(st[extraKey]){
-            players.push({ 
-              loc: extraKey, 
-              name: headers[extraKey] || defaultNames[extraKey], 
+          if (st[extraKey]) {
+            players.push({
+              loc: extraKey,
+              name: headers[extraKey] || defaultNames[extraKey],
               isExtra: true,
               isBase: false
             });
           }
         }
-        
+
         return players;
       }
 
       // Player selection modal for addition
-      function askPlayerToAdd(availablePlayers){
+      function askPlayerToAdd(availablePlayers) {
         return new Promise((resolve) => {
           const overlay = document.createElement('div');
           overlay.className = 'tcg-modal-overlay';
           const modal = document.createElement('div');
           modal.className = 'tcg-modal';
-          
+
           const title = document.createElement('h3');
           title.textContent = 'Select Player to Add';
           title.style.margin = '0 0 16px 0';
           title.style.textAlign = 'center';
           modal.appendChild(title);
-          
+
           const playerGrid = document.createElement('div');
           playerGrid.style.display = 'grid';
           playerGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
           playerGrid.style.gap = '8px';
           playerGrid.style.marginBottom = '16px';
-          
+
           const buttons = [];
           availablePlayers.forEach(player => {
             const btn = document.createElement('button');
@@ -1659,38 +1657,38 @@
             btn.style.color = 'white';
             btn.style.fontWeight = 'bold';
             btn.style.fontSize = '0.9rem';
-            
+
             // Apply player color
-            if(player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
-            else if(player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
-            else if(player.loc === 'extra1') btn.style.backgroundColor = 'orange';
-            else if(player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
-            else if(player.loc === 'extra3') btn.style.backgroundColor = 'purple';
-            else if(player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
-            else if(player.loc === 'extra5') btn.style.backgroundColor = 'pink';
-            else if(player.loc === 'extra6') btn.style.backgroundColor = 'brown';
-            else if(player.loc === 'extra7') btn.style.backgroundColor = 'gray';
-            else if(player.loc === 'extra8') btn.style.backgroundColor = 'teal';
-            
+            if (player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
+            else if (player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
+            else if (player.loc === 'extra1') btn.style.backgroundColor = 'orange';
+            else if (player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
+            else if (player.loc === 'extra3') btn.style.backgroundColor = 'purple';
+            else if (player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
+            else if (player.loc === 'extra5') btn.style.backgroundColor = 'pink';
+            else if (player.loc === 'extra6') btn.style.backgroundColor = 'brown';
+            else if (player.loc === 'extra7') btn.style.backgroundColor = 'gray';
+            else if (player.loc === 'extra8') btn.style.backgroundColor = 'teal';
+
             // Special styling for yellow text
-            if(player.loc === 'extra4') btn.style.color = 'black';
-            
+            if (player.loc === 'extra4') btn.style.color = 'black';
+
             playerGrid.appendChild(btn);
             buttons.push(btn);
-            
+
             btn.addEventListener('click', () => {
               resolve(player.loc);
               cleanup();
             });
           });
-          
+
           modal.appendChild(playerGrid);
-          
+
           const actions = document.createElement('div');
           actions.style.display = 'flex';
           actions.style.justifyContent = 'center';
           actions.style.gap = '8px';
-          
+
           const cancelBtn = document.createElement('button');
           cancelBtn.textContent = 'Cancel';
           cancelBtn.style.padding = '8px 16px';
@@ -1701,38 +1699,38 @@
             resolve(null);
             cleanup();
           });
-          
+
           actions.appendChild(cancelBtn);
           modal.appendChild(actions);
           overlay.appendChild(modal);
           document.body.appendChild(overlay);
-          
-          function cleanup(){
-            try{ overlay.remove(); }catch(e){}
+
+          function cleanup() {
+            try { overlay.remove(); } catch (e) { }
           }
         });
       }
 
       // Player selection modal for removal
-      function askPlayerToRemove(players){
+      function askPlayerToRemove(players) {
         return new Promise((resolve) => {
           const overlay = document.createElement('div');
           overlay.className = 'tcg-modal-overlay';
           const modal = document.createElement('div');
           modal.className = 'tcg-modal';
-          
+
           const title = document.createElement('h3');
           title.textContent = 'Select Player to Remove';
           title.style.margin = '0 0 16px 0';
           title.style.textAlign = 'center';
           modal.appendChild(title);
-          
+
           const playerGrid = document.createElement('div');
           playerGrid.style.display = 'grid';
           playerGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
           playerGrid.style.gap = '8px';
           playerGrid.style.marginBottom = '16px';
-          
+
           const buttons = [];
           players.forEach(player => {
             const btn = document.createElement('button');
@@ -1745,32 +1743,32 @@
             btn.style.color = 'white';
             btn.style.fontWeight = 'bold';
             btn.style.fontSize = '0.9rem';
-            
+
             // Apply player color
-            if(player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
-            else if(player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
-            else if(player.loc === 'extra1') btn.style.backgroundColor = 'orange';
-            else if(player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
-            else if(player.loc === 'extra3') btn.style.backgroundColor = 'purple';
-            else if(player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
-            else if(player.loc === 'extra5') btn.style.backgroundColor = 'pink';
-            else if(player.loc === 'extra6') btn.style.backgroundColor = 'brown';
-            else if(player.loc === 'extra7') btn.style.backgroundColor = 'gray';
-            else if(player.loc === 'extra8') btn.style.backgroundColor = 'teal';
-            
+            if (player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
+            else if (player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
+            else if (player.loc === 'extra1') btn.style.backgroundColor = 'orange';
+            else if (player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
+            else if (player.loc === 'extra3') btn.style.backgroundColor = 'purple';
+            else if (player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
+            else if (player.loc === 'extra5') btn.style.backgroundColor = 'pink';
+            else if (player.loc === 'extra6') btn.style.backgroundColor = 'brown';
+            else if (player.loc === 'extra7') btn.style.backgroundColor = 'gray';
+            else if (player.loc === 'extra8') btn.style.backgroundColor = 'teal';
+
             // Special styling for yellow text
-            if(player.loc === 'extra4') btn.style.color = 'black';
-            
+            if (player.loc === 'extra4') btn.style.color = 'black';
+
             playerGrid.appendChild(btn);
             buttons.push(btn);
           });
-          
+
           modal.appendChild(playerGrid);
-          
+
           // Cancel button
           const cancelWrapper = document.createElement('div');
           cancelWrapper.style.textAlign = 'center';
-          
+
           const cancelBtn = document.createElement('button');
           cancelBtn.textContent = 'Cancel';
           cancelBtn.style.padding = '8px 16px';
@@ -1779,47 +1777,47 @@
           cancelBtn.style.border = 'none';
           cancelBtn.style.borderRadius = '6px';
           cancelBtn.style.cursor = 'pointer';
-          
+
           cancelWrapper.appendChild(cancelBtn);
           modal.appendChild(cancelWrapper);
-          
+
           overlay.appendChild(modal);
           document.body.appendChild(overlay);
-          
-          function cleanup(choice){
+
+          function cleanup(choice) {
             buttons.forEach(btn => btn.removeEventListener('click', onClick));
             cancelBtn.removeEventListener('click', onCancel);
-            try{ document.body.removeChild(overlay); }catch(e){}
+            try { document.body.removeChild(overlay); } catch (e) { }
             resolve(choice);
           }
-          
-          function onClick(e){
+
+          function onClick(e) {
             const loc = e.target.dataset.loc;
             cleanup(loc);
           }
-          
-          function onCancel(){
+
+          function onCancel() {
             cleanup(null);
           }
-          
+
           buttons.forEach(btn => btn.addEventListener('click', onClick));
           cancelBtn.addEventListener('click', onCancel);
         });
       }
 
       // Position the unassigned chores column so its extended height sits between extra players
-      function updateUnassignedPosition(){
+      function updateUnassignedPosition() {
         const choresCol = document.getElementById('chores-column');
-        if(!choresCol) return;
+        if (!choresCol) return;
         const st = loadExtraState();
         const hasAnyExtras = Object.values(st).some(Boolean);
-        if(hasAnyExtras){
+        if (hasAnyExtras) {
           // Calculate the maximum row needed based on active players
           const activeExtras = getActiveExtraPlayers();
           const leftPlayers = activeExtras.filter(p => p.isLeft);
           const rightPlayers = activeExtras.filter(p => !p.isLeft);
           const maxRowsNeeded = Math.max(leftPlayers.length, rightPlayers.length) + 1; // +1 for base row
-          
+
           // Keep it in the center column starting at row 1,
           // but span down through all active rows so the extended list appears between the extras
           choresCol.style.gridColumn = '2';
@@ -1831,41 +1829,41 @@
         }
       }
 
-      function attachExtraHeaderHandlers(headerEl, field){
-        if(!headerEl) return;
+      function attachExtraHeaderHandlers(headerEl, field) {
+        if (!headerEl) return;
         headerEl.addEventListener('keydown', (e) => {
-          if(e.key === 'Enter') e.preventDefault();
+          if (e.key === 'Enter') e.preventDefault();
         });
         const enforceAndSave = () => {
           const raw = (headerEl.textContent || '');
           const noNewlines = raw.replace(/[\r\n]+/g, '');
           const trimmed = noNewlines.trim();
           const limited = trimmed.length > 8 ? trimmed.slice(0, 8) : trimmed;
-          if(limited !== raw){ headerEl.textContent = limited; }
+          if (limited !== raw) { headerEl.textContent = limited; }
           saveHeaderField(field, limited);
         };
         headerEl.addEventListener('input', enforceAndSave);
         headerEl.addEventListener('blur', enforceAndSave);
       }
 
-      function createExtraColumn(extraNum){
+      function createExtraColumn(extraNum) {
         const columnLeft = document.getElementById('column-left');
-        if(!columnLeft) return null;
-        
+        if (!columnLeft) return null;
+
         const extraKey = `extra${extraNum}`;
         const newColumn = columnLeft.cloneNode(true);
         newColumn.id = `column-${extraKey}`;
-        
+
         // Initially position based on the original algorithm
         // Will be repositioned by rebalancePlayers() after creation
         const isLeftSide = extraNum % 2 === 1;
         const row = Math.ceil(extraNum / 2) + 1;
         newColumn.style.gridColumn = isLeftSide ? '1' : '3';
         newColumn.style.gridRow = String(row);
-        
+
         // header
         const header = newColumn.querySelector('.column-header');
-        if(header){
+        if (header) {
           header.style.backgroundColor = extraColors[extraKey];
           header.style.textAlign = 'center';
           header.style.fontSize = '4vw';
@@ -1874,75 +1872,75 @@
           header.textContent = (allHeaders[extraKey] && String(allHeaders[extraKey]).trim()) || defaultNames[extraKey];
           attachExtraHeaderHandlers(header, extraKey);
         }
-        
+
         // points
         const pointsBank = newColumn.querySelector('.points-bank');
-        if(pointsBank){
+        if (pointsBank) {
           pointsBank.id = `${extraKey}-points-bank`;
           const isRightSide = extraNum % 2 === 0;
-          if(isRightSide) pointsBank.style.textAlign = 'right';
+          if (isRightSide) pointsBank.style.textAlign = 'right';
           const pointsStrong = pointsBank.querySelector('strong');
-          if(pointsStrong){
+          if (pointsStrong) {
             pointsStrong.id = `${extraKey}-points`;
             const p = loadPoints();
             pointsStrong.textContent = String(p[extraKey] || 0);
           }
         }
-        
+
         // list id and clear cloned chores
         const listDiv = newColumn.querySelector('#left-list');
-        if(listDiv){
+        if (listDiv) {
           listDiv.id = `${extraKey}-list`;
           // Clear any cloned chores from column-left
           listDiv.innerHTML = '<article class="card chore-placeholder">No chores assigned.</article>';
         }
-        
+
         gridSection.appendChild(newColumn);
-        
+
         // save presence
         const st = loadExtraState();
         st[extraKey] = true;
         saveExtraState(st);
-        
+
         // Reposition all columns to eliminate gaps and maintain proper order
         repositionAllExtraColumns();
-        
+
         // Reposition unassigned column if needed
         updateUnassignedPosition();
         return newColumn;
       }
 
-      function initFromStorage(){
+      function initFromStorage() {
         const st = loadExtraState();
         const baseState = loadBasePlayerState();
         let maxSlot = 0;
-        
+
         // Handle base player visibility
-        if(baseState.left === false){
+        if (baseState.left === false) {
           const leftColumn = document.getElementById('column-left');
-          if(leftColumn) leftColumn.style.display = 'none';
+          if (leftColumn) leftColumn.style.display = 'none';
         }
-        if(baseState.right === false){
+        if (baseState.right === false) {
           const rightColumn = document.getElementById('column-right');
-          if(rightColumn) rightColumn.style.display = 'none';
+          if (rightColumn) rightColumn.style.display = 'none';
         }
-        
+
         // Count how many extras are enabled and create them
-        for(let i = 1; i <= 8; i++){
+        for (let i = 1; i <= 8; i++) {
           const extraKey = `extra${i}`;
-          if(st[extraKey]){
+          if (st[extraKey]) {
             createExtraColumn(i);
             maxSlot = i;
           }
         }
-        
+
         // After all columns are created, reposition them to eliminate gaps
         repositionAllExtraColumns();
-        
+
         // Update button states
         updateAddButtonState();
         updateRemoveButtonState();
-        
+
         updateRemoveButtonState();
         renderPoints();
         // Dispatch event to notify chores script that extra columns are ready
@@ -1951,13 +1949,13 @@
         updateUnassignedPosition();
       }
 
-      if(!addColumnBtn || !gridSection) return;
+      if (!addColumnBtn || !gridSection) return;
 
       // Helper to clear cached header + points for an extra column
-      function clearExtraStorage(which){
+      function clearExtraStorage(which) {
         // which should be 'extra1', 'extra2', etc.
         const headers = loadAllHeaders();
-        if(headers && Object.prototype.hasOwnProperty.call(headers, which)){
+        if (headers && Object.prototype.hasOwnProperty.call(headers, which)) {
           delete headers[which];
           localStorage.setItem(HEADERS_KEY, JSON.stringify(headers));
         }
@@ -1967,13 +1965,13 @@
       }
 
       // Helper to clear cached header + points for a base player
-      function clearBaseStorage(which){
+      function clearBaseStorage(which) {
         // which should be 'left' or 'right'
         const headers = loadAllHeaders();
-        if(headers && Object.prototype.hasOwnProperty.call(headers, which)){
+        if (headers && Object.prototype.hasOwnProperty.call(headers, which)) {
           // Reset to default names instead of deleting
-          if(which === 'left') headers[which] = 'Player 1';
-          else if(which === 'right') headers[which] = 'Player 2';
+          if (which === 'left') headers[which] = 'Player 1';
+          else if (which === 'right') headers[which] = 'Player 2';
           localStorage.setItem(HEADERS_KEY, JSON.stringify(headers));
         }
         const pts = loadPoints();
@@ -1982,18 +1980,18 @@
       }
 
       // Helper to reassign chores from a removed column back to unchosen
-      function reassignChoresFromColumn(loc){
+      function reassignChoresFromColumn(loc) {
         const STORAGE_KEY = 'tcg_chores_v1';
-        try{
+        try {
           const raw = localStorage.getItem(STORAGE_KEY);
-          if(!raw) return;
+          if (!raw) return;
           const chores = JSON.parse(raw);
           // Find all chores in this location and set them to unchosen
           chores.forEach(c => {
-            if(c.loc === loc) c.loc = 'unchosen';
+            if (c.loc === loc) c.loc = 'unchosen';
           });
           localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
-        }catch(e){
+        } catch (e) {
           console.error('Error reassigning chores:', e);
         }
       }
@@ -2001,27 +1999,27 @@
       // initialize from saved state (if any)
       initFromStorage();
 
-      addColumnBtn.addEventListener('click', async function(){
+      addColumnBtn.addEventListener('click', async function () {
         // Get available players to add
         const availablePlayers = getAvailablePlayersToAdd();
-        if(availablePlayers.length === 0) return; // No players to add
-        
+        if (availablePlayers.length === 0) return; // No players to add
+
         // Ask user which player to add
         const playerLoc = await askPlayerToAdd(availablePlayers);
-        if(!playerLoc) return; // User cancelled
-        
+        if (!playerLoc) return; // User cancelled
+
         const player = availablePlayers.find(p => p.loc === playerLoc);
-        if(!player) return; // Invalid selection
-        
-        if(player.isBase){
+        if (!player) return; // Invalid selection
+
+        if (player.isBase) {
           // Re-enable base player
           const baseState = loadBasePlayerState();
           baseState[playerLoc] = true;
           saveBasePlayerState(baseState);
-          
+
           // Show the column
           const columnToShow = document.getElementById(`column-${playerLoc}`);
-          if(columnToShow){
+          if (columnToShow) {
             columnToShow.style.display = '';
           }
         } else {
@@ -2032,17 +2030,17 @@
           const slotNumber = parseInt(playerLoc.replace('extra', ''));
           createExtraColumn(slotNumber);
         }
-        
+
         // Reposition all columns to eliminate gaps
         repositionAllExtraColumns();
-        
+
         // Update button states
         updateRemoveButtonState();
         updateAddButtonState();
       });
 
       // Confirmation helper for removing player
-      function askConfirmRemove(playerName, playerColor){
+      function askConfirmRemove(playerName, playerColor) {
         return new Promise((resolve) => {
           const overlay = document.createElement('div');
           overlay.className = 'tcg-modal-overlay';
@@ -2059,7 +2057,7 @@
           const confirmBtn = document.createElement('button');
           confirmBtn.textContent = 'Remove';
           confirmBtn.style.transition = 'background-color 0.2s';
-          
+
           // Add hover effect to Remove button
           confirmBtn.addEventListener('mouseenter', () => {
             confirmBtn.style.backgroundColor = '#E24A4A';
@@ -2070,14 +2068,14 @@
             confirmBtn.style.color = '';
           });
 
-          function cleanup(result){
+          function cleanup(result) {
             cancelBtn.removeEventListener('click', onCancel);
             confirmBtn.removeEventListener('click', onConfirm);
-            try{ overlay.remove(); }catch(e){}
+            try { overlay.remove(); } catch (e) { }
             resolve(result);
           }
-          function onCancel(){ cleanup(false); }
-          function onConfirm(){ cleanup(true); }
+          function onCancel() { cleanup(false); }
+          function onConfirm() { cleanup(true); }
 
           cancelBtn.addEventListener('click', onCancel);
           confirmBtn.addEventListener('click', onConfirm);
@@ -2092,76 +2090,76 @@
       }
 
       // Remove player functionality: allow removing any player (but keep at least 1)
-      if(removeColumnBtn){
-        removeColumnBtn.addEventListener('click', async function(){
+      if (removeColumnBtn) {
+        removeColumnBtn.addEventListener('click', async function () {
           console.log('Remove button clicked');
           const players = getActivePlayers();
           console.log('Active players:', players);
-          
-          if(players.length <= 1) {
+
+          if (players.length <= 1) {
             console.log('Cannot remove - only 1 player left');
             return; // Need at least 1 player
           }
-          
+
           // Ask user which player to remove
           const playerLoc = await askPlayerToRemove(players);
-          if(!playerLoc) return; // User cancelled
-          
+          if (!playerLoc) return; // User cancelled
+
           const player = players.find(p => p.loc === playerLoc);
-          if(!player) return; // Invalid selection
-          
+          if (!player) return; // Invalid selection
+
           // Ask for confirmation
           let playerColor = 'gray';
-          if(player.loc === 'left') playerColor = '#2196F3';
-          else if(player.loc === 'right') playerColor = '#E53E3E';
+          if (player.loc === 'left') playerColor = '#2196F3';
+          else if (player.loc === 'right') playerColor = '#E53E3E';
           else playerColor = extraColors[playerLoc] || 'gray';
-          
-          const confirmed = await askConfirmRemove(player.name, playerColor);
-          if(!confirmed) return;
 
-          if(player.isBase){
+          const confirmed = await askConfirmRemove(player.name, playerColor);
+          if (!confirmed) return;
+
+          if (player.isBase) {
             // Handle base player removal - hide the column
             const columnToHide = document.getElementById(`column-${playerLoc}`);
-            if(columnToHide){
+            if (columnToHide) {
               columnToHide.style.display = 'none';
             }
-            
+
             // Update base player state
             const baseState = loadBasePlayerState();
             baseState[playerLoc] = false;
             saveBasePlayerState(baseState);
-            
+
             // Clear base player cached data
             clearBaseStorage(playerLoc);
           } else {
             // Handle extra player removal - actually remove the column
             const columnToRemove = document.getElementById(`column-${playerLoc}`);
-            if(columnToRemove){
+            if (columnToRemove) {
               columnToRemove.remove();
             }
-            
+
             // Update storage
             const st = loadExtraState();
             st[playerLoc] = false;
             saveExtraState(st);
             clearExtraStorage(playerLoc);
           }
-          
+
           // Reassign chores from removed player
           reassignChoresFromColumn(playerLoc);
-          
+
           // Reposition all columns to eliminate gaps
           repositionAllExtraColumns();
-          
+
           // Re-enable add button since we now have room
           enableAddButton();
-          
+
           // Update remove button state
           updateRemoveButtonState();
-          
+
           // Trigger re-render to remove assign buttons for this column
           window.dispatchEvent(new CustomEvent('extraColumnRemoved'));
-          
+
           // Reposition unassigned column if needed
           updateUnassignedPosition();
         });
@@ -2171,6 +2169,7 @@
       updateRemoveButtonState();
       updateAddButtonState();
     })();
-    </script>
+  </script>
 </body>
+
 </html>

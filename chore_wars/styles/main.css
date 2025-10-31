@@ -1,0 +1,271 @@
+/* COLOR PALETTE & FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Hachi+Maru+Pop&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Yusei+Magic&display=swap');
+
+:root {
+  --player2_color: #FF4242;
+  --player1_color: #66CED6;
+  --center_column: #ded666;
+  --header_footer: #adadad;
+  --button_back: #B8D0EB;
+  --button_hover: #5D707F;
+  --background_color: #e7e7e7;
+  --header_btn_back: #e7e7e7;
+  --header_btn_hover: #B8D0EB;
+  --extra1_color: orange;
+  --extra2_color: lime;
+  --extra3_color: purple;
+  --extra4_color: yellow;
+  --extra5_color: pink;
+  --extra6_color: brown;
+  --extra7_color: gray;
+  --extra8_color: teal;
+
+  --names_font: "Yusei Magic", sans-serif;
+  --header_font: "Montserrat", sans-serif;
+  --p_font: "Open Sans", sans-serif;
+
+
+}
+
+
+/* Simple wireframe styles */
+:root {
+  --gap: 16px;
+  /* Let container width grow with viewport but cap for readability */
+  /*.j Line 37-38 (below) is unused */
+  --max-width: clamp(960px, 96vw, 1400px);
+  --accent: #2b6cb0;
+  --muted: #f3f4f6;
+  --text: #111827;
+}
+
+* {
+  box-sizing: border-box
+}
+
+body {
+  font-family: var(--p_font);
+  margin: 0;
+  color: var(--text);
+  background: var(--background_color);
+  line-height: 1.4;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.header-btn {
+  background-color: var(--header_btn_back);
+  color: var(--button_hover);
+}
+
+.header-btn:hover {
+  background-color: var(--header_btn_hover);
+}
+
+.site-header {
+  background: var(--muted);
+  border-bottom: 1px solid var(--background_color);
+  background-color: var(--header_footer);
+}
+
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  grid-row: 3/4;
+}
+
+.logo {
+  max-width: 17%;
+  margin-top: 5px;
+}
+
+.container-logo img {
+  position: absolute;
+  left: 50%;
+  width: 25vw;
+  transform: translate(-50%, -50%);
+  margin-top: 0.5vw;
+}
+
+/*.j Lines 99-101 (below) is unused*/
+.logo-text {
+  max-width: 20%;
+}
+
+
+.main-nav a {
+  margin-left: 12px;
+  text-decoration: none;
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.site-main {
+  padding: 24px 0;
+  flex: 1 0 auto;
+}
+
+
+.site-footer {
+  border-top: 1px solid #e5e7eb;
+  background: var(--header_footer);
+  padding: 12px 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+
+/*.j I do not see .req used anywhere*/
+.req {
+  color: #dc2626;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+
+.btn {
+  background-color: var(--button_back);
+  color: var(--button_hover);
+  padding: clamp(4px, 1vw, 10px) clamp(6px, 1.5vw, 14px);
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+}
+
+.btn:hover {
+  background-color: var(--button_hover);
+  color: var(--button_back);
+}
+
+.btn-purchase {
+  background: #16a34a;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+/* Center the delete button on chore cards in the unassigned (middle) column */
+#chores-column .card .btn-delete {
+  display: block;
+  margin: 8px auto 0;
+}
+
+.btn:focus {
+  outline: 3px solid rgba(59, 130, 246, 0.15);
+  outline-offset: 2px;
+}
+
+
+/* Minimal modal styles for shop payer selection */
+.tcg-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.tcg-modal {
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  width: min(420px, 92%);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.tcg-modal p {
+  margin: 0 0 12px 0;
+}
+
+.tcg-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.tcg-modal-actions button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.tcg-modal-actions .left {
+  background: var(--player1_color);
+  color: #000000;
+  text-transform: uppercase;
+  font-family: var(--names_font);
+}
+
+.tcg-modal-actions .right {
+  background: var(--player2_color);
+  color: #000000;
+  text-transform: uppercase;
+  font-family: var(--names_font);
+}
+
+/* new explicit classes for confirm/cancel */
+.tcg-modal-actions .btn-cancel {
+  background: #2b6cb0;
+  color: #fff;
+}
+
+.tcg-modal-actions .btn-confirm {
+  background: #16a34a;
+  color: #fff;
+}
+
+/* dedicated OK button for info modals */
+.tcg-modal-actions .btn-ok {
+  background: #16a34a;
+  color: #fff;
+}
+
+
+
+/* Responsive layout adjustments */
+/*.j NEED TO ADD MORE RESPONSIVENESS !!! */
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .site-header .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .main-nav a {
+    margin-left: 0;
+    margin-right: 8px;
+  }
+}

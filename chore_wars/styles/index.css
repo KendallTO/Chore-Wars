@@ -1,0 +1,290 @@
+#remove-column-btn:not(:disabled):hover {
+    background-color: #E24A4A !important;
+    color: white !important;
+}
+
+#add-column-btn:not(:disabled):hover {
+    background-color: #4CAF50 !important;
+    color: white !important;
+}
+
+.grid-3 {
+    display: grid;
+    /* Scale the gap with viewport width within sensible bounds */
+    gap: clamp(12px, 4vw, 48px);
+    /* Flexible sides with a clamped center column for consistent proportions */
+    grid-template-columns: minmax(220px, 1fr) clamp(260px, 30vw, 560px) minmax(220px, 1fr);
+    margin: 0 auto;
+}
+
+
+/* Wider columns specifically for index.html main chore grid */
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 {
+    /* Match shop top three columns sizing */
+    grid-template-columns: minmax(220px, 1fr) clamp(260px, 30vw, 560px) minmax(220px, 1fr);
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+}
+
+body:has(.site-main .grid-3 #chores-column) #left-list {
+    width: 100%;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+body:has(.site-main .grid-3 #chores-column) #right-list {
+    width: 100%;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+body:has(.site-main .grid-3 #chores-column) #chores-list {
+    width: 100%;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Align extra column lists similar to left/right lists */
+body:has(.site-main .grid-3 #chores-column) #extra-1-list,
+body:has(.site-main .grid-3 #chores-column) #extra-2-list,
+body:has(.site-main .grid-3 #chores-column) #extra-3-list,
+body:has(.site-main .grid-3 #chores-column) #extra-4-list,
+body:has(.site-main .grid-3 #chores-column) #extra-5-list,
+body:has(.site-main .grid-3 #chores-column) #extra-6-list,
+body:has(.site-main .grid-3 #chores-column) #extra-7-list,
+body:has(.site-main .grid-3 #chores-column) #extra-8-list {
+    width: 100%;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Remove padding from columns on index.html */
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 25vw;
+}
+
+/* Increase width of cards and elements within columns by 50% on index.html */
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .card {
+    width: 100%;
+    align-self: center;
+    text-align: center;
+}
+
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .column-header {
+    width: 100%;
+}
+
+/* Increase minimum width of headers and articles on index by 20% */
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .column-header,
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column article.card {
+    max-width: 100%;
+}
+
+/* Set left and right padding to 5px for articles on index.html */
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column article.card {
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 0;
+    /* Allow cards to shrink below default minimum */
+    overflow: hidden;
+    /* Prevent horizontal overflow */
+}
+
+/* Make manual assign buttons responsive within chore cards */
+body:has(.site-main .grid-3 #chores-column) .card .btn {
+    font-size: clamp(0.65rem, 1.2vw, 0.9rem);
+    padding: clamp(3px, 0.8vw, 8px) clamp(4px, 1vw, 10px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex-shrink: 1;
+}
+
+body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .points-bank {
+    display: block;
+    align-self: center;
+    text-align: left;
+    width: 100%;
+}
+
+/* Force right points bank to align with column 3 header */
+body:has(.site-main .grid-3 #chores-column) #right-points-bank {
+    display: block;
+    text-align: right;
+    align-self: center;
+}
+
+/* Ensure extra columns inherit sizing from original columns */
+body:has(.site-main .grid-3 #chores-column) #column-extra-1,
+body:has(.site-main .grid-3 #chores-column) #column-extra-2,
+body:has(.site-main .grid-3 #chores-column) #column-extra-3,
+body:has(.site-main .grid-3 #chores-column) #column-extra-4,
+body:has(.site-main .grid-3 #chores-column) #column-extra-5,
+body:has(.site-main .grid-3 #chores-column) #column-extra-6,
+body:has(.site-main .grid-3 #chores-column) #column-extra-7,
+body:has(.site-main .grid-3 #chores-column) #column-extra-8 {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 25vw;
+}
+
+body:has(.site-main .grid-3 #chores-column) #column-extra-1 .card,
+body:has(.site-main .grid-3 #chores-column) #column-extra-2 .card,
+body:has(.site-main .grid-3 #chores-column) #column-extra-3 .card,
+body:has(.site-main .grid-3 #chores-column) #column-extra-4 .card,
+body:has(.site-main .grid-3 #chores-column) #column-extra-5 .card,
+body:has(.site-main .grid-3 #chores-column) #column-extra-6 .card,
+body:has(.site-main .grid-3 #chores-column) #column-extra-7 .card,
+body:has(.site-main .grid-3 #chores-column) #column-extra-8 .card {
+    width: 100%;
+    align-self: center;
+    text-align: center;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+
+.column {
+    /*.j Lines 163-164 don't seem to do anything*/
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* (merged into the primary .grid-3 block above) */
+/*.j Lines 172-184 still seem to do something though?*/
+
+.column-header {
+    margin: 0;
+    padding: 6px 8px;
+    font-size: 1rem;
+    background: transparent;
+    border-radius: 6px;
+    color: var(--text);
+    border: 1px dashed transparent;
+}
+
+#chores-column {
+    justify-self: center;
+}
+
+
+.card {
+    min-height: 120px;
+    background: #f9fafb;
+    border: 1px dashed #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border-radius: 8px;
+    color: #374151;
+    width: 100%;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+}
+
+
+#column-left h3,
+#left-header,
+#left-points-box {
+    text-align: center;
+    background-color: var(--player1_color);
+    font-size: 4vw;
+    font-family: var(--names_font);
+}
+
+#chores-column h3 {
+    text-align: center;
+    background-color: var(--center_column);
+    font-family: var(--header_font);
+}
+
+#column-right h3,
+#right-header,
+#right-points-box {
+    text-align: center;
+    background-color: var(--player2_color);
+    font-size: 4vw;
+    font-family: var(--names_font);
+}
+
+
+/* make editable header visually clear when focused */
+.column-header[contenteditable="true"]:focus {
+  outline: none;
+  border-color: rgba(43, 108, 176, 0.25);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.06);
+}
+
+
+.chore-form {
+  background: #fff;
+  border: 1px solid #e6e7eb;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* reuse .form-row layout already defined for .shop-form; ensure inputs inside chore-form match */
+.chore-form input[type="text"],
+.chore-form input[type="number"] {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font: inherit;
+}
+
+/* placeholder chore card style */
+.chore-placeholder {
+  background: #fff;
+  color: #6b7280;
+  border-style: dashed;
+}
+
+.points-bank {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+#auction-btn {
+  border: none;
+  padding: 8px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
