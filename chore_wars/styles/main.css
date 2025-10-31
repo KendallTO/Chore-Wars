@@ -23,8 +23,6 @@
   --names_font: "Yusei Magic", sans-serif;
   --header_font: "Montserrat", sans-serif;
   --p_font: "Open Sans", sans-serif;
-
-
 }
 
 
@@ -276,6 +274,31 @@ body:has(.site-main .grid-3 #chores-column) #column-extra-8 .card {
     flex-direction: column;
     gap: 12px;
 }
+
+#column-left h3,
+#left-header,
+#left-points-box {
+    text-align: center;
+    background-color: var(--player1_color);
+    font-size: 4vw;
+    font-family: var(--names_font);
+}
+
+#chores-column h3 {
+    text-align: center;
+    background-color: var(--center_column);
+    font-family: var(--header_font);
+}
+
+#column-right h3,
+#right-header,
+#right-points-box {
+    text-align: center;
+    background-color: var(--player2_color);
+    font-size: 4vw;
+    font-family: var(--names_font);
+}
+
 
 /* (merged into the primary .grid-3 block above) */
 

@@ -42,31 +42,6 @@
 }
 
 
-#column-left h3,
-#left-header,
-#left-points-box {
-    text-align: center;
-    background-color: var(--player1_color);
-    font-size: 4vw;
-    font-family: var(--names_font);
-}
-
-#chores-column h3 {
-    text-align: center;
-    background-color: var(--center_column);
-    font-family: var(--header_font);
-}
-
-#column-right h3,
-#right-header,
-#right-points-box {
-    text-align: center;
-    background-color: var(--player2_color);
-    font-size: 4vw;
-    font-family: var(--names_font);
-}
-
-
 /* make editable header visually clear when focused */
 .column-header[contenteditable="true"]:focus {
   outline: none;
