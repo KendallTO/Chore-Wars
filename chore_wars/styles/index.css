@@ -15,7 +15,7 @@
 }
 
 /* Wider columns specifically for index.html main chore grid */
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 {
+.site-main .grid-3 {
   /* Match shop top three columns sizing */
   grid-template-columns: minmax(220px, 1fr) clamp(260px, 30vw, 560px) minmax(220px, 1fr);
   max-width: 100%;
@@ -23,7 +23,7 @@ body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 {
   margin: 0 auto;
 }
 
-body:has(.site-main .grid-3 #chores-column) #left-list {
+#left-list {
   width: 100%;
   align-self: center;
   display: flex;
@@ -31,7 +31,7 @@ body:has(.site-main .grid-3 #chores-column) #left-list {
   align-items: center;
 }
 
-body:has(.site-main .grid-3 #chores-column) #right-list {
+#right-list {
   width: 100%;
   align-self: center;
   display: flex;
@@ -39,7 +39,7 @@ body:has(.site-main .grid-3 #chores-column) #right-list {
   align-items: center;
 }
 
-body:has(.site-main .grid-3 #chores-column) #chores-list {
+#chores-list {
   width: 100%;
   align-self: center;
   display: flex;
@@ -48,7 +48,7 @@ body:has(.site-main .grid-3 #chores-column) #chores-list {
 }
 
 /* Remove padding from columns on index.html */
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column {
+.site-main .grid-3 .column {
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -57,24 +57,24 @@ body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column {
 }
 
 /* Increase width of cards and elements within columns by 50% on index.html */
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .card {
+.site-main .grid-3 .column .card {
   width: 100%;
   align-self: center;
   text-align: center;
 }
 
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .column-header {
+.site-main .grid-3 .column .column-header {
   width: 100%;
 }
 
 /* Increase minimum width of headers and articles on index by 20% */
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .column-header,
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column article.card {
+.site-main .grid-3 .column .column-header,
+.site-main .grid-3 .column article.card {
   max-width: 100%;
 }
 
 /* Set left and right padding to 5px for articles on index.html */
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column article.card {
+.site-main .grid-3 .column article.card {
   padding-left: 5px;
   padding-right: 5px;
   min-width: 0;
@@ -84,7 +84,7 @@ body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column article.c
 }
 
 /* Make manual assign buttons responsive within chore cards */
-body:has(.site-main .grid-3 #chores-column) .card .btn {
+.card .btn {
   font-size: clamp(0.65rem, 1.2vw, 0.9rem);
   padding: clamp(3px, 0.8vw, 8px) clamp(4px, 1vw, 10px);
   white-space: nowrap;
@@ -94,7 +94,7 @@ body:has(.site-main .grid-3 #chores-column) .card .btn {
   flex-shrink: 1;
 }
 
-body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .points-bank {
+.site-main .grid-3 .column .points-bank {
   display: block;
   align-self: center;
   text-align: left;
@@ -102,21 +102,21 @@ body:has(.site-main .grid-3 #chores-column) .site-main .grid-3 .column .points-b
 }
 
 /* Force right points bank to align with column 3 header */
-body:has(.site-main .grid-3 #chores-column) #right-points-bank {
+#right-points-bank {
   display: block;
   text-align: right;
   align-self: center;
 }
 
 /* Ensure extra columns inherit sizing from original columns */
-body:has(.site-main .grid-3 #chores-column) #column-extra-1,
-body:has(.site-main .grid-3 #chores-column) #column-extra-2,
-body:has(.site-main .grid-3 #chores-column) #column-extra-3,
-body:has(.site-main .grid-3 #chores-column) #column-extra-4,
-body:has(.site-main .grid-3 #chores-column) #column-extra-5,
-body:has(.site-main .grid-3 #chores-column) #column-extra-6,
-body:has(.site-main .grid-3 #chores-column) #column-extra-7,
-body:has(.site-main .grid-3 #chores-column) #column-extra-8 {
+#column-extra-1,
+#column-extra-2,
+#column-extra-3,
+#column-extra-4,
+#column-extra-5,
+#column-extra-6,
+#column-extra-7,
+#column-extra-8 {
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -124,14 +124,14 @@ body:has(.site-main .grid-3 #chores-column) #column-extra-8 {
   width: 25vw;
 }
 
-body:has(.site-main .grid-3 #chores-column) #column-extra-1 .card,
-body:has(.site-main .grid-3 #chores-column) #column-extra-2 .card,
-body:has(.site-main .grid-3 #chores-column) #column-extra-3 .card,
-body:has(.site-main .grid-3 #chores-column) #column-extra-4 .card,
-body:has(.site-main .grid-3 #chores-column) #column-extra-5 .card,
-body:has(.site-main .grid-3 #chores-column) #column-extra-6 .card,
-body:has(.site-main .grid-3 #chores-column) #column-extra-7 .card,
-body:has(.site-main .grid-3 #chores-column) #column-extra-8 .card {
+#column-extra-1 .card,
+#column-extra-2 .card,
+#column-extra-3 .card,
+#column-extra-4 .card,
+#column-extra-5 .card,
+#column-extra-6 .card,
+#column-extra-7 .card,
+#column-extra-8 .card {
   width: 100%;
   align-self: center;
   text-align: center;
