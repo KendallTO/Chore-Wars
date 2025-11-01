@@ -108,6 +108,28 @@
   align-self: center;
 }
 
+#column-right {
+  grid-area: 1 / 3;
+}
+
+#column-left h3,
+#left-header,
+#left-points-box {
+  text-align: center;
+  background-color: var(--player1_color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#column-right h3,
+#right-header,
+#right-points-box {
+  text-align: center;
+  background-color: var(--player2_color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
 /* Ensure extra columns inherit sizing from original columns */
 #column-extra-1,
 #column-extra-2,
@@ -163,7 +185,19 @@
 }
 
 #chores-column {
+  position: sticky;
+  top: 90px;
+  height: 380px;
   justify-self: center;
+  background-color: var(--header_footer);
+  border: solid 25px var(--header_footer);
+  border-radius: 5px;
+}
+
+#chores-column h3 {
+  text-align: center;
+  background-color: var(--center_column);
+  font-family: var(--header_font);
 }
 
 
@@ -205,6 +239,18 @@
   gap: 8px;
 }
 
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.form-row input {
+  margin-top: 0;
+  width: 100%;
+  max-width: 200px;
+}
+
 /* reuse .form-row layout already defined for .shop-form; ensure inputs inside chore-form match */
 .chore-form input[type="text"],
 .chore-form input[type="number"] {
@@ -242,4 +288,26 @@
   display: flex;
   justify-content: center;
   margin: 1rem 0;
+}
+
+@media (max-width: 1015px) {
+
+  .button-container {
+    display: block;
+    text-align: center;
+  }
+
+  .button-container button {
+    margin: 15px auto;
+  }
+
+  #chores-column {
+    top: 20px;
+    height: 555px;
+  }
+
+  .form-row {
+    display: block;
+    text-align: center;
+  }
 }
