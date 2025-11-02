@@ -112,24 +112,6 @@
   grid-area: 1 / 3;
 }
 
-#column-left h3,
-#left-header,
-#left-points-box {
-  text-align: center;
-  background-color: var(--player1_color);
-  font-size: 4vw;
-  font-family: var(--names_font);
-}
-
-#column-right h3,
-#right-header,
-#right-points-box {
-  text-align: center;
-  background-color: var(--player2_color);
-  font-size: 4vw;
-  font-family: var(--names_font);
-}
-
 /* Ensure extra columns inherit sizing from original columns */
 #column-extra-1,
 #column-extra-2,
@@ -173,6 +155,15 @@
   color: white !important;
 }
 
+#bottom-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 800px;
+  margin: 24px auto;
+  padding: 0 20px;
+}
+
 
 .column-header {
   margin: 0;
@@ -182,12 +173,12 @@
   border-radius: 6px;
   color: var(--text);
   border: 1px dashed transparent;
+  text-transform: uppercase;
 }
 
 #chores-column {
   position: sticky;
   top: 90px;
-  height: 380px;
   justify-self: center;
   background-color: var(--header_footer);
   border: solid 25px var(--header_footer);
@@ -234,9 +225,11 @@
   padding: 10px;
   border-radius: 8px;
   margin-top: 12px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-width: 400px;
 }
 
 .form-row {
@@ -274,6 +267,7 @@
   padding: 6px;
   color: #374151;
   font-size: 0.95rem;
+  text-align: right;
 }
 
 #auction-btn {
@@ -290,7 +284,11 @@
   margin: 1rem 0;
 }
 
-@media (max-width: 1015px) {
+@media (max-width: 750px) {
+
+  .site-main .grid-3 {
+  grid-template-columns: minmax(220px, 1fr) clamp(260px, 30vw, 560px);
+}
 
   .button-container {
     display: block;
@@ -303,7 +301,6 @@
 
   #chores-column {
     top: 20px;
-    height: 555px;
   }
 
   .form-row {

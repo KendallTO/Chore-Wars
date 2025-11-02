@@ -32,7 +32,7 @@
   <main class="site-main container">
     <section class="grid-3">
       <div class="column" id="column-left">
-        <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;"
+        <h3 class="column-header" contenteditable="true" spellcheck="false"
           aria-label="Column 1 header">Player 1</h3>
 
         <!-- left points bank (display only) -->
@@ -62,8 +62,7 @@
         </div>
 
         <!-- add-chore form -->
-        <form id="add-chore-form" class="chore-form" aria-label="Add chore" novalidate
-          style="max-width: 400px; margin: 0 auto;">
+        <form id="add-chore-form" class="chore-form" aria-label="Add chore" novalidate>
           <div class="form-row">
             <input id="chore-name" name="name" type="text" required aria-required="true" placeholder="Chore Name">
             <button type="submit" id="unchosen-button-add" class="btn">Add</button>
@@ -72,11 +71,11 @@
       </div>
 
       <div class="column" id="column-right">
-        <h3 class="column-header" contenteditable="true" spellcheck="false" style="text-transform: uppercase;"
+        <h3 class="column-header" contenteditable="true" spellcheck="false"
           aria-label="Column 3 header">Player 2</h3>
 
         <!-- right points bank (display only) -->
-        <div class="points-bank" id="right-points-bank" style="text-align: right;">
+        <div class="points-bank" id="right-points-bank">
           <div>Points: <strong id="right-points">0</strong></div>
         </div>
 
@@ -88,8 +87,7 @@
     </section>
 
     <!-- Button bar above footer -->
-    <div
-      style="display: flex; justify-content: space-between; align-items: center; max-width: 800px; margin: 24px auto; padding: 0 20px;">
+    <div id="bottom-buttons">
       <button id="add-column-btn" type="button" class="btn">Add Player</button>
       <button id="unassign-all-btn" type="button" class="btn">Unassign All</button>
       <button id="remove-column-btn" type="button" class="btn" disabled>Remove Player</button>

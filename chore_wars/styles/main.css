@@ -142,6 +142,25 @@ body {
 }
 
 
+#column-left h3,
+#left-header,
+#left-points-box {
+  text-align: center;
+  background-color: var(--player1_color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+#column-right h3,
+#right-header,
+#right-points-box {
+  text-align: center;
+  background-color: var(--player2_color);
+  font-size: 4vw;
+  font-family: var(--names_font);
+}
+
+
 .site-footer {
   border-top: 1px solid #e5e7eb;
   background: var(--header_footer);
