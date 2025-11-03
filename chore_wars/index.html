@@ -1503,24 +1503,101 @@
       // Function to calculate optimal grid positions without gaps
       function calculateOptimalPositions() {
         const activeExtras = getActiveExtraPlayers();
-        const leftPlayers = activeExtras.filter(p => p.isLeft).sort((a, b) => a.number - b.number);
-        const rightPlayers = activeExtras.filter(p => p.isLeft === false).sort((a, b) => a.number - b.number);
-
+        const baseState = loadBasePlayerState();
+        
+        // Count active base players and ensure they're properly positioned
         const positions = {};
 
-        // Assign left side positions (starting from row 2)
-        leftPlayers.forEach((player, index) => {
+        // Handle base players first - ensure they're always in row 1
+        if (baseState.left) {
+          const leftColumn = document.getElementById('column-left');
+          if (leftColumn) {
+            leftColumn.style.gridColumn = '1';
+            leftColumn.style.gridRow = '1';
+            leftColumn.style.display = ''; // Ensure it's visible
+          }
+        }
+        
+        if (baseState.right) {
+          const rightColumn = document.getElementById('column-right');
+          if (rightColumn) {
+            rightColumn.style.gridColumn = '3';
+            rightColumn.style.gridRow = '1';
+            rightColumn.style.display = ''; // Ensure it's visible
+          }
+        }
+
+        // Now distribute extra players to balance the columns while preserving original positions
+        const totalExtraPlayers = activeExtras.length;
+        if (totalExtraPlayers === 0) return positions;
+
+        // Sort extra players by their number to maintain consistent ordering
+        const sortedExtras = activeExtras.sort((a, b) => a.number - b.number);
+
+        // Separate players by their original column preference
+        const originallyLeft = sortedExtras.filter(p => p.number % 2 === 1); // odd numbers go left
+        const originallyRight = sortedExtras.filter(p => p.number % 2 === 0); // even numbers go right
+
+        // Calculate how many should be in each column for balance
+        let targetLeftCount = Math.ceil(totalExtraPlayers / 2);
+        let targetRightCount = totalExtraPlayers - targetLeftCount;
+
+        // Adjust target counts based on base player presence for better balance
+        if (baseState.left && !baseState.right) {
+          // Base player on left, reduce left target to balance
+          targetLeftCount = Math.floor(totalExtraPlayers / 2);
+          targetRightCount = totalExtraPlayers - targetLeftCount;
+        } else if (!baseState.left && baseState.right) {
+          // Base player on right, reduce right target to balance
+          targetRightCount = Math.floor(totalExtraPlayers / 2);
+          targetLeftCount = totalExtraPlayers - targetRightCount;
+        }
+
+        // Start with players in their preferred columns
+        const leftColumnPlayers = [];
+        const rightColumnPlayers = [];
+
+        // Place players who originally belong in left column
+        originallyLeft.forEach(player => {
+          if (leftColumnPlayers.length < targetLeftCount) {
+            leftColumnPlayers.push(player);
+          } else {
+            // Left column is full, move to right
+            rightColumnPlayers.push(player);
+          }
+        });
+
+        // Place players who originally belong in right column
+        originallyRight.forEach(player => {
+          if (rightColumnPlayers.length < targetRightCount) {
+            rightColumnPlayers.push(player);
+          } else {
+            // Right column is full, move to left
+            leftColumnPlayers.push(player);
+          }
+        });
+
+        // Now position the players, maintaining their number-based order within each column
+        leftColumnPlayers.sort((a, b) => a.number - b.number);
+        rightColumnPlayers.sort((a, b) => a.number - b.number);
+
+        // Start positioning from row 2 if base players exist, row 1 if they don't
+        let leftRowIndex = baseState.left ? 2 : 1;
+        let rightRowIndex = baseState.right ? 2 : 1;
+
+        // Assign positions to left column players
+        leftColumnPlayers.forEach(player => {
           positions[player.key] = {
             column: 1,
-            row: index + 2 // Start from row 2 (row 1 has base players)
+            row: leftRowIndex++
           };
         });
 
-        // Assign right side positions (starting from row 2)
-        rightPlayers.forEach((player, index) => {
+        // Assign positions to right column players
+        rightColumnPlayers.forEach(player => {
           positions[player.key] = {
             column: 3,
-            row: index + 2 // Start from row 2 (row 1 has base players)
+            row: rightRowIndex++
           };
         });
 
@@ -1538,6 +1615,68 @@
             const pos = positions[extraKey];
             column.style.gridColumn = pos.column.toString();
             column.style.gridRow = pos.row.toString();
+          }
+        });
+      }
+
+      // Function to restore players to their original positions (when both base players are active)
+      function restoreOriginalPositions() {
+        const baseState = loadBasePlayerState();
+        
+        // Ensure base players are properly positioned and visible
+        if (baseState.left) {
+          const leftColumn = document.getElementById('column-left');
+          if (leftColumn) {
+            leftColumn.style.gridColumn = '1';
+            leftColumn.style.gridRow = '1';
+            leftColumn.style.display = ''; // Ensure visibility
+          }
+        }
+        
+        if (baseState.right) {
+          const rightColumn = document.getElementById('column-right');
+          if (rightColumn) {
+            rightColumn.style.gridColumn = '3';
+            rightColumn.style.gridRow = '1';
+            rightColumn.style.display = ''; // Ensure visibility
+          }
+        }
+
+        // Restore extra players to their original alternating pattern, filling gaps
+        const activeExtras = getActiveExtraPlayers();
+        const positions = {};
+
+        // Sort by original number to maintain proper ordering
+        const sortedExtras = activeExtras.sort((a, b) => a.number - b.number);
+        
+        // Track row positions for each column to eliminate gaps
+        let leftRowCounter = 2; // Start after base players
+        let rightRowCounter = 2;
+
+        sortedExtras.forEach((player) => {
+          const originalIsLeftSide = player.number % 2 === 1;
+          
+          if (originalIsLeftSide) {
+            positions[player.key] = {
+              column: 1,
+              row: leftRowCounter++
+            };
+          } else {
+            positions[player.key] = {
+              column: 3,
+              row: rightRowCounter++
+            };
+          }
+        });
+
+        // Apply the original positions without gaps
+        Object.keys(positions).forEach(extraKey => {
+          const column = document.getElementById(`column-${extraKey}`);
+          if (column) {
+            const pos = positions[extraKey];
+            column.style.gridColumn = pos.column.toString();
+            column.style.gridRow = pos.row.toString();
+            column.style.display = ''; // Ensure visibility
           }
         });
       }
@@ -1912,14 +2051,30 @@
         const baseState = loadBasePlayerState();
         let maxSlot = 0;
 
-        // Handle base player visibility
+        // Handle base player visibility and ensure proper positioning
+        const leftColumn = document.getElementById('column-left');
+        const rightColumn = document.getElementById('column-right');
+        
         if (baseState.left === false) {
-          const leftColumn = document.getElementById('column-left');
           if (leftColumn) leftColumn.style.display = 'none';
+        } else {
+          // Ensure Player 1 is properly positioned and visible
+          if (leftColumn) {
+            leftColumn.style.display = '';
+            leftColumn.style.gridColumn = '1';
+            leftColumn.style.gridRow = '1';
+          }
         }
+        
         if (baseState.right === false) {
-          const rightColumn = document.getElementById('column-right');
           if (rightColumn) rightColumn.style.display = 'none';
+        } else {
+          // Ensure Player 2 is properly positioned and visible
+          if (rightColumn) {
+            rightColumn.style.display = '';
+            rightColumn.style.gridColumn = '3';
+            rightColumn.style.gridRow = '1';
+          }
         }
 
         // Count how many extras are enabled and create them
@@ -1931,8 +2086,15 @@
           }
         }
 
-        // After all columns are created, reposition them to eliminate gaps
-        repositionAllExtraColumns();
+        // After all columns are created, position them appropriately
+        const currentBaseState = loadBasePlayerState();
+        if (currentBaseState.left && currentBaseState.right) {
+          // Both base players active - use original alternating pattern
+          restoreOriginalPositions();
+        } else {
+          // One or no base players - use dynamic balancing
+          repositionAllExtraColumns();
+        }
 
         // Update button states
         updateAddButtonState();
@@ -2014,10 +2176,18 @@
           baseState[playerLoc] = true;
           saveBasePlayerState(baseState);
 
-          // Show the column
+          // Show and properly position the column
           const columnToShow = document.getElementById(`column-${playerLoc}`);
           if (columnToShow) {
             columnToShow.style.display = '';
+            // Ensure proper grid positioning
+            if (playerLoc === 'left') {
+              columnToShow.style.gridColumn = '1';
+              columnToShow.style.gridRow = '1';
+            } else if (playerLoc === 'right') {
+              columnToShow.style.gridColumn = '3';
+              columnToShow.style.gridRow = '1';
+            }
           }
         } else {
           // Add extra player
@@ -2028,8 +2198,15 @@
           createExtraColumn(slotNumber);
         }
 
-        // Reposition all columns to eliminate gaps
-        repositionAllExtraColumns();
+        // Reposition all columns - check if we should restore original layout
+        const currentBaseState = loadBasePlayerState();
+        if (currentBaseState.left && currentBaseState.right) {
+          // Both base players are now active - restore original alternating pattern
+          restoreOriginalPositions();
+        } else {
+          // Continue using dynamic balancing
+          repositionAllExtraColumns();
+        }
 
         // Update button states
         updateRemoveButtonState();
@@ -2145,7 +2322,7 @@
           // Reassign chores from removed player
           reassignChoresFromColumn(playerLoc);
 
-          // Reposition all columns to eliminate gaps
+          // Rebalance all player positions dynamically
           repositionAllExtraColumns();
 
           // Re-enable add button since we now have room
