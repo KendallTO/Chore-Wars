@@ -47,6 +47,16 @@
   align-items: center;
 }
 
+/* Add gaps between unassigned chore items */
+#chores-list .card {
+  margin-top: clamp(8px, 1.5vw, 16px);
+}
+
+/* First unassigned chore should not have top margin */
+#chores-list .card:first-child {
+  margin-top: 0;
+}
+
 /* Remove padding from columns on index.html */
 .site-main .grid-3 .column {
   padding: 0;
@@ -113,14 +123,15 @@
 }
 
 /* Ensure extra columns inherit sizing from original columns */
-#column-extra-1,
-#column-extra-2,
-#column-extra-3,
-#column-extra-4,
-#column-extra-5,
-#column-extra-6,
-#column-extra-7,
-#column-extra-8 {
+#column-extra1,
+#column-extra2,
+#column-extra3,
+#column-extra4,
+#column-extra5,
+#column-extra6,
+#column-extra7,
+#column-extra8,
+[id^="column-extra"] {
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -128,14 +139,16 @@
   width: 25vw;
 }
 
-#column-extra-1 .card,
-#column-extra-2 .card,
-#column-extra-3 .card,
-#column-extra-4 .card,
-#column-extra-5 .card,
-#column-extra-6 .card,
-#column-extra-7 .card,
-#column-extra-8 .card {
+/* Fix: Ensure all extra column cards match base player card styling exactly */
+#column-extra1 .card,
+#column-extra2 .card,
+#column-extra3 .card,
+#column-extra4 .card,
+#column-extra5 .card,
+#column-extra6 .card,
+#column-extra7 .card,
+#column-extra8 .card,
+[id^="column-extra"] .card {
   width: 100%;
   align-self: center;
   text-align: center;
@@ -285,26 +298,242 @@
 }
 
 @media (max-width: 750px) {
-
+  /* Two-column mobile layout: players on left, unassigned chores on right */
   .site-main .grid-3 {
-  grid-template-columns: minmax(220px, 1fr) clamp(260px, 30vw, 560px);
-}
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(8px, 2vw, 16px);
+    max-width: 100%;
+  }
 
+  /* Left column: container for all players */
+  .players-container {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Right column: unassigned chores */
+  #chores-column {
+    grid-column: 2;
+    grid-row: 1;
+    position: static; /* Remove sticky positioning for mobile */
+    border: solid 10px var(--header_footer);
+    height: fit-content;
+  }
+
+  /* Scale the unassigned chores title properly */
+  #chores-column h3 {
+    font-size: clamp(0.7rem, 2.5vw, 1rem);
+    padding: clamp(3px, 0.8vw, 6px);
+    margin: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* All player columns go in the left column - ensure complete consistency */
+  #column-left,
+  #column-right,
+  #column-extra1,
+  #column-extra2,
+  #column-extra3,
+  #column-extra4,
+  #column-extra5,
+  #column-extra6,
+  #column-extra7,
+  #column-extra8,
+  [id^="column-extra"] {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-bottom: 12px !important;
+    padding: 6px !important;
+    border-radius: 6px !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    /* Explicitly assign all players to left column */
+    grid-column: 1 !important;
+    grid-row: unset !important;
+    position: static !important;
+    /* Override any desktop width rules */
+    box-sizing: border-box !important;
+  }
+
+  /* Ensure all player lists have identical mobile styling */
+  #left-list,
+  #right-list,
+  #extra1-list,
+  #extra2-list,
+  #extra3-list,
+  #extra4-list,
+  #extra5-list,
+  #extra6-list,
+  #extra7-list,
+  #extra8-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* Ensure all chore cards in player columns have identical mobile styling */
+  #column-left .card,
+  #column-right .card,
+  #column-extra1 .card,
+  #column-extra2 .card,
+  #column-extra3 .card,
+  #column-extra4 .card,
+  #column-extra5 .card,
+  #column-extra6 .card,
+  #column-extra7 .card,
+  #column-extra8 .card,
+  [id^="column-extra"] .card,
+  #left-list .card,
+  #right-list .card,
+  #extra1-list .card,
+  #extra2-list .card,
+  #extra3-list .card,
+  #extra4-list .card,
+  #extra5-list .card,
+  #extra6-list .card,
+  #extra7-list .card,
+  #extra8-list .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: clamp(6px, 1.5vw, 10px) !important;
+    min-height: 60px !important;
+    font-size: clamp(0.7rem, 2vw, 0.9rem) !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+
+  /* Create a container div for all players using CSS */
+  #column-left {
+    order: 1;
+  }
+  #column-right {
+    order: 2;
+  }
+  [id^="column-extra1"] { order: 3; }
+  [id^="column-extra2"] { order: 4; }
+  [id^="column-extra3"] { order: 5; }
+  [id^="column-extra4"] { order: 6; }
+  [id^="column-extra5"] { order: 7; }
+  [id^="column-extra6"] { order: 8; }
+  [id^="column-extra7"] { order: 9; }
+  [id^="column-extra8"] { order: 10; }
+
+  /* Adjust button container for mobile */
   .button-container {
-    display: block;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0.3rem 0;
   }
 
   .button-container button {
-    margin: 15px auto;
+    margin: 0;
+    font-size: clamp(0.6rem, 1.8vw, 0.8rem);
+    padding: clamp(4px, 1.5vw, 8px);
+  }
+
+  /* Make form more compact on mobile */
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .form-row input {
+    max-width: 100%;
+    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+    padding: clamp(4px, 1vw, 6px);
+  }
+
+  /* Adjust card sizes for mobile */
+  .site-main .grid-3 .column .card {
+    padding: clamp(6px, 1.5vw, 10px);
+    min-height: 60px;
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+  }
+
+  /* Add responsive top margin for unassigned chore items */
+  #chores-list .card {
+    margin-top: clamp(6px, 1.5vw, 12px) !important;
+  }
+
+  /* First unassigned chore should not have top margin */
+  #chores-list .card:first-child {
+    margin-top: 0 !important;
+  }
+
+  /* Make bottom buttons stack on mobile */
+  #bottom-buttons {
+    grid-column: 1 / -1; /* Span both columns */
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 10px;
+    margin: 12px auto;
+  }
+
+  #bottom-buttons button {
+    width: 100%;
+    max-width: 150px;
+    margin: 0 auto;
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+  }
+
+  /* Adjust column headers for mobile */
+  .site-main .grid-3 .column .column-header {
+    font-size: clamp(0.7rem, 3vw, 1rem);
+    padding: clamp(3px, 0.8vw, 6px);
+  }
+
+  /* Improve points bank display on mobile */
+  .points-bank {
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+    text-align: center !important;
+    padding: clamp(2px, 0.5vw, 4px);
+  }
+}
+
+/* Extra small screens - maintain two-column but with even tighter spacing */
+@media (max-width: 480px) {
+  .site-main .grid-3 {
+    gap: 6px;
   }
 
   #chores-column {
-    top: 20px;
+    border: solid 6px var(--header_footer);
   }
 
-  .form-row {
-    display: block;
-    text-align: center;
+  /* Further scale down the title for very small screens */
+  #chores-column h3 {
+    font-size: clamp(0.6rem, 3vw, 0.8rem);
+    padding: 2px;
+  }
+
+  /* Even tighter spacing for player columns */
+  #column-left,
+  #column-right,
+  [id^="column-extra"] {
+    margin-bottom: 8px;
+    padding: 4px;
+  }
+
+  /* Smaller cards for very small screens */
+  .site-main .grid-3 .column .card {
+    min-height: 50px;
+    padding: 4px;
   }
 }
