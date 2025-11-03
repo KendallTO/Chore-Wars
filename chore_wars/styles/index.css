@@ -46,6 +46,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Fill available space within the column, but never expand the column */
+  flex: 1 1 0;
+  min-height: 0; /* Allow shrinking */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Add gaps between unassigned chore items */
@@ -191,12 +196,13 @@
 }
 
 #chores-column {
-  position: sticky;
-  top: 90px;
   justify-self: center;
   background-color: var(--header_footer);
   border: solid 25px var(--header_footer);
   border-radius: 5px;
+  /* Make the column use flexbox to control internal spacing */
+  display: flex;
+  flex-direction: column;
 }
 
 #chores-column h3 {
@@ -321,7 +327,16 @@
     grid-row: 1;
     position: static; /* Remove sticky positioning for mobile */
     border: solid 10px var(--header_footer);
-    height: fit-content;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Mobile: list fills available space within column but never expands it */
+  #chores-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   /* Scale the unassigned chores title properly */
