@@ -1175,19 +1175,44 @@
           }
         });
         h.addEventListener('input', () => {
+          // Save cursor position before any text changes
+          const selection = window.getSelection();
+          const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+          const cursorOffset = range ? range.startOffset : 0;
+          
           // Remove any newlines and enforce 8-char limit live while typing/pasting
           const raw = (h.textContent || '');
           const noNewlines = raw.replace(/[\r\n]+/g, '');
-          const trimmed = noNewlines.trim();
-          const limited = trimmed.length > HEADER_MAX ? trimmed.slice(0, HEADER_MAX) : trimmed;
+          const limited = noNewlines.length > HEADER_MAX ? noNewlines.slice(0, HEADER_MAX) : noNewlines;
+          
           if (limited !== raw) {
             h.textContent = limited;
+            
+            // Restore cursor position
+            if (range && h.firstChild) {
+              const newRange = document.createRange();
+              const textNode = h.firstChild;
+              const newOffset = Math.min(cursorOffset, limited.length);
+              
+              try {
+                newRange.setStart(textNode, newOffset);
+                newRange.setEnd(textNode, newOffset);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              } catch (e) {
+                // Fallback: place cursor at end
+                newRange.selectNodeContents(h);
+                newRange.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }
+            }
           }
           saveHeaders();
           render();
         });
         h.addEventListener('blur', () => {
-          // Ensure no newlines and limit also on blur
+          // Ensure no newlines and limit also on blur (trimming allowed here)
           const raw = (h.textContent || '');
           const noNewlines = raw.replace(/[\r\n]+/g, '');
           const trimmed = noNewlines.trim();
@@ -1970,16 +1995,57 @@
         headerEl.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') e.preventDefault();
         });
+        
         const enforceAndSave = () => {
+          // Save cursor position before any text changes
+          const selection = window.getSelection();
+          const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+          const cursorOffset = range ? range.startOffset : 0;
+          
+          const raw = (headerEl.textContent || '');
+          const noNewlines = raw.replace(/[\r\n]+/g, '');
+          const limited = noNewlines.length > 8 ? noNewlines.slice(0, 8) : noNewlines;
+          
+          if (limited !== raw) { 
+            headerEl.textContent = limited;
+            
+            // Restore cursor position
+            if (range && headerEl.firstChild) {
+              const newRange = document.createRange();
+              const textNode = headerEl.firstChild;
+              const newOffset = Math.min(cursorOffset, limited.length);
+              
+              try {
+                newRange.setStart(textNode, newOffset);
+                newRange.setEnd(textNode, newOffset);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              } catch (e) {
+                // Fallback: place cursor at end
+                newRange.selectNodeContents(headerEl);
+                newRange.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }
+            }
+          }
+          saveHeaderField(field, limited);
+        };
+        
+        const enforceAndSaveOnBlur = () => {
+          // On blur, allow trimming
           const raw = (headerEl.textContent || '');
           const noNewlines = raw.replace(/[\r\n]+/g, '');
           const trimmed = noNewlines.trim();
           const limited = trimmed.length > 8 ? trimmed.slice(0, 8) : trimmed;
-          if (limited !== raw) { headerEl.textContent = limited; }
+          if (limited !== raw) { 
+            headerEl.textContent = limited; 
+          }
           saveHeaderField(field, limited);
         };
+        
         headerEl.addEventListener('input', enforceAndSave);
-        headerEl.addEventListener('blur', enforceAndSave);
+        headerEl.addEventListener('blur', enforceAndSaveOnBlur);
       }
 
       function createExtraColumn(extraNum) {
