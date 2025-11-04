@@ -348,8 +348,11 @@
 
         // action buttons depend on location
         if (!chore.loc || chore.loc === 'unchosen') {
-          // Only show assign buttons if in draft mode
-          if (draftMode) {
+          // Only show assign buttons if in draft mode AND chore has difficulty rating
+          if (draftMode && (chore.difficulty === 'easy' || chore.difficulty === 'difficult')) {
+            // Mark card as having manual assign buttons for CSS styling
+            art.dataset.hasButtons = 'true';
+            
             const assignLeft = document.createElement('button');
             assignLeft.type = 'button';
             assignLeft.className = 'btn';
@@ -437,6 +440,18 @@
               actions.appendChild(assignExtra8);
             }
 
+            // Count total buttons for sizing and add appropriate data attribute
+            const buttonCount = actions.children.length;
+            if (buttonCount >= 9) {
+              art.dataset.buttonCount = 'many'; // 9-10 buttons (nearly all or all players)
+            } else if (buttonCount >= 6) {
+              art.dataset.buttonCount = 'medium'; // 6-8 buttons (many players)
+            }
+            // 2-5 buttons get default styling (no extra attribute needed)
+            
+            // Debug: Log button count for verification
+            console.log(`Chore "${chore.name}" has ${buttonCount} manual assign buttons`);
+
             // In draft mode, show delete button separately at bottom center
             wrap.appendChild(actions);
 
@@ -456,6 +471,9 @@
 
             art.appendChild(wrap);
             return art;
+          } else {
+            // Mark card as NOT having manual assign buttons for CSS styling
+            art.dataset.hasButtons = 'false';
           }
         } else {
           // show complete button for assigned chores
@@ -969,7 +987,7 @@
         });
       }
 
-      // Helper for Draft: ask Easy or Hard
+      // Helper for Draft: ask Easy or Hard with Quit option
       function askHighOrLow(choreName) {
         return new Promise(resolve => {
           const overlay = document.createElement('div');
@@ -982,22 +1000,363 @@
           const actions = document.createElement('div');
           actions.className = 'tcg-modal-actions';
 
-          const highBtn = document.createElement('button');
-          highBtn.textContent = 'Hard';
+          const quitBtn = document.createElement('button');
+          quitBtn.textContent = 'Quit Draft';
+          quitBtn.className = 'btn-delete';
+          quitBtn.style.backgroundColor = '#E24A4A';
+          quitBtn.style.color = 'white';
+          
           const lowBtn = document.createElement('button');
           lowBtn.textContent = 'Easy';
+          
+          const highBtn = document.createElement('button');
+          highBtn.textContent = 'Hard';
 
           function cleanup(choice) {
+            document.removeEventListener('keydown', onKey);
             overlay.remove();
             resolve(choice);
           }
+          
+          function onKey(e) {
+            if (e.key === 'Escape') cleanup('quit');
+            if (e.key === 'Enter') cleanup('high'); // Default to Hard on Enter
+          }
 
-          highBtn.addEventListener('click', () => cleanup('high'));
+          quitBtn.addEventListener('click', () => cleanup('quit'));
           lowBtn.addEventListener('click', () => cleanup('low'));
+          highBtn.addEventListener('click', () => cleanup('high'));
+          document.addEventListener('keydown', onKey);
 
+          // Order buttons: Quit (left, destructive), Easy, Hard
+          actions.appendChild(quitBtn);
           actions.appendChild(lowBtn);
           actions.appendChild(highBtn);
           modal.appendChild(p);
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+        });
+      }
+
+      // New simultaneous auction function where all players decide at once
+      async function auctionSingleSimultaneous(chore, bidders) {
+        let currentPrice = 45;
+        let activeBidders = [...bidders];
+
+        while (currentPrice >= 5 && activeBidders.length > 0) {
+          // If we're at 5 points, randomly assign to one of the remaining bidders
+          if (currentPrice === 5) {
+            const randomBidder = activeBidders[Math.floor(Math.random() * activeBidders.length)];
+            chore.loc = randomBidder.loc;
+            chore.points = 5;
+            return { abort: false };
+          }
+
+          // Show all players simultaneously and let them decide
+          const responses = await askAllPlayersSimultaneous(chore, activeBidders, currentPrice);
+          
+          if (responses === 'quit') {
+            return { abort: true };
+          }
+
+          // Filter to only bidders who said yes
+          activeBidders = responses.filter(r => r.accepted).map(r => r.bidder);
+
+          // If only one bidder left, assign to them at current price
+          if (activeBidders.length === 1) {
+            chore.loc = activeBidders[0].loc;
+            chore.points = currentPrice;
+            return { abort: false };
+          }
+
+          // If no one left, assign to random original bidder at 5 points
+          if (activeBidders.length === 0) {
+            const randomBidder = bidders[Math.floor(Math.random() * bidders.length)];
+            chore.loc = randomBidder.loc;
+            chore.points = 5;
+            return { abort: false };
+          }
+
+          // Lower the price for next round
+          currentPrice -= 5;
+        }
+
+        // Fallback: assign to random remaining bidder at 5 points
+        if (activeBidders.length > 0) {
+          const randomBidder = activeBidders[Math.floor(Math.random() * activeBidders.length)];
+          chore.loc = randomBidder.loc;
+          chore.points = 5;
+          return { abort: false };
+        } else {
+          const randomBidder = bidders[Math.floor(Math.random() * bidders.length)];
+          chore.loc = randomBidder.loc;
+          chore.points = 5;
+          return { abort: false };
+        }
+      }
+
+      // Function to show all players simultaneously and collect their decisions
+      function askAllPlayersSimultaneous(chore, bidders, currentPrice) {
+        return new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+          
+          // Dynamic sizing based on viewport and player count
+          modal.style.maxWidth = '95vw';
+          modal.style.maxHeight = '90vh';
+          modal.style.width = 'auto';
+          modal.style.height = 'auto';
+          modal.style.overflowY = 'auto';
+          modal.style.display = 'flex';
+          modal.style.flexDirection = 'column';
+
+          // Header
+          const header = document.createElement('h3');
+          header.textContent = `Auction: "${chore.name}" at ${currentPrice} points`;
+          header.style.textAlign = 'center';
+          header.style.margin = '0 0 15px 0';
+          header.style.fontSize = 'clamp(1rem, 3vw, 1.5rem)';
+          header.style.wordWrap = 'break-word';
+          modal.appendChild(header);
+
+          // Instructions
+          const instructions = document.createElement('p');
+          instructions.textContent = 'All players: decide if you want to stay in the bidding or pass';
+          instructions.style.textAlign = 'center';
+          instructions.style.margin = '0 0 20px 0';
+          instructions.style.fontWeight = 'bold';
+          instructions.style.fontSize = 'clamp(0.8rem, 2.5vw, 1rem)';
+          modal.appendChild(instructions);
+
+          // Scrollable player container
+          const playerContainer = document.createElement('div');
+          playerContainer.style.flex = '1 1 auto';
+          playerContainer.style.overflowY = 'auto';
+          playerContainer.style.padding = '0 10px';
+
+          // Player grid with dynamic columns based on player count and screen size
+          const playerGrid = document.createElement('div');
+          playerGrid.style.display = 'grid';
+          
+          // Dynamic grid columns based on player count and screen width
+          const playerCount = bidders.length;
+          let columns;
+          if (window.innerWidth < 600) {
+            // Mobile: 1 column for small screens
+            columns = '1fr';
+          } else if (window.innerWidth < 900) {
+            // Tablet: 2 columns, but 1 if only 1-2 players
+            columns = playerCount <= 2 ? `repeat(${playerCount}, 1fr)` : 'repeat(2, 1fr)';
+          } else {
+            // Desktop: up to 3-4 columns depending on count
+            if (playerCount <= 2) columns = `repeat(${playerCount}, 1fr)`;
+            else if (playerCount <= 4) columns = 'repeat(2, 1fr)';
+            else if (playerCount <= 6) columns = 'repeat(3, 1fr)';
+            else columns = 'repeat(4, 1fr)';
+          }
+          
+          playerGrid.style.gridTemplateColumns = columns;
+          playerGrid.style.gap = 'clamp(10px, 2vw, 20px)';
+          playerGrid.style.marginBottom = '20px';
+
+          const playerDecisions = new Map();
+          const playerElements = new Map();
+
+          bidders.forEach(bidder => {
+            // Get player color
+            let playerColor = 'gray';
+            if (bidder.loc === 'left') playerColor = '#2196F3';
+            else if (bidder.loc === 'right') playerColor = '#E53E3E';
+            else if (bidder.loc === 'extra1') playerColor = 'orange';
+            else if (bidder.loc === 'extra2') playerColor = 'limegreen';
+            else if (bidder.loc === 'extra3') playerColor = 'purple';
+            else if (bidder.loc === 'extra4') playerColor = 'yellow';
+            else if (bidder.loc === 'extra5') playerColor = 'pink';
+            else if (bidder.loc === 'extra6') playerColor = 'brown';
+            else if (bidder.loc === 'extra7') playerColor = 'gray';
+            else if (bidder.loc === 'extra8') playerColor = 'teal';
+
+            const playerCard = document.createElement('div');
+            playerCard.style.border = `3px solid ${playerColor}`;
+            playerCard.style.borderRadius = '10px';
+            playerCard.style.padding = 'clamp(10px, 2vw, 15px)';
+            playerCard.style.textAlign = 'center';
+            playerCard.style.backgroundColor = 'rgba(255,255,255,0.1)';
+            playerCard.style.minHeight = 'clamp(120px, 15vh, 180px)';
+            playerCard.style.display = 'flex';
+            playerCard.style.flexDirection = 'column';
+            playerCard.style.justifyContent = 'space-between';
+
+            const playerName = document.createElement('h4');
+            playerName.textContent = bidder.name.toUpperCase();
+            playerName.style.color = playerColor;
+            playerName.style.margin = '0 0 10px 0';
+            playerName.style.fontWeight = 'bold';
+            playerName.style.fontSize = 'clamp(0.8rem, 2.5vw, 1.1rem)';
+            playerName.style.wordWrap = 'break-word';
+            playerCard.appendChild(playerName);
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = 'clamp(5px, 1vw, 10px)';
+            buttonContainer.style.justifyContent = 'center';
+            buttonContainer.style.flexWrap = 'wrap';
+
+            const stayBtn = document.createElement('button');
+            stayBtn.textContent = 'Stay In';
+            stayBtn.style.backgroundColor = '#4CAF50';
+            stayBtn.style.color = 'white';
+            stayBtn.style.border = 'none';
+            stayBtn.style.padding = 'clamp(6px, 1.5vw, 10px) clamp(8px, 2vw, 16px)';
+            stayBtn.style.borderRadius = '5px';
+            stayBtn.style.cursor = 'pointer';
+            stayBtn.style.fontWeight = 'bold';
+            stayBtn.style.fontSize = 'clamp(0.7rem, 2vw, 0.9rem)';
+            stayBtn.style.flex = '1';
+            stayBtn.style.minWidth = '70px';
+
+            const passBtn = document.createElement('button');
+            passBtn.textContent = 'Pass';
+            passBtn.style.backgroundColor = '#f44336';
+            passBtn.style.color = 'white';
+            passBtn.style.border = 'none';
+            passBtn.style.padding = 'clamp(6px, 1.5vw, 10px) clamp(8px, 2vw, 16px)';
+            passBtn.style.borderRadius = '5px';
+            passBtn.style.cursor = 'pointer';
+            passBtn.style.fontWeight = 'bold';
+            passBtn.style.fontSize = 'clamp(0.7rem, 2vw, 0.9rem)';
+            passBtn.style.flex = '1';
+            passBtn.style.minWidth = '70px';
+
+            const statusText = document.createElement('div');
+            statusText.style.marginTop = 'clamp(5px, 1vw, 10px)';
+            statusText.style.fontWeight = 'bold';
+            statusText.style.fontSize = 'clamp(0.7rem, 2vw, 0.9rem)';
+            statusText.style.height = 'clamp(15px, 3vh, 25px)';
+            statusText.style.display = 'flex';
+            statusText.style.alignItems = 'center';
+            statusText.style.justifyContent = 'center';
+
+            stayBtn.addEventListener('click', () => {
+              playerDecisions.set(bidder.loc, true);
+              stayBtn.style.backgroundColor = '#2E7D32';
+              passBtn.style.backgroundColor = '#f44336';
+              statusText.textContent = '✓ Staying In';
+              statusText.style.color = '#4CAF50';
+              checkAllDecided();
+            });
+
+            passBtn.addEventListener('click', () => {
+              playerDecisions.set(bidder.loc, false);
+              passBtn.style.backgroundColor = '#C62828';
+              stayBtn.style.backgroundColor = '#4CAF50';
+              statusText.textContent = '✗ Passed';
+              statusText.style.color = '#f44336';
+              checkAllDecided();
+            });
+
+            buttonContainer.appendChild(stayBtn);
+            buttonContainer.appendChild(passBtn);
+            playerCard.appendChild(buttonContainer);
+            playerCard.appendChild(statusText);
+
+            playerGrid.appendChild(playerCard);
+            playerElements.set(bidder.loc, { stayBtn, passBtn, statusText });
+          });
+
+          playerContainer.appendChild(playerGrid);
+          modal.appendChild(playerContainer);
+
+          // Bottom buttons (fixed at bottom)
+          const actions = document.createElement('div');
+          actions.style.display = 'flex';
+          actions.style.justifyContent = 'center';
+          actions.style.gap = 'clamp(10px, 2vw, 20px)';
+          actions.style.padding = '15px 0 0 0';
+          actions.style.borderTop = '1px solid #ccc';
+          actions.style.flexShrink = '0';
+
+          const quitBtn = document.createElement('button');
+          quitBtn.textContent = 'Quit Auction';
+          quitBtn.style.backgroundColor = '#E24A4A';
+          quitBtn.style.color = 'white';
+          quitBtn.style.border = 'none';
+          quitBtn.style.padding = 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px)';
+          quitBtn.style.borderRadius = '5px';
+          quitBtn.style.cursor = 'pointer';
+          quitBtn.style.fontWeight = 'bold';
+          quitBtn.style.fontSize = 'clamp(0.8rem, 2.5vw, 1rem)';
+
+          const confirmBtn = document.createElement('button');
+          confirmBtn.textContent = 'Confirm Decisions';
+          confirmBtn.style.backgroundColor = '#ccc';
+          confirmBtn.style.color = '#666';
+          confirmBtn.style.border = 'none';
+          confirmBtn.style.padding = 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px)';
+          confirmBtn.style.borderRadius = '5px';
+          confirmBtn.style.cursor = 'not-allowed';
+          confirmBtn.style.fontWeight = 'bold';
+          confirmBtn.style.fontSize = 'clamp(0.8rem, 2.5vw, 1rem)';
+          confirmBtn.disabled = true;
+
+          function checkAllDecided() {
+            if (playerDecisions.size === bidders.length) {
+              confirmBtn.style.backgroundColor = '#4CAF50';
+              confirmBtn.style.color = 'white';
+              confirmBtn.style.cursor = 'pointer';
+              confirmBtn.disabled = false;
+            }
+          }
+
+          quitBtn.addEventListener('click', () => {
+            cleanup();
+            resolve('quit');
+          });
+
+          confirmBtn.addEventListener('click', () => {
+            const responses = bidders.map(bidder => ({
+              bidder,
+              accepted: playerDecisions.get(bidder.loc) || false
+            }));
+            cleanup();
+            resolve(responses);
+          });
+
+          function cleanup() {
+            try { overlay.remove(); } catch (e) { }
+          }
+
+          // Handle window resize to adjust grid
+          function handleResize() {
+            const newPlayerCount = bidders.length;
+            let newColumns;
+            if (window.innerWidth < 600) {
+              newColumns = '1fr';
+            } else if (window.innerWidth < 900) {
+              newColumns = newPlayerCount <= 2 ? `repeat(${newPlayerCount}, 1fr)` : 'repeat(2, 1fr)';
+            } else {
+              if (newPlayerCount <= 2) newColumns = `repeat(${newPlayerCount}, 1fr)`;
+              else if (newPlayerCount <= 4) newColumns = 'repeat(2, 1fr)';
+              else if (newPlayerCount <= 6) newColumns = 'repeat(3, 1fr)';
+              else newColumns = 'repeat(4, 1fr)';
+            }
+            playerGrid.style.gridTemplateColumns = newColumns;
+          }
+
+          window.addEventListener('resize', handleResize);
+
+          // Cleanup resize listener when modal closes
+          const originalCleanup = cleanup;
+          cleanup = function() {
+            window.removeEventListener('resize', handleResize);
+            originalCleanup();
+          };
+
+          actions.appendChild(quitBtn);
+          actions.appendChild(confirmBtn);
           modal.appendChild(actions);
           overlay.appendChild(modal);
           document.body.appendChild(overlay);
@@ -1106,7 +1465,7 @@
 
         let aborted = false;
         for (const chore of unchosen) {
-          const result = await auctionSingle(chore, bidders);
+          const result = await auctionSingleSimultaneous(chore, bidders);
           if (result && result.abort) {
             aborted = true;
             break;
@@ -1142,21 +1501,40 @@
           return;
         }
 
+        let draftedCount = 0;
         for (const chore of unchosen) {
           const choice = await askHighOrLow(chore.name);
+          
+          // Handle quit option
+          if (choice === 'quit') {
+            // If we've drafted at least one chore, enable manual assignment for those
+            if (draftedCount > 0) {
+              draftMode = true; // Enable manual assignment buttons for drafted chores
+              saveChores(chores); // Save progress so far
+              render(); // Re-render to show manual assign buttons
+              try { notify(`Draft cancelled. ${draftedCount} chore(s) drafted - manual assignment enabled.`); } catch (e) { }
+            } else {
+              try { notify('Draft cancelled.'); } catch (e) { }
+            }
+            return; // Exit draft early
+          }
+          
           let points;
           if (choice === 'high') {
             points = randomInRange(35, 50);
+            chore.difficulty = 'difficult';
           } else {
             points = randomInRange(10, 30);
+            chore.difficulty = 'easy';
           }
           chore.points = roundToNearest5(points);
+          draftedCount++;
         }
 
         draftMode = true; // Enable manual assignment buttons
         saveChores(chores);
         render();
-        notify(`Drafted ${unchosen.length} chore(s) with point values.`, 1800);
+        notify(`Drafted ${draftedCount} chore(s) with point values.`, 1800);
       }
 
       const draftBtn = document.getElementById('draft-btn');

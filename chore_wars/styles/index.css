@@ -21,6 +21,10 @@
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
+  /* Ensure grid maintains column boundaries and uses available vertical space */
+  overflow: hidden;
+  min-height: 80vh; /* Ensure grid has substantial height for columns to expand into */
+  height: auto; /* Allow natural expansion based on content */
 }
 
 
@@ -46,16 +50,46 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Fill available space within the column, but never expand the column */
-  flex: 1 1 0;
+  /* Fill available space within fixed-height column */
+  flex: 1 1 0; /* Grow to fill available space, but column height is constrained */
   min-height: 0; /* Allow shrinking */
-  overflow-y: auto;
+  overflow-y: auto; /* Add scrolling if content exceeds available space */
   overflow-x: hidden;
 }
 
-/* Add gaps between unassigned chore items */
+/* Add gaps between unassigned chore items and allow dynamic expansion */
 #chores-list .card {
   margin-top: clamp(8px, 1.5vw, 16px);
+  /* Base size for unassigned chore cards - will expand when manual assign buttons are present */
+  min-height: 120px !important; /* Standard minimum height */
+  height: auto !important;
+  /* Optimize layout for manual assign buttons when present */
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 8px;
+}
+
+/* Special styling for unassigned chore cards that have manual assign buttons */
+#chores-list .card[data-has-buttons="true"] {
+  min-height: 220px !important; /* Base height for cards with buttons */
+  max-height: none !important; /* Allow unlimited expansion */
+  padding: 20px !important; /* Extra padding for button layout */
+  /* Ensure proper spacing for multiple buttons */
+  gap: 8px !important;
+}
+
+/* Medium button count (6-8 buttons) */
+#chores-list .card[data-has-buttons="true"][data-button-count="medium"] {
+  min-height: 300px !important;
+  padding: 24px !important;
+}
+
+/* Many buttons (9-10 buttons) */
+#chores-list .card[data-has-buttons="true"][data-button-count="many"] {
+  min-height: 400px !important; /* Much larger for 10 player buttons */
+  padding: 28px !important;
+  gap: 6px !important; /* Tighter gaps for many buttons */
 }
 
 /* First unassigned chore should not have top margin */
@@ -70,6 +104,9 @@
   flex-direction: column;
   align-items: center;
   width: 25vw;
+  /* Allow columns to expand vertically to fill available space */
+  height: 100%;
+  min-height: 0;
 }
 
 /* Increase width of cards and elements within columns by 50% on index.html */
@@ -108,6 +145,26 @@
   text-overflow: ellipsis;
   min-width: 0;
   flex-shrink: 1;
+  /* Add some margin for better spacing when multiple buttons are present */
+  margin: 2px;
+  /* Optimize for many player buttons */
+  line-height: 1.2;
+  border-radius: 4px;
+}
+
+/* More compact buttons when there are many players */
+.card[data-button-count="medium"] .btn,
+.card[data-button-count="many"] .btn {
+  font-size: clamp(0.6rem, 1vw, 0.8rem);
+  padding: clamp(2px, 0.6vw, 6px) clamp(3px, 0.8vw, 8px);
+  margin: 1px;
+  line-height: 1.1;
+}
+
+/* Extra compact for maximum players */
+.card[data-button-count="many"] .btn {
+  font-size: clamp(0.55rem, 0.9vw, 0.75rem);
+  padding: clamp(2px, 0.5vw, 5px) clamp(3px, 0.7vw, 7px);
 }
 
 .site-main .grid-3 .column .points-bank {
@@ -200,9 +257,15 @@
   background-color: var(--header_footer);
   border: solid 25px var(--header_footer);
   border-radius: 5px;
-  /* Make the column use flexbox to control internal spacing */
+  /* Make the column use flexbox to control internal spacing and fill available height */
   display: flex;
   flex-direction: column;
+  /* Fill available vertical space dynamically */
+  height: 100%; /* Fill available space in grid area */
+  min-height: 0; /* Allow shrinking if needed */
+  max-width: clamp(260px, 30vw, 560px); /* Match the grid column constraint */
+  width: 100%;
+  overflow: hidden; /* Prevent content from breaking out */
 }
 
 #chores-column h3 {
@@ -311,6 +374,9 @@
     grid-template-columns: 1fr 1fr;
     gap: clamp(8px, 2vw, 16px);
     max-width: 100%;
+    /* Ensure grid has height for columns to expand into on mobile */
+    min-height: 85vh;
+    height: auto;
   }
 
   /* Left column: container for all players */
@@ -329,13 +395,17 @@
     border: solid 10px var(--header_footer);
     display: flex;
     flex-direction: column;
+    /* Fill available vertical space on mobile */
+    height: 100%; /* Fill available space in grid area */
+    min-height: 0; /* Allow shrinking if needed */
+    overflow: hidden; /* Prevent content from breaking out */
   }
 
-  /* Mobile: list fills available space within column but never expands it */
+  /* Mobile: list fills available space within fixed-height column */
   #chores-list {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow-y: auto;
+    flex: 1 1 0; /* Fill available space within constrained column */
+    min-height: 0; /* Allow shrinking */
+    overflow-y: auto; /* Scroll within available space */
     overflow-x: hidden;
   }
 
@@ -483,9 +553,39 @@
     font-size: clamp(0.7rem, 2vw, 0.9rem);
   }
 
-  /* Add responsive top margin for unassigned chore items */
+  /* Add responsive top margin for unassigned chore items and ensure proper display */
   #chores-list .card {
     margin-top: clamp(6px, 1.5vw, 12px) !important;
+    /* Base size for mobile unassigned chore cards */
+    min-height: 100px !important; /* Standard mobile minimum height */
+    height: auto !important;
+    /* Optimize layout for manual assign buttons on mobile */
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+  }
+
+  /* Special styling for mobile unassigned chore cards that have manual assign buttons */
+  #chores-list .card[data-has-buttons="true"] {
+    min-height: 200px !important; /* Base height for mobile cards with buttons */
+    max-height: none !important; /* Allow unlimited expansion on mobile */
+    padding: clamp(12px, 3vw, 20px) !important; /* Extra responsive padding for button layout */
+    /* Ensure proper spacing for multiple buttons on mobile */
+    gap: 6px !important;
+  }
+
+  /* Medium button count (6-8 buttons) on mobile */
+  #chores-list .card[data-has-buttons="true"][data-button-count="medium"] {
+    min-height: 280px !important;
+    padding: clamp(16px, 4vw, 24px) !important;
+  }
+
+  /* Many buttons (9-10 buttons) on mobile */
+  #chores-list .card[data-has-buttons="true"][data-button-count="many"] {
+    min-height: 350px !important; /* Much larger for 10 player buttons on mobile */
+    padding: clamp(20px, 5vw, 28px) !important;
+    gap: 4px !important; /* Tighter gaps for many buttons on mobile */
   }
 
   /* First unassigned chore should not have top margin */
