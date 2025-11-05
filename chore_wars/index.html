@@ -2018,6 +2018,7 @@
             const pos = positions[extraKey];
             column.style.gridColumn = pos.column.toString();
             column.style.gridRow = pos.row.toString();
+            column.style.display = ''; // Ensure visibility
           }
         });
       }
@@ -2476,6 +2477,9 @@
         }
 
         gridSection.appendChild(newColumn);
+
+        // Ensure the column is visible
+        newColumn.style.display = '';
 
         // save presence
         const st = loadExtraState();
