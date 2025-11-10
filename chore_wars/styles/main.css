@@ -81,9 +81,31 @@ body {
 .header-btn {
   background-color: var(--header_btn_back);
   color: var(--button_hover);
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
 }
 
-.header-btn:hover {
+#logout-btn {
+  background-color: var(--header_btn_back);
+  color: red;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.header-btn:hover,
+#logout-btn:hover {
   background-color: var(--header_btn_hover);
 }
 
@@ -339,6 +361,12 @@ body {
     width: 100%;
     text-align: center;
     margin-bottom: 8px;
+  }
+  
+  #logout-btn {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    margin-left: 4px;
   }
   .container-logo img {
     width: 300px;

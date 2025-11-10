@@ -291,10 +291,17 @@
         width: 100%;
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
     }
     
     .user-welcome {
         margin-right: 0;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
     }
     
     .container-logo img {
