@@ -37,7 +37,7 @@
   --text: #111827;
 }
 
-/* Removes the scroll bar */
+/* Removes the scroll bar and prevents overscroll */
 body::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
@@ -46,6 +46,11 @@ body {
 }
 html {
   scrollbar-width: none; /* Firefox */
+  overscroll-behavior: none; /* Prevents overscroll/bounce on all directions */
+}
+body {
+  overscroll-behavior: none; /* Prevents overscroll/bounce on body */
+  overflow-x: hidden; /* Prevents horizontal scrolling */
 }
 
 * {
@@ -61,12 +66,16 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  -ms-overflow-style: none; /* Internet Explorer, Edge */
+  overscroll-behavior: none; /* Prevents overscroll/bounce on body */
+  overflow-x: hidden; /* Prevents horizontal scrolling */
 }
 
 .container {
   max-width: 100%;
   margin: 0 auto;
   padding: 16px;
+  overflow-x: hidden; /* Prevents container from overflowing horizontally */
 }
 
 .header-btn {
