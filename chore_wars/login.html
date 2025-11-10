@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chore Game - Login</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/login.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="login.html">
+                <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
+            </a>
+            <div class="container-logo">
+                <a href="login.html">
+                    <img src="images/Chore _Wars_logo_title_new.png" alt="The Chore Game">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main container">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h1>Welcome to Chore Wars</h1>
+                <p class="auth-subtitle">Sign in to manage your group's chores or create a new account</p>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form">
+                    <h2>Sign In</h2>
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" name="username" required 
+                               placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" required 
+                               placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    <p class="form-switch">
+                        Don't have an account? 
+                        <a href="#" id="show-register">Create one here</a>
+                    </p>
+                </form>
+
+                <!-- Registration Form -->
+                <form id="register-form" class="auth-form hidden">
+                    <h2>Create Account</h2>
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" name="username" required 
+                               placeholder="Choose a username" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email (optional)</label>
+                        <input type="email" id="register-email" name="email" 
+                               placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" name="password" required 
+                               placeholder="Create a password" minlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">Confirm Password</label>
+                        <input type="password" id="register-confirm" name="confirmPassword" required 
+                               placeholder="Confirm your password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                    <p class="form-switch">
+                        Already have an account? 
+                        <a href="#" id="show-login">Sign in here</a>
+                    </p>
+                </form>
+
+                <div id="auth-message" class="message hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // Simple authentication system using localStorage
+        (function() {
+            const USERS_KEY = 'tcg_users_v1';
+            const SESSION_KEY = 'tcg_session_v1';
+            
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const showRegisterLink = document.getElementById('show-register');
+            const showLoginLink = document.getElementById('show-login');
+            const messageEl = document.getElementById('auth-message');
+            
+            // Check if user is already logged in
+            function checkSession() {
+                const session = getSession();
+                if (session && session.username) {
+                    // Redirect to groups page
+                    window.location.href = 'groups.html';
+                }
+            }
+            
+            // Get current session
+            function getSession() {
+                try {
+                    const sessionData = localStorage.getItem(SESSION_KEY);
+                    return sessionData ? JSON.parse(sessionData) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            // Set user session
+            function setSession(username, email = '') {
+                const sessionData = {
+                    username: username,
+                    email: email,
+                    loginTime: Date.now()
+                };
+                localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+            }
+            
+            // Load users from storage
+            function loadUsers() {
+                try {
+                    const usersData = localStorage.getItem(USERS_KEY);
+                    return usersData ? JSON.parse(usersData) : {};
+                } catch (e) {
+                    return {};
+                }
+            }
+            
+            // Save users to storage
+            function saveUsers(users) {
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            }
+            
+            // Show message to user
+            function showMessage(message, isError = false) {
+                messageEl.textContent = message;
+                messageEl.className = isError ? 'message error' : 'message success';
+                setTimeout(() => {
+                    messageEl.className = 'message hidden';
+                }, 3000);
+            }
+            
+            // Switch between login and register forms
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                messageEl.className = 'message hidden';
+            });
+            
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                registerForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                messageEl.className = 'message hidden';
+            });
+            
+            // Handle login
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('login-username').value.trim();
+                const password = document.getElementById('login-password').value;
+                
+                if (!username || !password) {
+                    showMessage('Please fill in all fields', true);
+                    return;
+                }
+                
+                const users = loadUsers();
+                const user = users[username.toLowerCase()];
+                
+                if (!user) {
+                    showMessage('Username not found', true);
+                    return;
+                }
+                
+                if (user.password !== password) {
+                    showMessage('Incorrect password', true);
+                    return;
+                }
+                
+                // Login successful
+                setSession(username, user.email);
+                showMessage('Login successful! Redirecting...');
+                
+                setTimeout(() => {
+                    window.location.href = 'groups.html';
+                }, 1000);
+            });
+            
+            // Handle registration
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('register-username').value.trim();
+                const email = document.getElementById('register-email').value.trim();
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm').value;
+                
+                if (!username || !password || !confirmPassword) {
+                    showMessage('Please fill in all required fields', true);
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    showMessage('Passwords do not match', true);
+                    return;
+                }
+                
+                if (username.length < 3) {
+                    showMessage('Username must be at least 3 characters', true);
+                    return;
+                }
+                
+                if (password.length < 4) {
+                    showMessage('Password must be at least 4 characters', true);
+                    return;
+                }
+                
+                const users = loadUsers();
+                
+                if (users[username.toLowerCase()]) {
+                    showMessage('Username already exists', true);
+                    return;
+                }
+                
+                // Create new user
+                users[username.toLowerCase()] = {
+                    username: username,
+                    email: email,
+                    password: password,
+                    created: Date.now()
+                };
+                
+                saveUsers(users);
+                setSession(username, email);
+                
+                showMessage('Account created successfully! Redirecting...');
+                
+                setTimeout(() => {
+                    window.location.href = 'groups.html';
+                }, 1000);
+            });
+            
+            // Check session on page load
+            checkSession();
+        })();
+    </script>
+</body>
+
+</html>

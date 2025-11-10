@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/index.css">
 </head>
+
+<body>
 <header class="site-header">
 
   <div class="container">
@@ -97,7 +99,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>© <span id="year"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
+      <p>© <span id="year"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
       </p>
     </div>
   </footer>
@@ -109,12 +111,127 @@
   </script>
 
   <script>
-    // chores: add, render, persist (localStorage)
+    // Authentication and group system
+    (function() {
+      const SESSION_KEY = 'tcg_session_v1';
+      const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
+      
+      // Check if user is logged in and has selected a group
+      function checkAuthAndGroup() {
+        const session = getSession();
+        const currentGroup = getCurrentGroup();
+        
+        if (!session || !session.username) {
+          window.location.href = 'login.html';
+          return null;
+        }
+        
+        if (!currentGroup) {
+          window.location.href = 'groups.html';
+          return null;
+        }
+        
+        return { session, currentGroup };
+      }
+      
+      function getSession() {
+        try {
+          const sessionData = localStorage.getItem(SESSION_KEY);
+          return sessionData ? JSON.parse(sessionData) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+      
+      function getCurrentGroup() {
+        return localStorage.getItem(CURRENT_GROUP_KEY);
+      }
+      
+      // Initialize auth check
+      const authData = checkAuthAndGroup();
+      if (!authData) return;
+      
+      // Update navigation to show group context
+      const headerBtns = document.querySelector('.main-nav');
+      if (headerBtns) {
+        headerBtns.innerHTML = `
+          <span class="user-welcome">Group: ${authData.currentGroup.substring(6)}</span>
+          <a class="header-btn" href="index.html">Home</a>
+          <a class="header-btn" href="shop.html">Shop</a>
+          <a class="header-btn" href="groups.html">Groups</a>
+          <button id="logout-btn" class="header-btn">Logout</button>
+        `;
+        
+        // Add logout functionality
+        document.getElementById('logout-btn').addEventListener('click', () => {
+          askLogoutConfirm().then(confirmed => {
+            if (confirmed) {
+              localStorage.removeItem('tcg_session_v1');
+              localStorage.removeItem('tcg_current_group_v1');
+              window.location.href = 'login.html';
+            }
+          });
+        });
+      }
+      
+      // Logout confirmation modal
+      function askLogoutConfirm() {
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+          
+          modal.innerHTML = `
+            <p><strong>Confirm Logout</strong></p>
+            <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
+            <div class="tcg-modal-actions">
+              <button class="btn-confirm">Logout</button>
+              <button class="btn-cancel">Cancel</button>
+            </div>
+          `;
+          
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          
+          function cleanup() {
+            document.body.removeChild(overlay);
+          }
+          
+          function onConfirm() {
+            cleanup();
+            resolve(true);
+          }
+          
+          function onCancel() {
+            cleanup();
+            resolve(false);
+          }
+          
+          modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+          modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) onCancel();
+          });
+        });
+      }
+    })();
+  </script>
+
+  <script>
+    // chores: add, render, persist (localStorage) - now group-scoped
     (function () {
-      const STORAGE_KEY = 'tcg_chores_v1';
-      const HEADERS_KEY = 'tcg_column_headers_v1';
-      const POINTS_KEY = 'tcg_points_v1';
-      const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
+      // Get current group for scoped storage
+      function getCurrentGroup() {
+        return localStorage.getItem('tcg_current_group_v1') || 'default';
+      }
+      
+      const currentGroup = getCurrentGroup();
+      const STORAGE_KEY = `tcg_chores_v1_${currentGroup}`;
+      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
+      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
+      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
       const HEADER_MAX = 8; // Max characters allowed for left/right headers
 
       // points helpers
@@ -1689,8 +1806,8 @@
         });
       }
 
-      // Constants and functions needed for getActivePlayers
-      const BASE_STATE_KEY = 'base-player-state';
+      // Constants and functions needed for getActivePlayers - now group-scoped
+      const BASE_STATE_KEY = `base-player-state_${currentGroup}`;
       const defaultNames = {
         extra1: 'Player 3',
         extra2: 'Player 4',
@@ -1750,11 +1867,16 @@
       const removeColumnBtn = document.getElementById('remove-column-btn');
       const gridSection = document.querySelector('.grid-3');
 
-      // Local storage keys (scoped here to avoid cross-IIFE references)
-      const HEADERS_KEY = 'tcg_column_headers_v1';
-      const POINTS_KEY = 'tcg_points_v1';
-      const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
-      const POSITIONS_KEY = 'tcg_player_positions_v1';
+      // Local storage keys (scoped here to avoid cross-IIFE references) - now group-scoped
+      function getCurrentGroup() {
+        return localStorage.getItem('tcg_current_group_v1') || 'default';
+      }
+      
+      const currentGroup = getCurrentGroup();
+      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
+      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
+      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
+      const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;
 
       // Player colors for extra columns
       const extraColors = {
@@ -1808,8 +1930,8 @@
       function savePositions(positions) { localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions)); }
       function clearPositions() { localStorage.removeItem(POSITIONS_KEY); }
 
-      // Base player state management
-      const BASE_STATE_KEY = 'base-player-state';
+      // Base player state management - now group-scoped
+      const BASE_STATE_KEY = `base-player-state_${currentGroup}`;
       function loadBasePlayerState() {
         try {
           const raw = localStorage.getItem(BASE_STATE_KEY);

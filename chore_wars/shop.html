@@ -128,16 +128,130 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>© <span id="year2"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!
+            <p>© <span id="year2"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!
             </p>
             </p>
         </div>
     </footer>
 
     <script>
-        // minimal shop logic: store items in localStorage, render them, allow adding + purchase/delete
+        // Authentication check
+        (function() {
+            const SESSION_KEY = 'tcg_session_v1';
+            const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
+            
+            function checkAuthAndGroup() {
+                const session = getSession();
+                const currentGroup = getCurrentGroup();
+                
+                if (!session || !session.username) {
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                
+                if (!currentGroup) {
+                    window.location.href = 'groups.html';
+                    return null;
+                }
+                
+                return { session, currentGroup };
+            }
+            
+            function getSession() {
+                try {
+                    const sessionData = localStorage.getItem(SESSION_KEY);
+                    return sessionData ? JSON.parse(sessionData) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function getCurrentGroup() {
+                return localStorage.getItem(CURRENT_GROUP_KEY);
+            }
+            
+            // Initialize auth check
+            const authData = checkAuthAndGroup();
+            if (!authData) return;
+            
+            // Update navigation
+            const headerBtns = document.querySelector('.main-nav');
+            if (headerBtns) {
+                headerBtns.innerHTML = `
+                    <span class="user-welcome">Group: ${authData.currentGroup.substring(6)}</span>
+                    <a class="header-btn" href="index.html">Home</a>
+                    <a class="header-btn" href="shop.html">Shop</a>
+                    <a class="header-btn" href="groups.html">Groups</a>
+                    <button id="logout-btn" class="header-btn">Logout</button>
+                `;
+                
+                // Add logout functionality
+                document.getElementById('logout-btn').addEventListener('click', () => {
+                    askLogoutConfirm().then(confirmed => {
+                        if (confirmed) {
+                            localStorage.removeItem('tcg_session_v1');
+                            localStorage.removeItem('tcg_current_group_v1');
+                            window.location.href = 'login.html';
+                        }
+                    });
+                });
+            }
+            
+            // Logout confirmation modal
+            function askLogoutConfirm() {
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tcg-modal-overlay';
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'tcg-modal';
+                    
+                    modal.innerHTML = `
+                        <p><strong>Confirm Logout</strong></p>
+                        <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
+                        <div class="tcg-modal-actions">
+                            <button class="btn-confirm">Logout</button>
+                            <button class="btn-cancel">Cancel</button>
+                        </div>
+                    `;
+                    
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    
+                    function cleanup() {
+                        document.body.removeChild(overlay);
+                    }
+                    
+                    function onConfirm() {
+                        cleanup();
+                        resolve(true);
+                    }
+                    
+                    function onCancel() {
+                        cleanup();
+                        resolve(false);
+                    }
+                    
+                    modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+                    modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) onCancel();
+                    });
+                });
+            }
+        })();
+    </script>
+    
+    <script>
+        // minimal shop logic: store items in localStorage, render them, allow adding + purchase/delete - now group-scoped
         (function () {
-            const STORAGE_KEY = 'tcg_shop_items_v1';
+            // Get current group for scoped storage
+            function getCurrentGroup() {
+                return localStorage.getItem('tcg_current_group_v1') || 'default';
+            }
+            
+            const currentGroup = getCurrentGroup();
+            const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;
             const defaultItems = [
                 { id: Date.now() + 1, name: 'Example', description: 'Example item', price: 50, stock: null },
                 { id: Date.now() + 2, name: 'Limited Item', description: 'Only 3 available!', price: 30, stock: 3 },
@@ -582,7 +696,7 @@
 
                 // deduct and save
                 points[payerLoc] = current - item.price;
-                try { localStorage.setItem('tcg_points_v1', JSON.stringify(points)); } catch (e) { }
+                try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
                 // update the on-page point displays immediately
                 try { renderPoints(); } catch (e) { }
 
@@ -617,10 +731,10 @@
                 setTimeout(() => msgEl.textContent = '', 2000);
             }
 
-            // points display functions
+            // points display functions - now group-scoped
             function loadPoints() {
                 try {
-                    const raw = localStorage.getItem('tcg_points_v1');
+                    const raw = localStorage.getItem(`tcg_points_v1_${currentGroup}`);
                     const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
                     // ensure extras exist for compatibility
                     if (typeof parsed.left !== 'number') parsed.left = 0;
@@ -641,7 +755,7 @@
 
             function loadHeaders() {
                 try {
-                    const raw = localStorage.getItem('tcg_column_headers_v1');
+                    const raw = localStorage.getItem(`tcg_column_headers_v1_${currentGroup}`);
                     const parsed = raw ? JSON.parse(raw) : {};
                     return {
                         left: parsed.left || 'Left Column',
@@ -673,7 +787,7 @@
 
             function loadExtraState() {
                 try {
-                    const raw = localStorage.getItem('tcg_extra_cols_v1');
+                    const raw = localStorage.getItem(`tcg_extra_cols_v1_${currentGroup}`);
                     const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
                     return {
                         extra1: !!parsed.extra1,
@@ -690,20 +804,20 @@
                 }
             }
 
-            // Position storage functions
+            // Position storage functions - now group-scoped
             function loadPositions() {
                 try {
-                    const raw = localStorage.getItem('tcg_player_positions_v1');
+                    const raw = localStorage.getItem(`tcg_player_positions_v1_${currentGroup}`);
                     return raw ? JSON.parse(raw) : {};
                 } catch (e) { return {}; }
             }
-            function savePositions(positions) { localStorage.setItem('tcg_player_positions_v1', JSON.stringify(positions)); }
-            function clearPositions() { localStorage.removeItem('tcg_player_positions_v1'); }
+            function savePositions(positions) { localStorage.setItem(`tcg_player_positions_v1_${currentGroup}`, JSON.stringify(positions)); }
+            function clearPositions() { localStorage.removeItem(`tcg_player_positions_v1_${currentGroup}`); }
 
-            // Base player state management
+            // Base player state management - now group-scoped
             function loadBasePlayerState() {
                 try {
-                    const raw = localStorage.getItem('base-player-state');
+                    const raw = localStorage.getItem(`base-player-state_${currentGroup}`);
                     const p = raw ? JSON.parse(raw) : { left: true, right: true };
                     return { left: p.left !== false, right: p.right !== false };
                 }
@@ -905,9 +1019,9 @@
             render();
             renderPoints(); // render initial points
 
-            // re-render points when storage changes (in case points are updated in another tab)
+            // re-render points when storage changes (in case points are updated in another tab) - now group-scoped
             window.addEventListener('storage', (e) => {
-                if (e.key === 'tcg_points_v1' || e.key === 'tcg_column_headers_v1' || e.key === 'tcg_extra_cols_v1' || e.key === 'base-player-state') {
+                if (e.key === `tcg_points_v1_${currentGroup}` || e.key === `tcg_column_headers_v1_${currentGroup}` || e.key === `tcg_extra_cols_v1_${currentGroup}` || e.key === `base-player-state_${currentGroup}`) {
                     renderPoints();
                     updateShopManagementPosition();
                 }
