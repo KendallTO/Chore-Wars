@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Chore-Off</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .landing-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .landing-logo {
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .landing-title {
+            font-family: var(--header_font);
+            font-size: 2.5rem;
+            color: var(--text);
+            margin: 0 0 16px 0;
+        }
+        
+        .landing-subtitle {
+            font-size: 1.2rem;
+            color: #6b7280;
+            margin: 0 0 40px 0;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        
+        .landing-actions {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .landing-btn {
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary-large {
+            background: var(--accent);
+            color: #fff;
+        }
+        
+        .btn-primary-large:hover {
+            background: #1e56a0;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary-large {
+            background: #f3f4f6;
+            color: var(--text);
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-secondary-large:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 580px) {
+            .landing-title {
+                font-size: 2rem;
+            }
+            
+            .landing-subtitle {
+                font-size: 1rem;
+            }
+            
+            .landing-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .landing-btn {
+                width: 200px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="welcome.html">
+                <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
+            </a>
+            <div class="container-logo">
+                <a href="welcome.html">
+                    <img src="images/Chore _Wars_logo_title_new.png" alt="The Chore Game">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main container">
+        <div class="landing-container">
+            <h1 class="landing-title">Welcome to The Great Chore-Off!</h1>
+            <p class="landing-subtitle">
+                Transform chore management into a fun, collaborative game for your family, roommates, or team. 
+                Create groups, assign tasks, earn points, and make household responsibilities engaging for everyone.
+            </p>
+            
+            <div class="landing-actions">
+                <a href="login.html" class="landing-btn btn-primary-large">Get Started</a>
+                <a href="about.html" class="landing-btn btn-secondary-large">Learn More</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // Auto-redirect if user is already logged in
+        (function() {
+            const SESSION_KEY = 'tcg_session_v1';
+            const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
+            
+            function getSession() {
+                try {
+                    const sessionData = localStorage.getItem(SESSION_KEY);
+                    return sessionData ? JSON.parse(sessionData) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function getCurrentGroup() {
+                return localStorage.getItem(CURRENT_GROUP_KEY);
+            }
+            
+            const session = getSession();
+            const currentGroup = getCurrentGroup();
+            
+            if (session && session.username) {
+                if (currentGroup) {
+                    // User has both session and selected group, go to main app
+                    window.location.href = 'index.html';
+                } else {
+                    // User has session but no group selected, go to groups
+                    window.location.href = 'groups.html';
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

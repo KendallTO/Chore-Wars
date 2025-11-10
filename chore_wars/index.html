@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/index.css">
 </head>
+
+<body>
 <header class="site-header">
 
   <div class="container">
@@ -109,12 +111,72 @@
   </script>
 
   <script>
-    // chores: add, render, persist (localStorage)
+    // Authentication and group system
+    (function() {
+      const SESSION_KEY = 'tcg_session_v1';
+      const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
+      
+      // Check if user is logged in and has selected a group
+      function checkAuthAndGroup() {
+        const session = getSession();
+        const currentGroup = getCurrentGroup();
+        
+        if (!session || !session.username) {
+          window.location.href = 'login.html';
+          return null;
+        }
+        
+        if (!currentGroup) {
+          window.location.href = 'groups.html';
+          return null;
+        }
+        
+        return { session, currentGroup };
+      }
+      
+      function getSession() {
+        try {
+          const sessionData = localStorage.getItem(SESSION_KEY);
+          return sessionData ? JSON.parse(sessionData) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+      
+      function getCurrentGroup() {
+        return localStorage.getItem(CURRENT_GROUP_KEY);
+      }
+      
+      // Initialize auth check
+      const authData = checkAuthAndGroup();
+      if (!authData) return;
+      
+      // Update navigation to show group context
+      const headerBtns = document.querySelector('.main-nav');
+      if (headerBtns) {
+        headerBtns.innerHTML = `
+          <span class="user-welcome">Group: ${authData.currentGroup.substring(6)}</span>
+          <a class="header-btn" href="index.html">Home</a>
+          <a class="header-btn" href="shop.html">Shop</a>
+          <a class="header-btn" href="groups.html">Groups</a>
+        `;
+      }
+    })();
+  </script>
+
+  <script>
+    // chores: add, render, persist (localStorage) - now group-scoped
     (function () {
-      const STORAGE_KEY = 'tcg_chores_v1';
-      const HEADERS_KEY = 'tcg_column_headers_v1';
-      const POINTS_KEY = 'tcg_points_v1';
-      const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
+      // Get current group for scoped storage
+      function getCurrentGroup() {
+        return localStorage.getItem('tcg_current_group_v1') || 'default';
+      }
+      
+      const currentGroup = getCurrentGroup();
+      const STORAGE_KEY = `tcg_chores_v1_${currentGroup}`;
+      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
+      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
+      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
       const HEADER_MAX = 8; // Max characters allowed for left/right headers
 
       // points helpers
@@ -1689,8 +1751,8 @@
         });
       }
 
-      // Constants and functions needed for getActivePlayers
-      const BASE_STATE_KEY = 'base-player-state';
+      // Constants and functions needed for getActivePlayers - now group-scoped
+      const BASE_STATE_KEY = `base-player-state_${currentGroup}`;
       const defaultNames = {
         extra1: 'Player 3',
         extra2: 'Player 4',
@@ -1750,11 +1812,16 @@
       const removeColumnBtn = document.getElementById('remove-column-btn');
       const gridSection = document.querySelector('.grid-3');
 
-      // Local storage keys (scoped here to avoid cross-IIFE references)
-      const HEADERS_KEY = 'tcg_column_headers_v1';
-      const POINTS_KEY = 'tcg_points_v1';
-      const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
-      const POSITIONS_KEY = 'tcg_player_positions_v1';
+      // Local storage keys (scoped here to avoid cross-IIFE references) - now group-scoped
+      function getCurrentGroup() {
+        return localStorage.getItem('tcg_current_group_v1') || 'default';
+      }
+      
+      const currentGroup = getCurrentGroup();
+      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
+      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
+      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
+      const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;
 
       // Player colors for extra columns
       const extraColors = {
@@ -1808,8 +1875,8 @@
       function savePositions(positions) { localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions)); }
       function clearPositions() { localStorage.removeItem(POSITIONS_KEY); }
 
-      // Base player state management
-      const BASE_STATE_KEY = 'base-player-state';
+      // Base player state management - now group-scoped
+      const BASE_STATE_KEY = `base-player-state_${currentGroup}`;
       function loadBasePlayerState() {
         try {
           const raw = localStorage.getItem(BASE_STATE_KEY);

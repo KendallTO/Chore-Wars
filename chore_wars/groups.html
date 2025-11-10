@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chore Game - Groups</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/groups.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="groups.html">
+                <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
+            </a>
+            <div class="container-logo">
+                <a href="groups.html">
+                    <img src="images/Chore _Wars_logo_title_new.png" alt="The Chore Game">
+                </a>
+            </div>
+            <nav class="main-nav">
+                <span id="welcome-user" class="user-welcome">Welcome!</span>
+                <button id="logout-btn" class="header-btn">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main container">
+        <div class="groups-container">
+            <div class="groups-header">
+                <h1>Your Groups</h1>
+                <button id="create-group-btn" class="btn btn-primary">
+                    <span class="btn-icon">+</span>
+                    Create New Group
+                </button>
+            </div>
+
+            <!-- Create Group Form -->
+            <div id="create-group-form" class="group-form-card hidden">
+                <h2>Create New Group</h2>
+                <form id="group-form">
+                    <div class="form-group">
+                        <label for="group-name">Group Name</label>
+                        <input type="text" id="group-name" name="groupName" required 
+                               placeholder="Enter group name (e.g., 'Smith Family', 'Apartment 4B')" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="group-description">Description (optional)</label>
+                        <textarea id="group-description" name="description" rows="3" 
+                                placeholder="Describe your group or add any notes" maxlength="150"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create Group</button>
+                        <button type="button" id="cancel-create" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Groups List -->
+            <div id="groups-list" class="groups-grid">
+                <!-- Groups will be rendered here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>No Groups Yet</h3>
+                <p>Create your first group to start managing chores together!</p>
+                <button class="btn btn-primary" onclick="document.getElementById('create-group-btn').click()">
+                    Get Started
+                </button>
+            </div>
+        </div>
+
+        <div id="message" class="message hidden"></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year"></span> The Great Chore-Off: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Group management system
+        (function() {
+            const SESSION_KEY = 'tcg_session_v1';
+            const GROUPS_KEY = 'tcg_groups_v1';
+            const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
+            
+            const createGroupBtn = document.getElementById('create-group-btn');
+            const createGroupForm = document.getElementById('create-group-form');
+            const cancelCreateBtn = document.getElementById('cancel-create');
+            const groupForm = document.getElementById('group-form');
+            const groupsList = document.getElementById('groups-list');
+            const emptyState = document.getElementById('empty-state');
+            const messageEl = document.getElementById('message');
+            const welcomeUser = document.getElementById('welcome-user');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            // Check authentication
+            function checkAuth() {
+                const session = getSession();
+                if (!session || !session.username) {
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                return session;
+            }
+            
+            function getSession() {
+                try {
+                    const sessionData = localStorage.getItem(SESSION_KEY);
+                    return sessionData ? JSON.parse(sessionData) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            function loadGroups() {
+                try {
+                    const groupsData = localStorage.getItem(GROUPS_KEY);
+                    return groupsData ? JSON.parse(groupsData) : {};
+                } catch (e) {
+                    return {};
+                }
+            }
+            
+            function saveGroups(groups) {
+                localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+            }
+            
+            function setCurrentGroup(groupId) {
+                localStorage.setItem(CURRENT_GROUP_KEY, groupId);
+            }
+            
+            function showMessage(message, isError = false) {
+                messageEl.textContent = message;
+                messageEl.className = isError ? 'message error' : 'message success';
+                setTimeout(() => {
+                    messageEl.className = 'message hidden';
+                }, 3000);
+            }
+            
+            function generateGroupId() {
+                return 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            function getUserGroups(username) {
+                const groups = loadGroups();
+                return Object.keys(groups).filter(groupId => 
+                    groups[groupId].members.includes(username.toLowerCase())
+                ).map(groupId => ({ id: groupId, ...groups[groupId] }));
+            }
+            
+            function createGroupCard(group) {
+                const card = document.createElement('div');
+                card.className = 'group-card';
+                
+                const memberCount = group.members.length;
+                const memberText = memberCount === 1 ? '1 member' : `${memberCount} members`;
+                const createdDate = new Date(group.created).toLocaleDateString();
+                
+                card.innerHTML = `
+                    <div class="group-info">
+                        <h3 class="group-name">${escapeHtml(group.name)}</h3>
+                        ${group.description ? `<p class="group-description">${escapeHtml(group.description)}</p>` : ''}
+                        <div class="group-meta">
+                            <span class="member-count">${memberText}</span>
+                            <span class="created-date">Created ${createdDate}</span>
+                        </div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn btn-primary" onclick="enterGroup('${group.id}')">
+                            Enter Group
+                        </button>
+                        <button class="btn btn-danger" onclick="confirmLeaveGroup('${group.id}', '${escapeHtml(group.name)}')">
+                            Leave
+                        </button>
+                    </div>
+                `;
+                
+                return card;
+            }
+            
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            function renderGroups() {
+                const session = checkAuth();
+                if (!session) return;
+                
+                const userGroups = getUserGroups(session.username);
+                
+                if (userGroups.length === 0) {
+                    groupsList.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    groupsList.classList.remove('hidden');
+                    groupsList.innerHTML = '';
+                    
+                    userGroups.forEach(group => {
+                        groupsList.appendChild(createGroupCard(group));
+                    });
+                }
+            }
+            
+            // Global functions for onclick handlers
+            window.enterGroup = function(groupId) {
+                setCurrentGroup(groupId);
+                showMessage('Entering group...');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+            };
+            
+            window.confirmLeaveGroup = function(groupId, groupName) {
+                if (confirm(`Are you sure you want to leave "${groupName}"? This action cannot be undone.`)) {
+                    leaveGroup(groupId);
+                }
+            };
+            
+            function leaveGroup(groupId) {
+                const session = getSession();
+                if (!session) return;
+                
+                const groups = loadGroups();
+                const group = groups[groupId];
+                
+                if (!group) {
+                    showMessage('Group not found', true);
+                    return;
+                }
+                
+                // Remove user from group members
+                group.members = group.members.filter(member => 
+                    member.toLowerCase() !== session.username.toLowerCase()
+                );
+                
+                // If no members left, delete the group
+                if (group.members.length === 0) {
+                    delete groups[groupId];
+                    // Also clean up group-specific data
+                    cleanupGroupData(groupId);
+                } else {
+                    groups[groupId] = group;
+                }
+                
+                saveGroups(groups);
+                showMessage('Left group successfully');
+                renderGroups();
+            }
+            
+            function cleanupGroupData(groupId) {
+                // Remove group-specific localStorage entries
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.includes(`_${groupId}`)) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+            }
+            
+            // Event listeners
+            createGroupBtn.addEventListener('click', () => {
+                createGroupForm.classList.remove('hidden');
+                document.getElementById('group-name').focus();
+            });
+            
+            cancelCreateBtn.addEventListener('click', () => {
+                createGroupForm.classList.add('hidden');
+                groupForm.reset();
+            });
+            
+            groupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const session = checkAuth();
+                if (!session) return;
+                
+                const groupName = document.getElementById('group-name').value.trim();
+                const description = document.getElementById('group-description').value.trim();
+                
+                if (!groupName) {
+                    showMessage('Group name is required', true);
+                    return;
+                }
+                
+                const groups = loadGroups();
+                const groupId = generateGroupId();
+                
+                groups[groupId] = {
+                    id: groupId,
+                    name: groupName,
+                    description: description,
+                    created: Date.now(),
+                    creator: session.username,
+                    members: [session.username.toLowerCase()]
+                };
+                
+                saveGroups(groups);
+                showMessage('Group created successfully!');
+                
+                createGroupForm.classList.add('hidden');
+                groupForm.reset();
+                renderGroups();
+            });
+            
+            logoutBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    localStorage.removeItem(SESSION_KEY);
+                    localStorage.removeItem(CURRENT_GROUP_KEY);
+                    window.location.href = 'login.html';
+                }
+            });
+            
+            // Initialize page
+            const session = checkAuth();
+            if (session) {
+                welcomeUser.textContent = `Welcome, ${session.username}!`;
+                renderGroups();
+            }
+        })();
+    </script>
+</body>
+
+</html>
