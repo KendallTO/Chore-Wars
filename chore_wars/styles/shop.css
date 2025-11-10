@@ -7,7 +7,6 @@
 
 #extra1-points-box {
   background-color: var(--extra1_color);
-  grid-area: 2 / 1;
 }
 
 #extra2-header {
@@ -19,7 +18,6 @@
 
 #extra2-points-box {
   background-color: var(--extra2_color);
-  grid-area: 2 / 3;
 }
 
 #extra3-header {
@@ -31,7 +29,6 @@
 
 #extra3-points-box {
   background-color: var(--extra3_color);
-  grid-area: 3 / 1;
 }
 
 #extra4-header {
@@ -43,7 +40,6 @@
 
 #extra4-points-box {
   background-color: var(--extra4_color);
-  grid-area: 3 / 3;
 }
 
 #extra5-header {
@@ -55,7 +51,6 @@
 
 #extra5-points-box {
   background-color: var(--extra5_color);
-  grid-area: 4 / 1;
 }
 
 #extra6-header {
@@ -67,7 +62,6 @@
 
 #extra6-points-box {
   background-color: var(--extra6_color);
-  grid-area: 4 / 3;
 }
 
 #extra7-header {
@@ -79,7 +73,6 @@
 
 #extra7-points-box {
   background-color: var(--extra7_color);
-  grid-area: 5 / 1;
 }
 
 #extra8-header {
@@ -91,7 +84,6 @@
 
 #extra8-points-box {
   background-color: var(--extra8_color);
-  grid-area: 5 / 3;
 }
 
 /* Points display in shop */

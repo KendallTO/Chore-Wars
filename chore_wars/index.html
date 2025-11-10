@@ -1619,6 +1619,11 @@
         render();
       });
 
+      // Re-render when extra columns are added to update assign buttons
+      window.addEventListener('extraColumnAdded', () => {
+        render();
+      });
+
       // Unassign All button functionality
       const unassignAllBtn = document.getElementById('unassign-all-btn');
       if (unassignAllBtn) {
@@ -1749,6 +1754,7 @@
       const HEADERS_KEY = 'tcg_column_headers_v1';
       const POINTS_KEY = 'tcg_points_v1';
       const EXTRA_STATE_KEY = 'tcg_extra_cols_v1';
+      const POSITIONS_KEY = 'tcg_player_positions_v1';
 
       // Player colors for extra columns
       const extraColors = {
@@ -1786,7 +1792,21 @@
         try { const raw = localStorage.getItem(EXTRA_STATE_KEY); const p = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }; return { extra1: !!p.extra1, extra2: !!p.extra2, extra3: !!p.extra3, extra4: !!p.extra4, extra5: !!p.extra5, extra6: !!p.extra6, extra7: !!p.extra7, extra8: !!p.extra8 }; }
         catch (e) { return { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }; }
       }
-      function saveExtraState(s) { localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
+      function saveExtraState(s) { 
+        localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); 
+        // Clear saved positions when extra state changes since optimal positions will be different
+        clearPositions();
+      }
+
+      // Position storage functions
+      function loadPositions() {
+        try {
+          const raw = localStorage.getItem(POSITIONS_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function savePositions(positions) { localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions)); }
+      function clearPositions() { localStorage.removeItem(POSITIONS_KEY); }
 
       // Base player state management
       const BASE_STATE_KEY = 'base-player-state';
@@ -1798,7 +1818,11 @@
         }
         catch (e) { return { left: true, right: true }; }
       }
-      function saveBasePlayerState(s) { localStorage.setItem(BASE_STATE_KEY, JSON.stringify(s)); }
+      function saveBasePlayerState(s) { 
+        localStorage.setItem(BASE_STATE_KEY, JSON.stringify(s)); 
+        // Clear saved positions when base state changes since optimal positions will be different
+        clearPositions();
+      }
 
       function loadPoints() {
         try {
@@ -2021,6 +2045,9 @@
             column.style.display = ''; // Ensure visibility
           }
         });
+
+        // Save the calculated positions to localStorage
+        savePositions(positions);
       }
 
       // Function to restore players to their original positions (when both base players are active)
@@ -2535,13 +2562,29 @@
         }
 
         // After all columns are created, position them appropriately
+        const savedPositions = loadPositions();
         const currentBaseState = loadBasePlayerState();
-        if (currentBaseState.left && currentBaseState.right) {
-          // Both base players active - use original alternating pattern
-          restoreOriginalPositions();
+        
+        if (Object.keys(savedPositions).length > 0) {
+          // Restore saved positions if they exist
+          Object.keys(savedPositions).forEach(extraKey => {
+            const column = document.getElementById(`column-${extraKey}`);
+            if (column && st[extraKey]) { // Only apply if column exists and is active
+              const pos = savedPositions[extraKey];
+              column.style.gridColumn = pos.column.toString();
+              column.style.gridRow = pos.row.toString();
+              column.style.display = '';
+            }
+          });
         } else {
-          // One or no base players - use dynamic balancing
-          repositionAllExtraColumns();
+          // No saved positions, calculate from scratch
+          if (currentBaseState.left && currentBaseState.right) {
+            // Both base players active - use original alternating pattern
+            restoreOriginalPositions();
+          } else {
+            // One or no base players - use dynamic balancing
+            repositionAllExtraColumns();
+          }
         }
 
         // Update button states
@@ -2641,24 +2684,24 @@
           // Add extra player
           // Clear cache for the extra column before creating it
           clearExtraStorage(playerLoc);
-          // Create the extra column
+          // Create the extra column (this will handle positioning automatically)
           const slotNumber = parseInt(playerLoc.replace('extra', ''));
           createExtraColumn(slotNumber);
         }
 
-        // Reposition all columns - check if we should restore original layout
-        const currentBaseState = loadBasePlayerState();
-        if (currentBaseState.left && currentBaseState.right) {
-          // Both base players are now active - restore original alternating pattern
-          restoreOriginalPositions();
-        } else {
-          // Continue using dynamic balancing
+        // For base players, we need to reposition all extra columns to follow the same logic
+        if (player.isBase) {
           repositionAllExtraColumns();
+          updateUnassignedPosition();
         }
+        // Note: Extra players already get positioned in createExtraColumn()
 
         // Update button states
         updateRemoveButtonState();
         updateAddButtonState();
+
+        // Trigger re-render to add assign buttons for this column
+        window.dispatchEvent(new CustomEvent('extraColumnAdded'));
       });
 
       // Confirmation helper for removing player

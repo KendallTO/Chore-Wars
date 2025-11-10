@@ -652,6 +652,16 @@
                 }
             }
 
+            // Position storage functions
+            function loadPositions() {
+                try {
+                    const raw = localStorage.getItem('tcg_player_positions_v1');
+                    return raw ? JSON.parse(raw) : {};
+                } catch (e) { return {}; }
+            }
+            function savePositions(positions) { localStorage.setItem('tcg_player_positions_v1', JSON.stringify(positions)); }
+            function clearPositions() { localStorage.removeItem('tcg_player_positions_v1'); }
+
             // Base player state management
             function loadBasePlayerState() {
                 try {
@@ -701,7 +711,7 @@
                     const extraKey = `extra${i}`;
                     if (st[extraKey]) {
                         activeExtras.push({
-                            key: extraKey,
+                            extraKey: extraKey,
                             number: i,
                             isLeft: i % 2 === 1
                         });
@@ -713,25 +723,32 @@
 
             // Function to calculate optimal grid positions without gaps
             function calculateOptimalPositions() {
+                const baseState = loadBasePlayerState();
                 const activeExtras = getActiveExtraPlayers();
-                const leftPlayers = activeExtras.filter(p => p.isLeft).sort((a, b) => a.number - b.number);
-                const rightPlayers = activeExtras.filter(p => p.isLeft === false).sort((a, b) => a.number - b.number);
+                
+                // Determines starting positions based on which base players exist
+                let leftRowIndex = baseState.left ? 2 : 1;   // Start at row 1 if Player 1 is gone
+                let rightRowIndex = baseState.right ? 2 : 1; // Start at row 1 if Player 2 is gone
+                
+                // Split extra players by their original side (odd numbers = left, even = right)
+                const leftPlayers = activeExtras.filter(p => p.number % 2 === 1).sort((a, b) => a.number - b.number);
+                const rightPlayers = activeExtras.filter(p => p.number % 2 === 0).sort((a, b) => a.number - b.number);
 
                 const positions = {};
 
-                // Assign left side positions (starting from row 2)
+                // Assign left side positions to eliminate gaps
                 leftPlayers.forEach((player, index) => {
-                    positions[player.key] = {
+                    positions[player.extraKey] = {
                         column: 1,
-                        row: index + 2 // Start from row 2 (row 1 has base players)
+                        row: leftRowIndex + index
                     };
                 });
 
-                // Assign right side positions (starting from row 2)
+                // Assign right side positions to eliminate gaps
                 rightPlayers.forEach((player, index) => {
-                    positions[player.key] = {
+                    positions[player.extraKey] = {
                         column: 3,
-                        row: index + 2 // Start from row 2 (row 1 has base players)
+                        row: rightRowIndex + index
                     };
                 });
 
@@ -749,8 +766,14 @@
                         const pos = positions[extraKey];
                         box.style.gridColumn = pos.column.toString();
                         box.style.gridRow = pos.row.toString();
+                        box.style.display = ''; // Ensure visibility
                     }
                 });
+
+                // Save the calculated positions to localStorage (only save if there are positions)
+                if (Object.keys(positions).length > 0) {
+                    savePositions(positions);
+                }
             }
 
             // Position the center shop-management so its extended form passes between extra players
@@ -817,8 +840,23 @@
                     }
                 }
 
-                // Reposition all extra boxes to eliminate gaps
-                repositionAllExtraBoxes();
+                // Try to restore saved positions first, otherwise recalculate
+                const savedPositions = loadPositions();
+                if (Object.keys(savedPositions).length > 0) {
+                    // Restore saved positions
+                    Object.keys(savedPositions).forEach(extraKey => {
+                        const box = document.getElementById(`${extraKey}-points-box`);
+                        if (box && extras[extraKey]) { // Only apply if box exists and player is active
+                            const pos = savedPositions[extraKey];
+                            box.style.gridColumn = pos.column.toString();
+                            box.style.gridRow = pos.row.toString();
+                            box.style.display = '';
+                        }
+                    });
+                } else {
+                    // No saved positions, recalculate
+                    repositionAllExtraBoxes();
+                }
 
                 // Make sure the center section spans appropriately when extras are present
                 updateShopManagementPosition();
@@ -835,6 +873,17 @@
                     renderPoints();
                     updateShopManagementPosition();
                 }
+            });
+
+            // Listen for player add/remove events from index.html to update positioning
+            window.addEventListener('extraColumnAdded', () => {
+                renderPoints();
+                updateShopManagementPosition();
+            });
+
+            window.addEventListener('extraColumnRemoved', () => {
+                renderPoints();
+                updateShopManagementPosition();
             });
 
             // Add Items form toggle functionality
