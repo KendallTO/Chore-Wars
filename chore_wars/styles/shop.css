@@ -322,9 +322,9 @@
   margin-bottom: 15px;
 }
 
-/* one-time badge style */
-.badge.one-time {
+/* limited-stock badge style */
+.badge.limited-stock {
   background: #b45309;
-  /* amber/dark orange to indicate special/one-time */
+  /* amber/dark orange to indicate limited availability */
   font-weight: 600;
 }
