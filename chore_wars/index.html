@@ -40,6 +40,11 @@
         <!-- left points bank (display only) -->
         <div class="points-bank">
           <div>Points: <strong id="left-points">0</strong></div>
+          <button type="button" class="inventory-toggle" data-player="left">
+            <span class="toggle-text">View Inventory</span>
+            <span class="toggle-icon">▼</span>
+          </button>
+          <div class="inventory-dropdown hidden" id="left-inventory"></div>
         </div>
 
         <!-- left column chores -->
@@ -79,6 +84,11 @@
         <!-- right points bank (display only) -->
         <div class="points-bank" id="right-points-bank">
           <div>Points: <strong id="right-points">0</strong></div>
+          <button type="button" class="inventory-toggle" data-player="right">
+            <span class="toggle-text">View Inventory</span>
+            <span class="toggle-icon">▼</span>
+          </button>
+          <div class="inventory-dropdown hidden" id="right-inventory"></div>
         </div>
 
         <!-- right column chores -->
@@ -1877,6 +1887,119 @@
       const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
       const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
       const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;
+      const INVENTORY_KEY = `tcg_player_inventories_v1_${currentGroup}`;
+
+      // Inventory management functions
+      function loadInventories() {
+        try {
+          const raw = localStorage.getItem(INVENTORY_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+      
+      function saveInventories(inventories) {
+        try {
+          localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventories));
+        } catch (e) {
+          console.error('Failed to save inventories:', e);
+        }
+      }
+      
+      function useItemFromInventory(playerLoc, itemId) {
+        const inventories = loadInventories();
+        if (!inventories[playerLoc]) return;
+        
+        const itemIndex = inventories[playerLoc].findIndex(item => item.id === itemId);
+        if (itemIndex === -1) return;
+        
+        const item = inventories[playerLoc][itemIndex];
+        item.quantity -= 1;
+        
+        if (item.quantity <= 0) {
+          inventories[playerLoc].splice(itemIndex, 1);
+        }
+        
+        saveInventories(inventories);
+        renderInventory(playerLoc);
+      }
+      
+      function renderInventory(playerLoc) {
+        const inventories = loadInventories();
+        const container = document.getElementById(`${playerLoc}-inventory`);
+        if (!container) return;
+        
+        const items = inventories[playerLoc] || [];
+        container.innerHTML = '';
+        
+        if (items.length === 0) {
+          // CSS will show "No items in inventory" via ::before
+          return;
+        }
+        
+        items.forEach(item => {
+          const itemCard = document.createElement('div');
+          itemCard.className = 'inventory-item';
+          
+          const header = document.createElement('div');
+          header.className = 'inventory-item-header';
+          
+          const name = document.createElement('div');
+          name.className = 'inventory-item-name';
+          name.textContent = item.name;
+          header.appendChild(name);
+          
+          const quantity = document.createElement('div');
+          quantity.className = 'inventory-item-quantity';
+          quantity.textContent = `×${item.quantity}`;
+          header.appendChild(quantity);
+          
+          itemCard.appendChild(header);
+          
+          if (item.description) {
+            const desc = document.createElement('p');
+            desc.className = 'inventory-item-desc';
+            desc.textContent = item.description;
+            itemCard.appendChild(desc);
+          }
+          
+          const actions = document.createElement('div');
+          actions.className = 'inventory-item-actions';
+          
+          const useBtn = document.createElement('button');
+          useBtn.className = 'btn-use-item';
+          useBtn.textContent = 'Use Item';
+          useBtn.addEventListener('click', () => {
+            useItemFromInventory(playerLoc, item.id);
+          });
+          actions.appendChild(useBtn);
+          
+          itemCard.appendChild(actions);
+          container.appendChild(itemCard);
+        });
+      }
+      
+      // Initialize inventory toggle functionality
+      function initInventoryToggles() {
+        const toggleButtons = document.querySelectorAll('.inventory-toggle');
+        toggleButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            const playerLoc = button.dataset.player;
+            const dropdown = document.getElementById(`${playerLoc}-inventory`);
+            const isExpanded = button.getAttribute('aria-expanded') === 'true';
+            
+            if (isExpanded) {
+              button.setAttribute('aria-expanded', 'false');
+              dropdown.classList.add('hidden');
+            } else {
+              button.setAttribute('aria-expanded', 'true');
+              dropdown.classList.remove('hidden');
+              renderInventory(playerLoc);
+            }
+          });
+        });
+      }
 
       // Player colors for extra columns
       const extraColors = {
@@ -2615,6 +2738,16 @@
             const p = loadPoints();
             pointsStrong.textContent = String(p[extraKey] || 0);
           }
+          
+          // Update inventory toggle and dropdown for extra column
+          const inventoryToggle = pointsBank.querySelector('.inventory-toggle');
+          if (inventoryToggle) {
+            inventoryToggle.setAttribute('data-player', extraKey);
+          }
+          const inventoryDropdown = pointsBank.querySelector('.inventory-dropdown');
+          if (inventoryDropdown) {
+            inventoryDropdown.id = `${extraKey}-inventory`;
+          }
         }
 
         // list id and clear cloned chores
@@ -2770,6 +2903,9 @@
 
       // initialize from saved state (if any)
       initFromStorage();
+      
+      // Initialize inventory toggles
+      initInventoryToggles();
 
       addColumnBtn.addEventListener('click', async function () {
         // Get available players to add
@@ -2809,6 +2945,8 @@
           // Create the extra column (this will handle positioning automatically)
           const slotNumber = parseInt(playerLoc.replace('extra', ''));
           createExtraColumn(slotNumber);
+          // Re-initialize inventory toggles for the new column
+          initInventoryToggles();
         }
 
         // For base players, we need to reposition all extra columns to follow the same logic
