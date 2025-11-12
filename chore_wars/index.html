@@ -2499,7 +2499,15 @@
         const choresCol = document.getElementById('chores-column');
         if (!choresCol) return;
         const st = loadExtraState();
+        const baseState = loadBasePlayerState();
         const hasAnyExtras = Object.values(st).some(Boolean);
+        
+        // Count total visible players (base + extras)
+        let totalVisiblePlayers = 0;
+        if (baseState.left !== false) totalVisiblePlayers++;
+        if (baseState.right !== false) totalVisiblePlayers++;
+        totalVisiblePlayers += Object.values(st).filter(Boolean).length;
+        
         if (hasAnyExtras) {
           // Calculate the maximum row needed based on active players
           const activeExtras = getActiveExtraPlayers();
@@ -2516,6 +2524,10 @@
           choresCol.style.gridColumn = '';
           choresCol.style.gridRow = '';
         }
+        
+        // For mobile: set grid-row to span all visible players
+        // This uses a CSS variable that the media query can use
+        choresCol.style.setProperty('--total-players', totalVisiblePlayers);
       }
 
       function attachExtraHeaderHandlers(headerEl, field) {
