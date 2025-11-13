@@ -17,6 +17,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 32px;
+    position: relative;
+    z-index: 10;
 }
 
 .groups-header h1 {
@@ -24,6 +26,14 @@
     color: var(--text);
     font-family: var(--header_font);
     font-size: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+#create-group-btn {
+    position: relative;
+    z-index: 20;
+    pointer-events: auto;
 }
 
 .btn-icon {

@@ -134,6 +134,8 @@ body {
   width: 25vw;
   transform: translate(-50%, -50%);
   margin-top: 0.5vw;
+  pointer-events: none;
+  z-index: 5;
 }
 
 /*.j Lines 99-101 (below) is unused*/
