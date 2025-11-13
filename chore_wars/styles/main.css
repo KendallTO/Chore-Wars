@@ -126,6 +126,9 @@ body {
 .logo {
   max-width: 17%;
   margin-top: 5px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
 .container-logo img {
@@ -149,6 +152,12 @@ body {
   font-weight: 500;
   margin-right: 16px;
   font-size: 0.9rem;
+}
+
+.main-nav {
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .main-nav a {
@@ -338,12 +347,52 @@ body {
   }
 }
 
+/* Medium screens: adjust logo size and spacing to prevent overlap */
+@media (max-width: 800px) {
+  .logo {
+    max-width: 15%;
+  }
+  
+  .container-logo img {
+    width: 22vw;
+  }
+  
+  .main-nav a, .header-btn, #logout-btn {
+    margin-left: 8px;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .logo {
+    max-width: 12%;
+  }
+  
+  .container-logo img {
+    width: 20vw;
+  }
+  
+  .main-nav a, .header-btn, #logout-btn {
+    margin-left: 6px;
+    padding: 5px 7px;
+    font-size: 0.8rem;
+  }
+}
+
 @media (max-width: 580px) {
   .site-header .container {
     flex-direction: column;
     align-items: flex-start;
     padding: 20px 50px;
   }
+  
+  .logo {
+    max-width: 60px;
+    min-width: 50px;
+    width: 60px;
+  }
+  
   .main-nav {
     width:100%;
     display: flex;
