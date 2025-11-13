@@ -76,6 +76,13 @@
                     </div>
 
                     <div class="form-row">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="item-group-goal" name="groupGoal" style="width: auto;" />
+                            <span style="font-size: 0.9rem;">Group Goal</span>
+                        </label>
+                    </div>
+
+                    <div class="form-row">
                         <button type="submit">Add Item</button>
                         <span id="form-msg" class="form-msg" role="status" aria-live="polite"></span>
                     </div>
@@ -487,6 +494,13 @@
                             item.stock = item.oneTime ? 1 : null;
                             delete item.oneTime;
                         }
+                        // Initialize group goal properties if missing
+                        if (item.isGroupGoal && item.contributed === undefined) {
+                            item.contributed = 0;
+                        }
+                        if (item.isGroupGoal && item.isComplete === undefined) {
+                            item.isComplete = false;
+                        }
                     });
                     
                     return items;
@@ -519,6 +533,15 @@
                     titleWrap.appendChild(badge);
                 }
 
+                // Group goal badge
+                if (item.isGroupGoal) {
+                    const badge = document.createElement('span');
+                    badge.className = item.isComplete ? 'badge group-goal-complete' : 'badge group-goal';
+                    badge.textContent = item.isComplete ? '✓ COMPLETE' : 'GROUP GOAL';
+                    badge.style.backgroundColor = item.isComplete ? '#16a34a' : '#2563eb';
+                    titleWrap.appendChild(badge);
+                }
+
                 art.appendChild(titleWrap);
 
                 if (item.description) {
@@ -528,10 +551,42 @@
                     art.appendChild(p);
                 }
 
-                const price = document.createElement('p');
-                price.className = 'product-price';
-                price.textContent = item.price + ' pts';
-                art.appendChild(price);
+                // Show progress for group goals
+                if (item.isGroupGoal) {
+                    const progressContainer = document.createElement('div');
+                    progressContainer.style.margin = '8px 0';
+                    progressContainer.style.textAlign = 'center';
+
+                    const progressText = document.createElement('p');
+                    progressText.style.margin = '0 0 4px 0';
+                    progressText.style.fontSize = '0.9rem';
+                    progressText.style.fontWeight = '600';
+                    progressText.textContent = `${item.contributed || 0} / ${item.price} pts`;
+                    progressContainer.appendChild(progressText);
+
+                    const progressBar = document.createElement('div');
+                    progressBar.style.width = '100%';
+                    progressBar.style.height = '8px';
+                    progressBar.style.backgroundColor = '#e5e7eb';
+                    progressBar.style.borderRadius = '4px';
+                    progressBar.style.overflow = 'hidden';
+
+                    const progressFill = document.createElement('div');
+                    const percent = Math.min(100, ((item.contributed || 0) / item.price) * 100);
+                    progressFill.style.width = percent + '%';
+                    progressFill.style.height = '100%';
+                    progressFill.style.backgroundColor = item.isComplete ? '#16a34a' : '#2563eb';
+                    progressFill.style.transition = 'width 0.3s ease';
+                    progressBar.appendChild(progressFill);
+
+                    progressContainer.appendChild(progressBar);
+                    art.appendChild(progressContainer);
+                } else {
+                    const price = document.createElement('p');
+                    price.className = 'product-price';
+                    price.textContent = item.price + ' pts';
+                    art.appendChild(price);
+                }
 
                 // actions: purchase + delete
                 const actions = document.createElement('div');
@@ -542,12 +597,19 @@
                 buyBtn.className = 'btn btn-purchase';
                 buyBtn.dataset.action = 'purchase';
                 
-                // Disable purchase button if item is out of stock
+                // Disable purchase button if item is out of stock or group goal is complete
                 if (item.stock === 0) {
                     buyBtn.textContent = 'Out of Stock';
                     buyBtn.disabled = true;
                     buyBtn.style.opacity = '0.5';
                     buyBtn.style.cursor = 'not-allowed';
+                } else if (item.isGroupGoal && item.isComplete) {
+                    buyBtn.textContent = 'Goal Reached';
+                    buyBtn.disabled = true;
+                    buyBtn.style.opacity = '0.5';
+                    buyBtn.style.cursor = 'not-allowed';
+                } else if (item.isGroupGoal) {
+                    buyBtn.textContent = 'Contribute';
                 } else {
                     buyBtn.textContent = 'Purchase';
                 }
@@ -604,9 +666,20 @@
                 }
 
                 const items = loadItems();
+                const isGroupGoal = document.getElementById('item-group-goal').checked;
+                
                 // round price to nearest multiple of 5 before saving
                 const roundedPrice = roundToNearest5(price);
-                const newItem = { id: Date.now(), name, description: desc, price: roundedPrice, stock };
+                const newItem = { 
+                    id: Date.now(), 
+                    name, 
+                    description: desc, 
+                    price: roundedPrice, 
+                    stock,
+                    isGroupGoal: isGroupGoal,
+                    contributed: isGroupGoal ? 0 : undefined,
+                    isComplete: isGroupGoal ? false : undefined
+                };
                 items.push(newItem);
                 saveItems(items);
                 render();
@@ -835,6 +908,100 @@
                 });
             }
 
+            // Ask how much to contribute to a group goal
+            function askContributionAmount(playerName, maxAmount, remaining) {
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tcg-modal-overlay';
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'tcg-modal';
+                    
+                    // Round max to nearest 5 (down) to ensure valid contribution
+                    const maxRounded = Math.floor(maxAmount / 5) * 5;
+                    const defaultValue = Math.min(maxRounded, Math.ceil(remaining / 5) * 5);
+                    
+                    modal.innerHTML = `
+                        <p><strong>Contribute to Group Goal</strong></p>
+                        <p>${playerName} has <strong>${maxAmount}</strong> points available.</p>
+                        <p>Remaining needed: <strong>${remaining}</strong> points</p>
+                        <p style="font-size: 0.85rem; color: #6b7280; margin: 8px 0;">Contributions must be in multiples of 5</p>
+                        <div style="margin: 15px 0;">
+                            <input type="number" id="contribution-amount" min="5" max="${maxRounded}" step="5" value="${defaultValue}" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div class="tcg-modal-actions">
+                            <button class="btn-cancel">Cancel</button>
+                            <button class="btn-confirm">Contribute</button>
+                        </div>
+                    `;
+                    
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    
+                    const input = modal.querySelector('#contribution-amount');
+                    input.focus();
+                    input.select();
+                    
+                    function cleanup() {
+                        document.body.removeChild(overlay);
+                    }
+                    
+                    function onConfirm() {
+                        let amount = parseInt(input.value) || 0;
+                        
+                        // Validate amount
+                        if (amount <= 0) {
+                            input.focus();
+                            return;
+                        }
+                        
+                        // Round to nearest 5
+                        amount = Math.round(amount / 5) * 5;
+                        
+                        // Ensure it's at least 5
+                        if (amount < 5) {
+                            amount = 5;
+                        }
+                        
+                        // Ensure it doesn't exceed max
+                        if (amount > maxRounded) {
+                            amount = maxRounded;
+                        }
+                        
+                        // Check if player has enough after rounding
+                        if (amount > maxAmount) {
+                            input.value = maxRounded;
+                            input.focus();
+                            return;
+                        }
+                        
+                        cleanup();
+                        resolve(amount);
+                    }
+                    
+                    function onCancel() {
+                        cleanup();
+                        resolve(0);
+                    }
+                    
+                    modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+                    modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) onCancel();
+                    });
+                    
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            onConfirm();
+                        } else if (e.key === 'Escape') {
+                            onCancel();
+                        }
+                    });
+                });
+            }
+
             // purchase handler (uses combined askPayerChoice)
             async function purchaseItem(id) {
                 const items = loadItems();
@@ -845,6 +1012,12 @@
                 // Check if item is out of stock
                 if (item.stock === 0) {
                     await showInfo('This item is out of stock.');
+                    return;
+                }
+                
+                // Check if group goal is already complete
+                if (item.isGroupGoal && item.isComplete) {
+                    await showInfo('This group goal has already been completed!');
                     return;
                 }
 
@@ -868,6 +1041,50 @@
                 // load point banks
                 const points = loadPoints();
                 const current = Number(points[payerLoc] || 0);
+                
+                // For group goals, handle contributions differently
+                if (item.isGroupGoal) {
+                    const remaining = item.price - (item.contributed || 0);
+                    const maxContribution = Math.min(current, remaining);
+                    
+                    if (maxContribution <= 0) {
+                        await showInfo(
+                            `${payer.name} doesn't have any points to contribute.`,
+                            'OK'
+                        );
+                        return;
+                    }
+                    
+                    // Ask how much to contribute (up to maxContribution)
+                    const contribution = await askContributionAmount(payer.name, maxContribution, remaining);
+                    if (!contribution || contribution <= 0) return;
+                    
+                    // Deduct points
+                    points[payerLoc] = current - contribution;
+                    try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
+                    try { renderPoints(); } catch (e) { }
+                    
+                    // Add contribution to item
+                    item.contributed = (item.contributed || 0) + contribution;
+                    
+                    // Check if goal is complete
+                    if (item.contributed >= item.price) {
+                        item.contributed = item.price; // Cap at goal
+                        item.isComplete = true;
+                        saveItems(items);
+                        render();
+                        msgEl.textContent = `🎉 GROUP GOAL COMPLETE! ${item.name} has been fully funded!`;
+                        setTimeout(() => msgEl.textContent = '', 4000);
+                    } else {
+                        saveItems(items);
+                        render();
+                        msgEl.textContent = `${payer.name} contributed ${contribution} pts to ${item.name}. (${item.contributed}/${item.price})`;
+                        setTimeout(() => msgEl.textContent = '', 3000);
+                    }
+                    return;
+                }
+                
+                // Regular purchase logic
                 if (current < item.price) {
                     // Get player color based on location
                     let playerColor = '';
