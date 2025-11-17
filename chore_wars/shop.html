@@ -57,7 +57,7 @@
                     <h3 class="shop-form-title">Add New Item</h3>
                     <div class="form-row">
                         <input id="item-name" name="name" type="text" required aria-required="true" aria-label="Name"
-                            placeholder="Name*" />
+                            placeholder="Name* (max 15 characters)" maxlength="15" />
                     </div>
 
                     <div class="form-row">
@@ -524,6 +524,17 @@
                 const title = document.createElement('h3');
                 title.className = 'product-title';
                 title.textContent = item.name;
+                
+                // Dynamic font sizing based on title length
+                const nameLength = item.name.length;
+                if (nameLength > 12) {
+                    title.style.fontSize = '0.95rem';
+                } else if (nameLength > 10) {
+                    title.style.fontSize = '1.05rem';
+                } else {
+                    title.style.fontSize = '1.2rem';
+                }
+                
                 titleWrap.appendChild(title);
 
                 if (item.stock !== null && item.stock !== undefined) {
@@ -621,6 +632,14 @@
                 editBtn.className = 'btn';
                 editBtn.dataset.action = 'edit';
                 editBtn.textContent = 'Edit';
+                
+                // Disable edit button if group goal is complete
+                if (item.isGroupGoal && item.isComplete) {
+                    editBtn.disabled = true;
+                    editBtn.style.opacity = '0.5';
+                    editBtn.style.cursor = 'not-allowed';
+                }
+                
                 actions.appendChild(editBtn);
 
                 const delBtn = document.createElement('button');
@@ -1158,8 +1177,8 @@
                     modal.innerHTML = `
                         <p><strong>Edit Shop Item</strong></p>
                         <div style="margin: 15px 0;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Item Name:</label>
-                            <input type="text" id="edit-item-name" value="${item.name}" 
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Item Name (max 15 characters):</label>
+                            <input type="text" id="edit-item-name" value="${item.name}" maxlength="15" 
                                    style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
                         </div>
                         <div style="margin: 15px 0;">
