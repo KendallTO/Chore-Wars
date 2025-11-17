@@ -191,12 +191,64 @@
         </div>
     </footer>
 
+    <!-- =========================================================================
+        JAVASCRIPT ARCHITECTURE OVERVIEW - SHOP SYSTEM
+        =========================================================================
+        
+        This page contains several JavaScript modules for the shop system:
+        
+        1. AUTHENTICATION & GROUP SYSTEM
+           - Validates user login and group selection
+           - Redirects to login.html if no session
+           - Redirects to groups.html if no group selected
+           - Updates navigation with logout functionality
+           - Displays group ID in footer
+        
+        2. SHOP MANAGEMENT SYSTEM (Main Module)
+           - Shop item CRUD operations (Create, Read, Update, Delete, Edit)
+           - Points synchronization with index.html
+           - Inventory tracking per player
+           - Purchase system with player selection modal
+           - Group goal contribution system
+           - Limited stock management
+           - Edit protection for completed group goals
+        
+        3. POINTS & INVENTORY DISPLAY
+           - Real-time points display for all players (1-10)
+           - Inventory dropdown toggles
+           - Syncs with index.html localStorage data
+           - Updates after purchases and contributions
+        
+        4. GROUP GOAL SYSTEM
+           - Collaborative purchasing feature
+           - Progress bar visualization
+           - Contribution tracking (increments of 5)
+           - Completion status management
+           - Prevents editing completed goals
+        
+        KEY DATA STRUCTURES:
+        - Shop Item: { id, name, description, price, stock?, isGroupGoal?, contributed?, isComplete? }
+        - Points: { left, right, extra1-extra8 }
+        - Inventory: { player_loc: [item_id, item_id, ...] }
+        
+        STORAGE KEYS (all group-scoped):
+        - tcg_shop_items_v1_${groupId}
+        - tcg_points_v1_${groupId} (shared with index.html)
+        - tcg_inventories_v1_${groupId}
+        - tcg_column_headers_v1_${groupId} (shared with index.html)
+        
+    ========================================================================= -->
+
     <script>
-        // Authentication check
+        // ===================================
+        // AUTHENTICATION & GROUP SYSTEM
+        // ===================================
+        // Validates user login and group selection, manages logout
         (function() {
             const SESSION_KEY = 'tcg_session_v1';
             const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
             
+            // Check if user is logged in and has selected a group
             function checkAuthAndGroup() {
                 const session = getSession();
                 const currentGroup = getCurrentGroup();
@@ -227,11 +279,14 @@
                 return localStorage.getItem(CURRENT_GROUP_KEY);
             }
             
-            // Initialize auth check
+            // Initialize authentication check - redirect if not logged in or no group
             const authData = checkAuthAndGroup();
             if (!authData) return;
             
-            // Update navigation
+            // ===================================
+            // NAVIGATION UPDATE
+            // ===================================
+            // Add Groups link and Logout button to navigation
             const headerBtns = document.querySelector('.main-nav');
             if (headerBtns) {
                 headerBtns.innerHTML = `
@@ -259,7 +314,10 @@
                 groupDisplay.textContent = `Group: ${authData.currentGroup.substring(6)}`;
             }
             
-            // Logout confirmation modal
+            // ===================================
+            // LOGOUT CONFIRMATION MODAL
+            // ===================================
+            // Shows confirmation dialog before logging out
             function askLogoutConfirm() {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -305,18 +363,29 @@
     </script>
     
     <script>
-        // minimal shop logic: store items in localStorage, render them, allow adding + purchase/delete - now group-scoped
+        // ===================================
+        // MAIN SHOP MANAGEMENT SYSTEM
+        // ===================================
+        // Handles shop items, purchases, inventory, and group goals
+        // All data is group-scoped via localStorage
         (function () {
+            // ===================================
+            // STORAGE KEYS & CONFIGURATION
+            // ===================================
             // Get current group for scoped storage
             function getCurrentGroup() {
                 return localStorage.getItem('tcg_current_group_v1') || 'default';
             }
             
             const currentGroup = getCurrentGroup();
-            const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;
-            const INVENTORY_KEY = `tcg_player_inventories_v1_${currentGroup}`;
+            const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;  // Shop items storage
+            const INVENTORY_KEY = `tcg_player_inventories_v1_${currentGroup}`;  // Player inventories
             
-            // Inventory management functions
+            // ===================================
+            // INVENTORY SYSTEM
+            // ===================================
+            // Tracks which items each player owns
+            // Structure: { playerLoc: [itemId1, itemId2, ...] }
             function loadInventories() {
                 try {
                     const raw = localStorage.getItem(INVENTORY_KEY);
@@ -326,6 +395,7 @@
                 }
             }
             
+            // Saves inventory data to localStorage
             function saveInventories(inventories) {
                 try {
                     localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventories));
@@ -334,6 +404,7 @@
                 }
             }
             
+            // Adds purchased item to player's inventory (with quantity tracking)
             function addItemToInventory(playerLoc, itemId, itemName, itemDesc) {
                 const inventories = loadInventories();
                 if (!inventories[playerLoc]) {
@@ -357,6 +428,7 @@
                 renderInventory(playerLoc);
             }
             
+            // Removes one quantity of item from player's inventory (or deletes if qty = 0)
             function useItemFromInventory(playerLoc, itemId) {
                 const inventories = loadInventories();
                 if (!inventories[playerLoc]) return;
@@ -375,6 +447,11 @@
                 renderInventory(playerLoc);
             }
             
+            // ===================================
+            // INVENTORY RENDERING
+            // ===================================
+            // Displays player's inventory with item cards, quantity, and use button
+            // Shows "No items" message if inventory is empty
             function renderInventory(playerLoc) {
                 const inventories = loadInventories();
                 const container = document.getElementById(`${playerLoc}-inventory`);
@@ -430,7 +507,11 @@
                 });
             }
             
-            // Initialize inventory toggle functionality
+            // ===================================
+            // INVENTORY TOGGLE BUTTONS
+            // ===================================
+            // Handles dropdown toggles for viewing player inventories
+            // Shows/hides inventory when clicking "View Inventory" buttons
             function initInventoryToggles() {
                 const toggleButtons = document.querySelectorAll('.inventory-toggle');
                 toggleButtons.forEach(button => {
@@ -483,6 +564,12 @@
                 });
             }
 
+            // ===================================
+            // SHOP ITEMS DATA PERSISTENCE
+            // ===================================
+            // Loads shop items from localStorage
+            // Migrates old oneTime format to stock format
+            // Initializes group goal properties if missing
             function loadItems() {
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
@@ -509,10 +596,18 @@
                 }
             }
 
+            // Saves shop items array to localStorage
             function saveItems(items) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
             }
 
+            // ===================================
+            // PRODUCT CARD RENDERING
+            // ===================================
+            // Creates shop item card with badges, progress bars, and action buttons
+            // Shows different UI for group goals vs regular items
+            // Disables edit button for completed group goals
+            // Dynamic font sizing based on title length (15 char max)
             function createCard(item) {
                 const art = document.createElement('article');
                 art.className = 'card product';
@@ -654,12 +749,20 @@
                 return art;
             }
 
+            // Renders all shop items to the products grid
             function render() {
                 const items = loadItems();
                 productsEl.innerHTML = '';
                 items.forEach(it => productsEl.appendChild(createCard(it)));
             }
 
+            // ===================================
+            // ADD ITEM FORM HANDLER
+            // ===================================
+            // Handles shop item creation from the form
+            // Validates inputs (name, price, stock)
+            // Reads group goal checkbox to create group goal items
+            // Creates item with unique ID and saves to localStorage
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 msgEl.textContent = '';
@@ -715,7 +818,11 @@
                 setTimeout(() => msgEl.textContent = '', 2000);
             });
 
-            // delegated click handler for purchase / delete / edit
+            // ===================================
+            // PRODUCT ACTION HANDLER (Event Delegation)
+            // ===================================
+            // Handles all button clicks on product cards: purchase, delete, edit
+            // Uses event delegation on products grid for performance
             productsEl.addEventListener('click', function (e) {
                 const btn = e.target.closest('button[data-action]');
                 if (!btn) return;
@@ -732,7 +839,12 @@
                 }
             });
 
-            // Combined purchase modal: shows all players and cancel button
+            // ===================================
+            // PLAYER SELECTION MODAL (Purchase)
+            // ===================================
+            // Shows grid of all active players for purchase selection
+            // Color-coded buttons matching player colors from index.html
+            // Returns selected player or null if cancelled
             function askPayerChoice(players, price, itemName) {
                 // players is an array of {loc: 'left'|'right'|'extra1'|'extra2', name: 'Name'}
                 return new Promise((resolve) => {
@@ -883,7 +995,10 @@
                 });
             }
 
-            // info helper: single-OK modal matching shop style
+            // ===================================
+            // MODAL HELPERS
+            // ===================================
+            // Simple information modal with OK button
             function showInfo(message, okLabel = 'OK') {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -907,7 +1022,7 @@
                 });
             }
 
-            // confirm helper: show a purchase confirmation modal (Confirm / Cancel)
+            // Purchase confirmation modal with Confirm/Cancel buttons
             function askConfirmPurchase(itemName, price) {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -936,7 +1051,12 @@
                 });
             }
 
-            // Ask how much to contribute to a group goal
+            // ===================================
+            // GROUP GOAL CONTRIBUTION MODAL
+            // ===================================
+            // Asks player how much to contribute to a group goal
+            // Enforces multiples of 5, validates against player's available points
+            // Returns contributed amount or 0 if cancelled
             function askContributionAmount(playerName, maxAmount, remaining) {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -1030,7 +1150,12 @@
                 });
             }
 
-            // purchase handler (uses combined askPayerChoice)
+            // ===================================
+            // PURCHASE/CONTRIBUTION HANDLER
+            // ===================================
+            // Handles both regular purchases and group goal contributions
+            // Validates stock availability, player points, and completion status
+            // Deducts points, updates inventory, manages stock and group goal progress
             async function purchaseItem(id) {
                 const items = loadItems();
                 const idx = items.findIndex(i => i.id === id);
@@ -1158,6 +1283,12 @@
                 setTimeout(() => msgEl.textContent = '', 2000);
             }
 
+            // ===================================
+            // EDIT SHOP ITEM MODAL
+            // ===================================
+            // Opens modal to edit item name, description, price, and stock
+            // Preserves group goal properties (contributed, isComplete, isGroupGoal)
+            // Validates inputs and updates item in localStorage
             function editItem(id) {
                 const items = loadItems();
                 const idx = items.findIndex(i => i.id === id);
@@ -1287,7 +1418,11 @@
                 setTimeout(() => msgEl.textContent = '', 2000);
             }
 
-            // points display functions - now group-scoped
+            // ===================================
+            // POINTS SYSTEM (Shared with index.html)
+            // ===================================
+            // Loads points from group-scoped localStorage
+            // Syncs with index.html for consistent point tracking
             function loadPoints() {
                 try {
                     const raw = localStorage.getItem(`tcg_points_v1_${currentGroup}`);
@@ -1309,6 +1444,8 @@
                 }
             }
 
+            // Loads player headers (names) from group-scoped localStorage
+            // Shared with index.html for consistent naming
             function loadHeaders() {
                 try {
                     const raw = localStorage.getItem(`tcg_column_headers_v1_${currentGroup}`);
@@ -1380,7 +1517,12 @@
                 catch (e) { return { left: true, right: true }; }
             }
 
-            // Function to get all active players for shop
+            // ===================================
+            // ACTIVE PLAYERS DETECTION
+            // ===================================
+            // Gets list of all active players from index.html state
+            // Checks base player state and extra columns state
+            // Returns array of player objects with loc and name
             function getActivePlayers() {
                 const headers = loadHeaders();
                 const st = loadExtraState();
@@ -1501,6 +1643,12 @@
                 }
             }
 
+            // ===================================
+            // RENDER POINTS DISPLAY
+            // ===================================
+            // Updates all player point displays in the UI
+            // Shows/hides player boxes based on active state from index.html
+            // Handles base players and extra columns (Players 3-10)
             function renderPoints() {
                 const points = loadPoints();
                 const headers = loadHeaders();
@@ -1570,12 +1718,19 @@
                 updateShopManagementPosition();
             }
 
-            // set year and initial render
+            // ===================================
+            // INITIALIZATION
+            // ===================================
+            // Set footer year and perform initial renders
             document.getElementById('year2').textContent = new Date().getFullYear();
             render();
             renderPoints(); // render initial points
 
-            // re-render points when storage changes (in case points are updated in another tab) - now group-scoped
+            // ===================================
+            // STORAGE EVENT LISTENERS
+            // ===================================
+            // Re-render when localStorage changes (cross-tab sync)
+            // Watches for points, headers, extra columns, and base player state changes
             window.addEventListener('storage', (e) => {
                 if (e.key === `tcg_points_v1_${currentGroup}` || e.key === `tcg_column_headers_v1_${currentGroup}` || e.key === `tcg_extra_cols_v1_${currentGroup}` || e.key === `base-player-state_${currentGroup}`) {
                     renderPoints();
@@ -1583,7 +1738,11 @@
                 }
             });
 
-            // Listen for player add/remove events from index.html to update positioning
+            // ===================================
+            // PLAYER COLUMN EVENT LISTENERS
+            // ===================================
+            // Listen for player add/remove events from index.html
+            // Updates points display and shop positioning when columns change
             window.addEventListener('extraColumnAdded', () => {
                 renderPoints();
                 updateShopManagementPosition();
@@ -1594,7 +1753,10 @@
                 updateShopManagementPosition();
             });
 
-            // Add Items form toggle functionality
+            // ===================================
+            // ADD ITEMS FORM TOGGLE
+            // ===================================
+            // Collapses/expands the "Add New Item" form in shop management
             const toggleBtn = document.getElementById('toggle-add-form');
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', () => {
@@ -1615,7 +1777,7 @@
                     }
                 });
 
-                // close form on successful add
+                // Auto-close form on successful item add
                 const originalSubmitHandler = form.onsubmit;
                 form.addEventListener('submit', (e) => {
                     if (e.defaultPrevented) return; // if validation failed
@@ -1625,7 +1787,10 @@
                 });
             }
             
-            // Initialize inventory toggles
+            // ===================================
+            // FINAL INITIALIZATION
+            // ===================================
+            // Initialize all inventory dropdown toggles
             initInventoryToggles();
         })();
     </script>
