@@ -621,9 +621,115 @@
         del.dataset.action = 'delete';
         actions.appendChild(del);
 
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'btn';
+        edit.textContent = 'Edit';
+        edit.dataset.action = 'edit';
+        actions.appendChild(edit);
+
         wrap.appendChild(actions);
         art.appendChild(wrap);
         return art;
+      }
+
+      // Edit chore modal
+      function editChore(choreId) {
+        const chores = loadChores();
+        const idx = chores.findIndex(c => c.id === choreId);
+        if (idx === -1) return;
+        const chore = chores[idx];
+
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+          
+          modal.innerHTML = `
+            <p><strong>Edit Chore</strong></p>
+            <div style="margin: 15px 0;">
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">Chore Name:</label>
+              <input type="text" id="edit-chore-name" value="${chore.name}" 
+                     style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+            </div>
+            <div style="margin: 15px 0;">
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">Points:</label>
+              <input type="number" id="edit-chore-points" value="${chore.points}" min="5" max="50" step="5" 
+                     style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+            </div>
+            <div class="tcg-modal-actions">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-confirm">Save</button>
+            </div>
+          `;
+          
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          
+          const nameInput = modal.querySelector('#edit-chore-name');
+          const pointsInput = modal.querySelector('#edit-chore-points');
+          nameInput.focus();
+          nameInput.select();
+          
+          function cleanup() {
+            document.body.removeChild(overlay);
+          }
+          
+          function onConfirm() {
+            const newName = nameInput.value.trim();
+            const newPoints = parseInt(pointsInput.value) || 5;
+            
+            if (!newName) {
+              nameInput.focus();
+              return;
+            }
+            
+            // Round points to nearest 5 and cap at 50
+            let roundedPoints = Math.round(newPoints / 5) * 5;
+            roundedPoints = Math.max(5, Math.min(50, roundedPoints));
+            
+            // Update the chore
+            chores[idx].name = newName;
+            chores[idx].points = roundedPoints;
+            saveChores(chores);
+            render();
+            
+            cleanup();
+            notify(`Chore updated: ${newName} (${roundedPoints} pts)`, 1800);
+            resolve(true);
+          }
+          
+          function onCancel() {
+            cleanup();
+            resolve(false);
+          }
+          
+          modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+          modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) onCancel();
+          });
+          
+          nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onConfirm();
+            } else if (e.key === 'Escape') {
+              onCancel();
+            }
+          });
+          
+          pointsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onConfirm();
+            } else if (e.key === 'Escape') {
+              onCancel();
+            }
+          });
+        });
       }
 
       function render() {
@@ -817,8 +923,8 @@
           savePoints(points);
           renderPoints();
 
-          // remove the chore after completion
-          chores.splice(idx, 1);
+          // unassign the chore after completion instead of deleting
+          chores[idx].loc = null;
           saveChores(chores);
           render();
 
@@ -924,6 +1030,10 @@
           draftMode = true;
           saveChores(chores);
           render();
+          return;
+        }
+        if (action === 'edit') {
+          editChore(id);
           return;
         }
         if (action === 'delete') {

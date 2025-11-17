@@ -616,6 +616,13 @@
                 
                 actions.appendChild(buyBtn);
 
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'btn';
+                editBtn.dataset.action = 'edit';
+                editBtn.textContent = 'Edit';
+                actions.appendChild(editBtn);
+
                 const delBtn = document.createElement('button');
                 delBtn.type = 'button';
                 delBtn.className = 'btn btn-delete';
@@ -689,7 +696,7 @@
                 setTimeout(() => msgEl.textContent = '', 2000);
             });
 
-            // delegated click handler for purchase / delete
+            // delegated click handler for purchase / delete / edit
             productsEl.addEventListener('click', function (e) {
                 const btn = e.target.closest('button[data-action]');
                 if (!btn) return;
@@ -701,6 +708,8 @@
                     purchaseItem(id);
                 } else if (action === 'delete') {
                     deleteItem(id);
+                } else if (action === 'edit') {
+                    editItem(id);
                 }
             });
 
@@ -1128,6 +1137,122 @@
                     msgEl.textContent = `Purchased. Added to ${payer.name}'s inventory.`;
                 }
                 setTimeout(() => msgEl.textContent = '', 2000);
+            }
+
+            function editItem(id) {
+                const items = loadItems();
+                const idx = items.findIndex(i => i.id === id);
+                if (idx === -1) return;
+                const item = items[idx];
+
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tcg-modal-overlay';
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'tcg-modal';
+                    modal.style.maxWidth = '500px';
+                    
+                    const stockValue = item.stock !== null && item.stock !== undefined ? item.stock : '';
+                    
+                    modal.innerHTML = `
+                        <p><strong>Edit Shop Item</strong></p>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Item Name:</label>
+                            <input type="text" id="edit-item-name" value="${item.name}" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Description:</label>
+                            <textarea id="edit-item-description" rows="3" 
+                                      style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem; resize: vertical;">${item.description || ''}</textarea>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Price (points):</label>
+                            <input type="number" id="edit-item-price" value="${item.price}" min="0" step="5" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Stock (leave empty for unlimited):</label>
+                            <input type="number" id="edit-item-stock" value="${stockValue}" min="0" placeholder="Unlimited" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div class="tcg-modal-actions">
+                            <button class="btn-cancel">Cancel</button>
+                            <button class="btn-confirm">Save</button>
+                        </div>
+                    `;
+                    
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    
+                    const nameInput = modal.querySelector('#edit-item-name');
+                    const descInput = modal.querySelector('#edit-item-description');
+                    const priceInput = modal.querySelector('#edit-item-price');
+                    const stockInput = modal.querySelector('#edit-item-stock');
+                    nameInput.focus();
+                    nameInput.select();
+                    
+                    function cleanup() {
+                        document.body.removeChild(overlay);
+                    }
+                    
+                    function onConfirm() {
+                        const newName = nameInput.value.trim();
+                        const newDesc = descInput.value.trim();
+                        const newPrice = parseInt(priceInput.value) || 0;
+                        const stockValue = stockInput.value.trim();
+                        const newStock = stockValue === '' ? null : parseInt(stockValue);
+                        
+                        if (!newName) {
+                            nameInput.focus();
+                            return;
+                        }
+                        
+                        if (newPrice < 0) {
+                            priceInput.focus();
+                            return;
+                        }
+                        
+                        if (stockValue !== '' && (isNaN(newStock) || newStock < 0)) {
+                            stockInput.focus();
+                            return;
+                        }
+                        
+                        // Update the item (preserve group goal properties)
+                        items[idx].name = newName;
+                        items[idx].description = newDesc;
+                        items[idx].price = newPrice;
+                        items[idx].stock = newStock;
+                        saveItems(items);
+                        render();
+                        
+                        cleanup();
+                        msgEl.textContent = `Item updated: ${newName}`;
+                        setTimeout(() => msgEl.textContent = '', 2000);
+                        resolve(true);
+                    }
+                    
+                    function onCancel() {
+                        cleanup();
+                        resolve(false);
+                    }
+                    
+                    modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+                    modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) onCancel();
+                    });
+                    
+                    nameInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            onConfirm();
+                        } else if (e.key === 'Escape') {
+                            onCancel();
+                        }
+                    });
+                });
             }
 
             function deleteItem(id) {
