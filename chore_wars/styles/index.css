@@ -374,23 +374,21 @@
     grid-template-columns: 1fr 1fr;
     gap: clamp(8px, 2vw, 16px);
     max-width: 100%;
-    /* Ensure grid has height for columns to expand into on mobile */
+    /* Allow grid to grow based on content */
     min-height: 85vh;
     height: auto;
   }
 
-  /* Left column: container for all players */
-  .players-container {
-    grid-column: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  /* All player columns go to left column, stacked - use !important to override inline styles */
+  .column:not(#chores-column) {
+    grid-column: 1 !important;
+    grid-row: auto !important; /* Let grid auto-place them */
   }
 
   /* Right column: unassigned chores */
   #chores-column {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 2 !important;
+    grid-row: 1 / calc(var(--total-players, 10) + 1) !important; /* Span from row 1 to number of players */
     position: static; /* Remove sticky positioning for mobile */
     border: solid 10px var(--header_footer);
     display: flex;
@@ -653,3 +651,4 @@
     padding: 4px;
   }
 }
+

@@ -14,7 +14,7 @@
 
         <div class="container">
             <a href="index.html">
-                <img class="logo" src="images/Logo_THE_GREAT_CHORE_OFF_Icon.png" alt="Logo">
+                <img class="logo" src="images/cwLightM.png" alt="Logo">
             </a>
             <div class="container-logo">
                 <a href="index.html">
@@ -34,6 +34,11 @@
             <div class="points-box" id="left-points-box">
                 <h3 id="left-header">Left Column</h3>
                 <div class="points-value"><strong id="shop-left-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="left">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="left-inventory"></div>
             </div>
 
             <!-- Shop management section (moved to center) -->
@@ -52,7 +57,7 @@
                     <h3 class="shop-form-title">Add New Item</h3>
                     <div class="form-row">
                         <input id="item-name" name="name" type="text" required aria-required="true" aria-label="Name"
-                            placeholder="Name*" />
+                            placeholder="Name* (max 15 characters)" maxlength="15" />
                     </div>
 
                     <div class="form-row">
@@ -71,6 +76,13 @@
                     </div>
 
                     <div class="form-row">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="item-group-goal" name="groupGoal" style="width: auto;" />
+                            <span style="font-size: 0.9rem;">Group Goal</span>
+                        </label>
+                    </div>
+
+                    <div class="form-row">
                         <button type="submit">Add Item</button>
                         <span id="form-msg" class="form-msg" role="status" aria-live="polite"></span>
                     </div>
@@ -80,40 +92,85 @@
             <div class="points-box" id="right-points-box">
                 <h3 id="right-header">Right Column</h3>
                 <div class="points-value"><strong id="shop-right-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="right">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="right-inventory"></div>
             </div>
 
             <!-- Extra player points boxes (row 2). Shown only if extras exist in index.html -->
             <div class="points-box" id="extra1-points-box">
                 <h3 id="extra1-header">Player 3</h3>
                 <div class="points-value"><strong id="shop-extra1-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra1">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra1-inventory"></div>
             </div>
             <div class="points-box" id="extra2-points-box">
                 <h3 id="extra2-header">Player 4</h3>
                 <div class="points-value"><strong id="shop-extra2-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra2">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra2-inventory"></div>
             </div>
             <div class="points-box" id="extra3-points-box">
                 <h3 id="extra3-header">Player 5</h3>
                 <div class="points-value"><strong id="shop-extra3-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra3">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra3-inventory"></div>
             </div>
             <div class="points-box" id="extra4-points-box">
                 <h3 id="extra4-header">Player 6</h3>
                 <div class="points-value"><strong id="shop-extra4-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra4">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra4-inventory"></div>
             </div>
             <div class="points-box" id="extra5-points-box">
                 <h3 id="extra5-header">Player 7</h3>
                 <div class="points-value"><strong id="shop-extra5-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra5">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra5-inventory"></div>
             </div>
             <div class="points-box" id="extra6-points-box">
                 <h3 id="extra6-header">Player 8</h3>
                 <div class="points-value"><strong id="shop-extra6-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra6">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra6-inventory"></div>
             </div>
             <div class="points-box" id="extra7-points-box">
                 <h3 id="extra7-header">Player 9</h3>
                 <div class="points-value"><strong id="shop-extra7-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra7">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra7-inventory"></div>
             </div>
             <div class="points-box" id="extra8-points-box">
                 <h3 id="extra8-header">Player 10</h3>
                 <div class="points-value"><strong id="shop-extra8-points">0</strong> pts</div>
+                <button type="button" class="inventory-toggle" data-player="extra8">
+                    <span class="toggle-text">View Inventory</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="inventory-dropdown hidden" id="extra8-inventory"></div>
             </div>
         </div>
 
@@ -130,16 +187,68 @@
         <div class="container">
             <p>© <span id="year2"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!
             </p>
-            </p>
+            <p id="group-display" style="margin-top: 8px; font-size: 0.9em; opacity: 0.8;"></p>
         </div>
     </footer>
 
+    <!-- =========================================================================
+        JAVASCRIPT ARCHITECTURE OVERVIEW - SHOP SYSTEM
+        =========================================================================
+        
+        This page contains several JavaScript modules for the shop system:
+        
+        1. AUTHENTICATION & GROUP SYSTEM
+           - Validates user login and group selection
+           - Redirects to login.html if no session
+           - Redirects to groups.html if no group selected
+           - Updates navigation with logout functionality
+           - Displays group ID in footer
+        
+        2. SHOP MANAGEMENT SYSTEM (Main Module)
+           - Shop item CRUD operations (Create, Read, Update, Delete, Edit)
+           - Points synchronization with index.html
+           - Inventory tracking per player
+           - Purchase system with player selection modal
+           - Group goal contribution system
+           - Limited stock management
+           - Edit protection for completed group goals
+        
+        3. POINTS & INVENTORY DISPLAY
+           - Real-time points display for all players (1-10)
+           - Inventory dropdown toggles
+           - Syncs with index.html localStorage data
+           - Updates after purchases and contributions
+        
+        4. GROUP GOAL SYSTEM
+           - Collaborative purchasing feature
+           - Progress bar visualization
+           - Contribution tracking (increments of 5)
+           - Completion status management
+           - Prevents editing completed goals
+        
+        KEY DATA STRUCTURES:
+        - Shop Item: { id, name, description, price, stock?, isGroupGoal?, contributed?, isComplete? }
+        - Points: { left, right, extra1-extra8 }
+        - Inventory: { player_loc: [item_id, item_id, ...] }
+        
+        STORAGE KEYS (all group-scoped):
+        - tcg_shop_items_v1_${groupId}
+        - tcg_points_v1_${groupId} (shared with index.html)
+        - tcg_inventories_v1_${groupId}
+        - tcg_column_headers_v1_${groupId} (shared with index.html)
+        
+    ========================================================================= -->
+
     <script>
-        // Authentication check
+        // ===================================
+        // AUTHENTICATION & GROUP SYSTEM
+        // ===================================
+        // Validates user login and group selection, manages logout
         (function() {
             const SESSION_KEY = 'tcg_session_v1';
             const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
             
+            // Check if user is logged in and has selected a group
             function checkAuthAndGroup() {
                 const session = getSession();
                 const currentGroup = getCurrentGroup();
@@ -170,15 +279,17 @@
                 return localStorage.getItem(CURRENT_GROUP_KEY);
             }
             
-            // Initialize auth check
+            // Initialize authentication check - redirect if not logged in or no group
             const authData = checkAuthAndGroup();
             if (!authData) return;
             
-            // Update navigation
+            // ===================================
+            // NAVIGATION UPDATE
+            // ===================================
+            // Add Groups link and Logout button to navigation
             const headerBtns = document.querySelector('.main-nav');
             if (headerBtns) {
                 headerBtns.innerHTML = `
-                    <span class="user-welcome">Group: ${authData.currentGroup.substring(6)}</span>
                     <a class="header-btn" href="index.html">Home</a>
                     <a class="header-btn" href="shop.html">Shop</a>
                     <a class="header-btn" href="groups.html">Groups</a>
@@ -197,7 +308,16 @@
                 });
             }
             
-            // Logout confirmation modal
+            // Add group ID to footer
+            const groupDisplay = document.getElementById('group-display');
+            if (groupDisplay) {
+                groupDisplay.textContent = `Group: ${authData.currentGroup.substring(6)}`;
+            }
+            
+            // ===================================
+            // LOGOUT CONFIRMATION MODAL
+            // ===================================
+            // Shows confirmation dialog before logging out
             function askLogoutConfirm() {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -243,15 +363,175 @@
     </script>
     
     <script>
-        // minimal shop logic: store items in localStorage, render them, allow adding + purchase/delete - now group-scoped
+        // ===================================
+        // MAIN SHOP MANAGEMENT SYSTEM
+        // ===================================
+        // Handles shop items, purchases, inventory, and group goals
+        // All data is group-scoped via localStorage
         (function () {
+            // ===================================
+            // STORAGE KEYS & CONFIGURATION
+            // ===================================
             // Get current group for scoped storage
             function getCurrentGroup() {
                 return localStorage.getItem('tcg_current_group_v1') || 'default';
             }
             
             const currentGroup = getCurrentGroup();
-            const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;
+            const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;  // Shop items storage
+            const INVENTORY_KEY = `tcg_player_inventories_v1_${currentGroup}`;  // Player inventories
+            
+            // ===================================
+            // INVENTORY SYSTEM
+            // ===================================
+            // Tracks which items each player owns
+            // Structure: { playerLoc: [itemId1, itemId2, ...] }
+            function loadInventories() {
+                try {
+                    const raw = localStorage.getItem(INVENTORY_KEY);
+                    return raw ? JSON.parse(raw) : {};
+                } catch (e) {
+                    return {};
+                }
+            }
+            
+            // Saves inventory data to localStorage
+            function saveInventories(inventories) {
+                try {
+                    localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventories));
+                } catch (e) {
+                    console.error('Failed to save inventories:', e);
+                }
+            }
+            
+            // Adds purchased item to player's inventory (with quantity tracking)
+            function addItemToInventory(playerLoc, itemId, itemName, itemDesc) {
+                const inventories = loadInventories();
+                if (!inventories[playerLoc]) {
+                    inventories[playerLoc] = [];
+                }
+                
+                // Check if item already exists in inventory
+                const existingItem = inventories[playerLoc].find(item => item.id === itemId);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    inventories[playerLoc].push({
+                        id: itemId,
+                        name: itemName,
+                        description: itemDesc,
+                        quantity: 1
+                    });
+                }
+                
+                saveInventories(inventories);
+                renderInventory(playerLoc);
+            }
+            
+            // Removes one quantity of item from player's inventory (or deletes if qty = 0)
+            function useItemFromInventory(playerLoc, itemId) {
+                const inventories = loadInventories();
+                if (!inventories[playerLoc]) return;
+                
+                const itemIndex = inventories[playerLoc].findIndex(item => item.id === itemId);
+                if (itemIndex === -1) return;
+                
+                const item = inventories[playerLoc][itemIndex];
+                item.quantity -= 1;
+                
+                if (item.quantity <= 0) {
+                    inventories[playerLoc].splice(itemIndex, 1);
+                }
+                
+                saveInventories(inventories);
+                renderInventory(playerLoc);
+            }
+            
+            // ===================================
+            // INVENTORY RENDERING
+            // ===================================
+            // Displays player's inventory with item cards, quantity, and use button
+            // Shows "No items" message if inventory is empty
+            function renderInventory(playerLoc) {
+                const inventories = loadInventories();
+                const container = document.getElementById(`${playerLoc}-inventory`);
+                if (!container) return;
+                
+                const items = inventories[playerLoc] || [];
+                container.innerHTML = '';
+                
+                if (items.length === 0) {
+                    // CSS will show "No items in inventory" via ::before
+                    return;
+                }
+                
+                items.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'inventory-item';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'inventory-item-header';
+                    
+                    const name = document.createElement('div');
+                    name.className = 'inventory-item-name';
+                    name.textContent = item.name;
+                    header.appendChild(name);
+                    
+                    const quantity = document.createElement('div');
+                    quantity.className = 'inventory-item-quantity';
+                    quantity.textContent = `×${item.quantity}`;
+                    header.appendChild(quantity);
+                    
+                    itemCard.appendChild(header);
+                    
+                    if (item.description) {
+                        const desc = document.createElement('p');
+                        desc.className = 'inventory-item-desc';
+                        desc.textContent = item.description;
+                        itemCard.appendChild(desc);
+                    }
+                    
+                    const actions = document.createElement('div');
+                    actions.className = 'inventory-item-actions';
+                    
+                    const useBtn = document.createElement('button');
+                    useBtn.className = 'btn-use-item';
+                    useBtn.textContent = 'Use Item';
+                    useBtn.addEventListener('click', () => {
+                        useItemFromInventory(playerLoc, item.id);
+                    });
+                    actions.appendChild(useBtn);
+                    
+                    itemCard.appendChild(actions);
+                    container.appendChild(itemCard);
+                });
+            }
+            
+            // ===================================
+            // INVENTORY TOGGLE BUTTONS
+            // ===================================
+            // Handles dropdown toggles for viewing player inventories
+            // Shows/hides inventory when clicking "View Inventory" buttons
+            function initInventoryToggles() {
+                const toggleButtons = document.querySelectorAll('.inventory-toggle');
+                toggleButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const playerLoc = button.dataset.player;
+                        const dropdown = document.getElementById(`${playerLoc}-inventory`);
+                        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                        
+                        if (isExpanded) {
+                            button.setAttribute('aria-expanded', 'false');
+                            dropdown.classList.add('hidden');
+                        } else {
+                            button.setAttribute('aria-expanded', 'true');
+                            dropdown.classList.remove('hidden');
+                            renderInventory(playerLoc);
+                        }
+                    });
+                });
+            }
+            
             const defaultItems = [
                 { id: Date.now() + 1, name: 'Example', description: 'Example item', price: 50, stock: null },
                 { id: Date.now() + 2, name: 'Limited Item', description: 'Only 3 available!', price: 30, stock: 3 },
@@ -284,6 +564,12 @@
                 });
             }
 
+            // ===================================
+            // SHOP ITEMS DATA PERSISTENCE
+            // ===================================
+            // Loads shop items from localStorage
+            // Migrates old oneTime format to stock format
+            // Initializes group goal properties if missing
             function loadItems() {
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
@@ -295,6 +581,13 @@
                             item.stock = item.oneTime ? 1 : null;
                             delete item.oneTime;
                         }
+                        // Initialize group goal properties if missing
+                        if (item.isGroupGoal && item.contributed === undefined) {
+                            item.contributed = 0;
+                        }
+                        if (item.isGroupGoal && item.isComplete === undefined) {
+                            item.isComplete = false;
+                        }
                     });
                     
                     return items;
@@ -303,10 +596,18 @@
                 }
             }
 
+            // Saves shop items array to localStorage
             function saveItems(items) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
             }
 
+            // ===================================
+            // PRODUCT CARD RENDERING
+            // ===================================
+            // Creates shop item card with badges, progress bars, and action buttons
+            // Shows different UI for group goals vs regular items
+            // Disables edit button for completed group goals
+            // Dynamic font sizing based on title length (15 char max)
             function createCard(item) {
                 const art = document.createElement('article');
                 art.className = 'card product';
@@ -318,12 +619,32 @@
                 const title = document.createElement('h3');
                 title.className = 'product-title';
                 title.textContent = item.name;
+                
+                // Dynamic font sizing based on title length
+                const nameLength = item.name.length;
+                if (nameLength > 12) {
+                    title.style.fontSize = '0.95rem';
+                } else if (nameLength > 10) {
+                    title.style.fontSize = '1.05rem';
+                } else {
+                    title.style.fontSize = '1.2rem';
+                }
+                
                 titleWrap.appendChild(title);
 
                 if (item.stock !== null && item.stock !== undefined) {
                     const badge = document.createElement('span');
                     badge.className = 'badge limited-stock';
                     badge.textContent = `Stock: ${item.stock}`;
+                    titleWrap.appendChild(badge);
+                }
+
+                // Group goal badge
+                if (item.isGroupGoal) {
+                    const badge = document.createElement('span');
+                    badge.className = item.isComplete ? 'badge group-goal-complete' : 'badge group-goal';
+                    badge.textContent = item.isComplete ? '✓ COMPLETE' : 'GROUP GOAL';
+                    badge.style.backgroundColor = item.isComplete ? '#16a34a' : '#2563eb';
                     titleWrap.appendChild(badge);
                 }
 
@@ -336,10 +657,42 @@
                     art.appendChild(p);
                 }
 
-                const price = document.createElement('p');
-                price.className = 'product-price';
-                price.textContent = item.price + ' pts';
-                art.appendChild(price);
+                // Show progress for group goals
+                if (item.isGroupGoal) {
+                    const progressContainer = document.createElement('div');
+                    progressContainer.style.margin = '8px 0';
+                    progressContainer.style.textAlign = 'center';
+
+                    const progressText = document.createElement('p');
+                    progressText.style.margin = '0 0 4px 0';
+                    progressText.style.fontSize = '0.9rem';
+                    progressText.style.fontWeight = '600';
+                    progressText.textContent = `${item.contributed || 0} / ${item.price} pts`;
+                    progressContainer.appendChild(progressText);
+
+                    const progressBar = document.createElement('div');
+                    progressBar.style.width = '100%';
+                    progressBar.style.height = '8px';
+                    progressBar.style.backgroundColor = '#e5e7eb';
+                    progressBar.style.borderRadius = '4px';
+                    progressBar.style.overflow = 'hidden';
+
+                    const progressFill = document.createElement('div');
+                    const percent = Math.min(100, ((item.contributed || 0) / item.price) * 100);
+                    progressFill.style.width = percent + '%';
+                    progressFill.style.height = '100%';
+                    progressFill.style.backgroundColor = item.isComplete ? '#16a34a' : '#2563eb';
+                    progressFill.style.transition = 'width 0.3s ease';
+                    progressBar.appendChild(progressFill);
+
+                    progressContainer.appendChild(progressBar);
+                    art.appendChild(progressContainer);
+                } else {
+                    const price = document.createElement('p');
+                    price.className = 'product-price';
+                    price.textContent = item.price + ' pts';
+                    art.appendChild(price);
+                }
 
                 // actions: purchase + delete
                 const actions = document.createElement('div');
@@ -350,17 +703,39 @@
                 buyBtn.className = 'btn btn-purchase';
                 buyBtn.dataset.action = 'purchase';
                 
-                // Disable purchase button if item is out of stock
+                // Disable purchase button if item is out of stock or group goal is complete
                 if (item.stock === 0) {
                     buyBtn.textContent = 'Out of Stock';
                     buyBtn.disabled = true;
                     buyBtn.style.opacity = '0.5';
                     buyBtn.style.cursor = 'not-allowed';
+                } else if (item.isGroupGoal && item.isComplete) {
+                    buyBtn.textContent = 'Goal Reached';
+                    buyBtn.disabled = true;
+                    buyBtn.style.opacity = '0.5';
+                    buyBtn.style.cursor = 'not-allowed';
+                } else if (item.isGroupGoal) {
+                    buyBtn.textContent = 'Contribute';
                 } else {
                     buyBtn.textContent = 'Purchase';
                 }
                 
                 actions.appendChild(buyBtn);
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'btn';
+                editBtn.dataset.action = 'edit';
+                editBtn.textContent = 'Edit';
+                
+                // Disable edit button if group goal is complete
+                if (item.isGroupGoal && item.isComplete) {
+                    editBtn.disabled = true;
+                    editBtn.style.opacity = '0.5';
+                    editBtn.style.cursor = 'not-allowed';
+                }
+                
+                actions.appendChild(editBtn);
 
                 const delBtn = document.createElement('button');
                 delBtn.type = 'button';
@@ -374,12 +749,20 @@
                 return art;
             }
 
+            // Renders all shop items to the products grid
             function render() {
                 const items = loadItems();
                 productsEl.innerHTML = '';
                 items.forEach(it => productsEl.appendChild(createCard(it)));
             }
 
+            // ===================================
+            // ADD ITEM FORM HANDLER
+            // ===================================
+            // Handles shop item creation from the form
+            // Validates inputs (name, price, stock)
+            // Reads group goal checkbox to create group goal items
+            // Creates item with unique ID and saves to localStorage
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 msgEl.textContent = '';
@@ -412,9 +795,20 @@
                 }
 
                 const items = loadItems();
+                const isGroupGoal = document.getElementById('item-group-goal').checked;
+                
                 // round price to nearest multiple of 5 before saving
                 const roundedPrice = roundToNearest5(price);
-                const newItem = { id: Date.now(), name, description: desc, price: roundedPrice, stock };
+                const newItem = { 
+                    id: Date.now(), 
+                    name, 
+                    description: desc, 
+                    price: roundedPrice, 
+                    stock,
+                    isGroupGoal: isGroupGoal,
+                    contributed: isGroupGoal ? 0 : undefined,
+                    isComplete: isGroupGoal ? false : undefined
+                };
                 items.push(newItem);
                 saveItems(items);
                 render();
@@ -424,7 +818,11 @@
                 setTimeout(() => msgEl.textContent = '', 2000);
             });
 
-            // delegated click handler for purchase / delete
+            // ===================================
+            // PRODUCT ACTION HANDLER (Event Delegation)
+            // ===================================
+            // Handles all button clicks on product cards: purchase, delete, edit
+            // Uses event delegation on products grid for performance
             productsEl.addEventListener('click', function (e) {
                 const btn = e.target.closest('button[data-action]');
                 if (!btn) return;
@@ -436,10 +834,17 @@
                     purchaseItem(id);
                 } else if (action === 'delete') {
                     deleteItem(id);
+                } else if (action === 'edit') {
+                    editItem(id);
                 }
             });
 
-            // Combined purchase modal: shows all players and cancel button
+            // ===================================
+            // PLAYER SELECTION MODAL (Purchase)
+            // ===================================
+            // Shows grid of all active players for purchase selection
+            // Color-coded buttons matching player colors from index.html
+            // Returns selected player or null if cancelled
             function askPayerChoice(players, price, itemName) {
                 // players is an array of {loc: 'left'|'right'|'extra1'|'extra2', name: 'Name'}
                 return new Promise((resolve) => {
@@ -590,7 +995,10 @@
                 });
             }
 
-            // info helper: single-OK modal matching shop style
+            // ===================================
+            // MODAL HELPERS
+            // ===================================
+            // Simple information modal with OK button
             function showInfo(message, okLabel = 'OK') {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -614,7 +1022,7 @@
                 });
             }
 
-            // confirm helper: show a purchase confirmation modal (Confirm / Cancel)
+            // Purchase confirmation modal with Confirm/Cancel buttons
             function askConfirmPurchase(itemName, price) {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -643,7 +1051,111 @@
                 });
             }
 
-            // purchase handler (uses combined askPayerChoice)
+            // ===================================
+            // GROUP GOAL CONTRIBUTION MODAL
+            // ===================================
+            // Asks player how much to contribute to a group goal
+            // Enforces multiples of 5, validates against player's available points
+            // Returns contributed amount or 0 if cancelled
+            function askContributionAmount(playerName, maxAmount, remaining) {
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tcg-modal-overlay';
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'tcg-modal';
+                    
+                    // Round max to nearest 5 (down) to ensure valid contribution
+                    const maxRounded = Math.floor(maxAmount / 5) * 5;
+                    const defaultValue = Math.min(maxRounded, Math.ceil(remaining / 5) * 5);
+                    
+                    modal.innerHTML = `
+                        <p><strong>Contribute to Group Goal</strong></p>
+                        <p>${playerName} has <strong>${maxAmount}</strong> points available.</p>
+                        <p>Remaining needed: <strong>${remaining}</strong> points</p>
+                        <p style="font-size: 0.85rem; color: #6b7280; margin: 8px 0;">Contributions must be in multiples of 5</p>
+                        <div style="margin: 15px 0;">
+                            <input type="number" id="contribution-amount" min="5" max="${maxRounded}" step="5" value="${defaultValue}" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div class="tcg-modal-actions">
+                            <button class="btn-cancel">Cancel</button>
+                            <button class="btn-confirm">Contribute</button>
+                        </div>
+                    `;
+                    
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    
+                    const input = modal.querySelector('#contribution-amount');
+                    input.focus();
+                    input.select();
+                    
+                    function cleanup() {
+                        document.body.removeChild(overlay);
+                    }
+                    
+                    function onConfirm() {
+                        let amount = parseInt(input.value) || 0;
+                        
+                        // Validate amount
+                        if (amount <= 0) {
+                            input.focus();
+                            return;
+                        }
+                        
+                        // Round to nearest 5
+                        amount = Math.round(amount / 5) * 5;
+                        
+                        // Ensure it's at least 5
+                        if (amount < 5) {
+                            amount = 5;
+                        }
+                        
+                        // Ensure it doesn't exceed max
+                        if (amount > maxRounded) {
+                            amount = maxRounded;
+                        }
+                        
+                        // Check if player has enough after rounding
+                        if (amount > maxAmount) {
+                            input.value = maxRounded;
+                            input.focus();
+                            return;
+                        }
+                        
+                        cleanup();
+                        resolve(amount);
+                    }
+                    
+                    function onCancel() {
+                        cleanup();
+                        resolve(0);
+                    }
+                    
+                    modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+                    modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) onCancel();
+                    });
+                    
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            onConfirm();
+                        } else if (e.key === 'Escape') {
+                            onCancel();
+                        }
+                    });
+                });
+            }
+
+            // ===================================
+            // PURCHASE/CONTRIBUTION HANDLER
+            // ===================================
+            // Handles both regular purchases and group goal contributions
+            // Validates stock availability, player points, and completion status
+            // Deducts points, updates inventory, manages stock and group goal progress
             async function purchaseItem(id) {
                 const items = loadItems();
                 const idx = items.findIndex(i => i.id === id);
@@ -653,6 +1165,12 @@
                 // Check if item is out of stock
                 if (item.stock === 0) {
                     await showInfo('This item is out of stock.');
+                    return;
+                }
+                
+                // Check if group goal is already complete
+                if (item.isGroupGoal && item.isComplete) {
+                    await showInfo('This group goal has already been completed!');
                     return;
                 }
 
@@ -676,6 +1194,50 @@
                 // load point banks
                 const points = loadPoints();
                 const current = Number(points[payerLoc] || 0);
+                
+                // For group goals, handle contributions differently
+                if (item.isGroupGoal) {
+                    const remaining = item.price - (item.contributed || 0);
+                    const maxContribution = Math.min(current, remaining);
+                    
+                    if (maxContribution <= 0) {
+                        await showInfo(
+                            `${payer.name} doesn't have any points to contribute.`,
+                            'OK'
+                        );
+                        return;
+                    }
+                    
+                    // Ask how much to contribute (up to maxContribution)
+                    const contribution = await askContributionAmount(payer.name, maxContribution, remaining);
+                    if (!contribution || contribution <= 0) return;
+                    
+                    // Deduct points
+                    points[payerLoc] = current - contribution;
+                    try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
+                    try { renderPoints(); } catch (e) { }
+                    
+                    // Add contribution to item
+                    item.contributed = (item.contributed || 0) + contribution;
+                    
+                    // Check if goal is complete
+                    if (item.contributed >= item.price) {
+                        item.contributed = item.price; // Cap at goal
+                        item.isComplete = true;
+                        saveItems(items);
+                        render();
+                        msgEl.textContent = `🎉 GROUP GOAL COMPLETE! ${item.name} has been fully funded!`;
+                        setTimeout(() => msgEl.textContent = '', 4000);
+                    } else {
+                        saveItems(items);
+                        render();
+                        msgEl.textContent = `${payer.name} contributed ${contribution} pts to ${item.name}. (${item.contributed}/${item.price})`;
+                        setTimeout(() => msgEl.textContent = '', 3000);
+                    }
+                    return;
+                }
+                
+                // Regular purchase logic
                 if (current < item.price) {
                     // Get player color based on location
                     let playerColor = '';
@@ -700,22 +1262,147 @@
                 // update the on-page point displays immediately
                 try { renderPoints(); } catch (e) { }
 
+                // Add item to player's inventory
+                addItemToInventory(payerLoc, item.id, item.name, item.description);
+
                 // Handle stock reduction for limited items
                 if (item.stock !== null && item.stock !== undefined) {
                     item.stock -= 1;
                     if (item.stock <= 0) {
                         // remove item when stock reaches 0
                         items.splice(idx, 1);
-                        msgEl.textContent = `Purchased — ${item.name} sold out! Charged ${payer.name}.`;
+                        msgEl.textContent = `Purchased — ${item.name} sold out! Added to ${payer.name}'s inventory.`;
                     } else {
-                        msgEl.textContent = `Purchased — ${item.stock} left. Charged ${payer.name}.`;
+                        msgEl.textContent = `Purchased — ${item.stock} left. Added to ${payer.name}'s inventory.`;
                     }
                     saveItems(items);
                     render();
                 } else {
-                    msgEl.textContent = `Purchased. Charged ${payer.name}.`;
+                    msgEl.textContent = `Purchased. Added to ${payer.name}'s inventory.`;
                 }
                 setTimeout(() => msgEl.textContent = '', 2000);
+            }
+
+            // ===================================
+            // EDIT SHOP ITEM MODAL
+            // ===================================
+            // Opens modal to edit item name, description, price, and stock
+            // Preserves group goal properties (contributed, isComplete, isGroupGoal)
+            // Validates inputs and updates item in localStorage
+            function editItem(id) {
+                const items = loadItems();
+                const idx = items.findIndex(i => i.id === id);
+                if (idx === -1) return;
+                const item = items[idx];
+
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tcg-modal-overlay';
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'tcg-modal';
+                    modal.style.maxWidth = '500px';
+                    
+                    const stockValue = item.stock !== null && item.stock !== undefined ? item.stock : '';
+                    
+                    modal.innerHTML = `
+                        <p><strong>Edit Shop Item</strong></p>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Item Name (max 15 characters):</label>
+                            <input type="text" id="edit-item-name" value="${item.name}" maxlength="15" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Description:</label>
+                            <textarea id="edit-item-description" rows="3" 
+                                      style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem; resize: vertical;">${item.description || ''}</textarea>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Price (points):</label>
+                            <input type="number" id="edit-item-price" value="${item.price}" min="0" step="5" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Stock (leave empty for unlimited):</label>
+                            <input type="number" id="edit-item-stock" value="${stockValue}" min="0" placeholder="Unlimited" 
+                                   style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+                        </div>
+                        <div class="tcg-modal-actions">
+                            <button class="btn-cancel">Cancel</button>
+                            <button class="btn-confirm">Save</button>
+                        </div>
+                    `;
+                    
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    
+                    const nameInput = modal.querySelector('#edit-item-name');
+                    const descInput = modal.querySelector('#edit-item-description');
+                    const priceInput = modal.querySelector('#edit-item-price');
+                    const stockInput = modal.querySelector('#edit-item-stock');
+                    nameInput.focus();
+                    nameInput.select();
+                    
+                    function cleanup() {
+                        document.body.removeChild(overlay);
+                    }
+                    
+                    function onConfirm() {
+                        const newName = nameInput.value.trim();
+                        const newDesc = descInput.value.trim();
+                        const newPrice = parseInt(priceInput.value) || 0;
+                        const stockValue = stockInput.value.trim();
+                        const newStock = stockValue === '' ? null : parseInt(stockValue);
+                        
+                        if (!newName) {
+                            nameInput.focus();
+                            return;
+                        }
+                        
+                        if (newPrice < 0) {
+                            priceInput.focus();
+                            return;
+                        }
+                        
+                        if (stockValue !== '' && (isNaN(newStock) || newStock < 0)) {
+                            stockInput.focus();
+                            return;
+                        }
+                        
+                        // Update the item (preserve group goal properties)
+                        items[idx].name = newName;
+                        items[idx].description = newDesc;
+                        items[idx].price = newPrice;
+                        items[idx].stock = newStock;
+                        saveItems(items);
+                        render();
+                        
+                        cleanup();
+                        msgEl.textContent = `Item updated: ${newName}`;
+                        setTimeout(() => msgEl.textContent = '', 2000);
+                        resolve(true);
+                    }
+                    
+                    function onCancel() {
+                        cleanup();
+                        resolve(false);
+                    }
+                    
+                    modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+                    modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) onCancel();
+                    });
+                    
+                    nameInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            onConfirm();
+                        } else if (e.key === 'Escape') {
+                            onCancel();
+                        }
+                    });
+                });
             }
 
             function deleteItem(id) {
@@ -731,7 +1418,11 @@
                 setTimeout(() => msgEl.textContent = '', 2000);
             }
 
-            // points display functions - now group-scoped
+            // ===================================
+            // POINTS SYSTEM (Shared with index.html)
+            // ===================================
+            // Loads points from group-scoped localStorage
+            // Syncs with index.html for consistent point tracking
             function loadPoints() {
                 try {
                     const raw = localStorage.getItem(`tcg_points_v1_${currentGroup}`);
@@ -753,6 +1444,8 @@
                 }
             }
 
+            // Loads player headers (names) from group-scoped localStorage
+            // Shared with index.html for consistent naming
             function loadHeaders() {
                 try {
                     const raw = localStorage.getItem(`tcg_column_headers_v1_${currentGroup}`);
@@ -824,7 +1517,12 @@
                 catch (e) { return { left: true, right: true }; }
             }
 
-            // Function to get all active players for shop
+            // ===================================
+            // ACTIVE PLAYERS DETECTION
+            // ===================================
+            // Gets list of all active players from index.html state
+            // Checks base player state and extra columns state
+            // Returns array of player objects with loc and name
             function getActivePlayers() {
                 const headers = loadHeaders();
                 const st = loadExtraState();
@@ -945,6 +1643,12 @@
                 }
             }
 
+            // ===================================
+            // RENDER POINTS DISPLAY
+            // ===================================
+            // Updates all player point displays in the UI
+            // Shows/hides player boxes based on active state from index.html
+            // Handles base players and extra columns (Players 3-10)
             function renderPoints() {
                 const points = loadPoints();
                 const headers = loadHeaders();
@@ -1014,12 +1718,19 @@
                 updateShopManagementPosition();
             }
 
-            // set year and initial render
+            // ===================================
+            // INITIALIZATION
+            // ===================================
+            // Set footer year and perform initial renders
             document.getElementById('year2').textContent = new Date().getFullYear();
             render();
             renderPoints(); // render initial points
 
-            // re-render points when storage changes (in case points are updated in another tab) - now group-scoped
+            // ===================================
+            // STORAGE EVENT LISTENERS
+            // ===================================
+            // Re-render when localStorage changes (cross-tab sync)
+            // Watches for points, headers, extra columns, and base player state changes
             window.addEventListener('storage', (e) => {
                 if (e.key === `tcg_points_v1_${currentGroup}` || e.key === `tcg_column_headers_v1_${currentGroup}` || e.key === `tcg_extra_cols_v1_${currentGroup}` || e.key === `base-player-state_${currentGroup}`) {
                     renderPoints();
@@ -1027,7 +1738,11 @@
                 }
             });
 
-            // Listen for player add/remove events from index.html to update positioning
+            // ===================================
+            // PLAYER COLUMN EVENT LISTENERS
+            // ===================================
+            // Listen for player add/remove events from index.html
+            // Updates points display and shop positioning when columns change
             window.addEventListener('extraColumnAdded', () => {
                 renderPoints();
                 updateShopManagementPosition();
@@ -1038,7 +1753,10 @@
                 updateShopManagementPosition();
             });
 
-            // Add Items form toggle functionality
+            // ===================================
+            // ADD ITEMS FORM TOGGLE
+            // ===================================
+            // Collapses/expands the "Add New Item" form in shop management
             const toggleBtn = document.getElementById('toggle-add-form');
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', () => {
@@ -1059,7 +1777,7 @@
                     }
                 });
 
-                // close form on successful add
+                // Auto-close form on successful item add
                 const originalSubmitHandler = form.onsubmit;
                 form.addEventListener('submit', (e) => {
                     if (e.defaultPrevented) return; // if validation failed
@@ -1068,6 +1786,12 @@
                     try { updateShopManagementPosition(); } catch (e) { }
                 });
             }
+            
+            // ===================================
+            // FINAL INITIALIZATION
+            // ===================================
+            // Initialize all inventory dropdown toggles
+            initInventoryToggles();
         })();
     </script>
 </body>

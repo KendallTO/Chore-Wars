@@ -86,12 +86,49 @@
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
+        /*
+        =====================================================================
+        CHORE WARS - GROUP MANAGEMENT SYSTEM
+        =====================================================================
+        
+        This page handles group creation, selection, and management.
+        Users can:
+        - Create new groups with name and description
+        - View all groups they're a member of
+        - Enter a group to access its chores and shop
+        - Leave groups (with cleanup of group-specific data)
+        - See member counts and join dates for each group
+        
+        STORAGE KEYS USED:
+        - tcg_session_v1: Current user session (username, timestamp)
+        - tcg_groups_v1: All groups data (group objects keyed by groupId)
+        - tcg_current_group_v1: Currently selected group ID
+        - tcg_*_v1_${groupId}: Group-specific data (cleaned up on leave)
+        
+        GROUP DATA STRUCTURE:
+        {
+          id: string,           // 8-character unique group identifier
+          name: string,         // Display name of the group
+          description: string,  // Optional description
+          created: number,      // Timestamp of creation
+          creator: string,      // Username of group creator
+          members: string[]     // Lowercase usernames of all members
+        }
+        =====================================================================
+        */
+        
         // Group management system
         (function() {
+            // ===================================================================
+            // CONSTANTS - LocalStorage keys for session and group data
+            // ===================================================================
             const SESSION_KEY = 'tcg_session_v1';
             const GROUPS_KEY = 'tcg_groups_v1';
             const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
             
+            // ===================================================================
+            // DOM ELEMENTS - References to page elements
+            // ===================================================================
             const createGroupBtn = document.getElementById('create-group-btn');
             const createGroupForm = document.getElementById('create-group-form');
             const cancelCreateBtn = document.getElementById('cancel-create');
@@ -102,7 +139,15 @@
             const welcomeUser = document.getElementById('welcome-user');
             const logoutBtn = document.getElementById('logout-btn');
             
-            // Check authentication
+            // ===================================================================
+            // AUTHENTICATION - Session management and access control
+            // ===================================================================
+            
+            /**
+             * Check if user is authenticated
+             * Redirects to login page if no valid session exists
+             * @returns {Object|null} Session object or null
+             */
             function checkAuth() {
                 const session = getSession();
                 if (!session || !session.username) {
@@ -112,6 +157,10 @@
                 return session;
             }
             
+            /**
+             * Retrieve current session from localStorage
+             * @returns {Object|null} Session object with username and timestamp
+             */
             function getSession() {
                 try {
                     const sessionData = localStorage.getItem(SESSION_KEY);
@@ -121,6 +170,14 @@
                 }
             }
             
+            // ===================================================================
+            // GROUP DATA MANAGEMENT - CRUD operations for groups
+            // ===================================================================
+            
+            /**
+             * Load all groups from localStorage
+             * @returns {Object} Object containing all groups keyed by groupId
+             */
             function loadGroups() {
                 try {
                     const groupsData = localStorage.getItem(GROUPS_KEY);
@@ -130,14 +187,32 @@
                 }
             }
             
+            /**
+             * Save groups object to localStorage
+             * @param {Object} groups - Groups object to save
+             */
             function saveGroups(groups) {
                 localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
             }
             
+            /**
+             * Set the currently selected group
+             * Stores groupId in localStorage for use by other pages
+             * @param {string} groupId - ID of the group to set as current
+             */
             function setCurrentGroup(groupId) {
                 localStorage.setItem(CURRENT_GROUP_KEY, groupId);
             }
             
+            // ===================================================================
+            // UI HELPERS - Message display and utility functions
+            // ===================================================================
+            
+            /**
+             * Display a temporary message to the user
+             * @param {string} message - Message text to display
+             * @param {boolean} isError - Whether this is an error message (red) or success (green)
+             */
             function showMessage(message, isError = false) {
                 messageEl.textContent = message;
                 messageEl.className = isError ? 'message error' : 'message success';
@@ -146,10 +221,21 @@
                 }, 3000);
             }
             
+            /**
+             * Generate a unique group identifier
+             * Uses timestamp and random string for uniqueness
+             * @returns {string} Unique group ID in format 'group_timestamp_random'
+             */
             function generateGroupId() {
                 return 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
             
+            /**
+             * Get all groups that a user is a member of
+             * Filters through all groups checking if username is in members array
+             * @param {string} username - Username to search for
+             * @returns {Array} Array of group objects that user belongs to
+             */
             function getUserGroups(username) {
                 const groups = loadGroups();
                 return Object.keys(groups).filter(groupId => 
@@ -157,6 +243,12 @@
                 ).map(groupId => ({ id: groupId, ...groups[groupId] }));
             }
             
+            /**
+             * Create a card element for displaying a group
+             * Shows group name, description, member count, creation date, and action buttons
+             * @param {Object} group - Group object to create card for
+             * @returns {HTMLElement} Div element containing the group card
+             */
             function createGroupCard(group) {
                 const card = document.createElement('div');
                 card.className = 'group-card';
@@ -187,12 +279,25 @@
                 return card;
             }
             
+            /**
+             * Escape HTML special characters to prevent XSS attacks
+             * @param {string} text - Text to escape
+             * @returns {string} HTML-safe string
+             */
             function escapeHtml(text) {
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
             }
             
+            // ===================================================================
+            // GROUP RENDERING - Display groups list
+            // ===================================================================
+            
+            /**
+             * Render all groups that the current user is a member of
+             * Shows empty state if no groups, otherwise displays group cards
+             */
             function renderGroups() {
                 const session = checkAuth();
                 if (!session) return;
@@ -213,7 +318,15 @@
                 }
             }
             
-            // Global functions for onclick handlers
+            // ===================================================================
+            // GROUP ACTIONS - Enter and leave group functionality
+            // ===================================================================
+            
+            /**
+             * Enter a group and navigate to main chore page
+             * Sets the group as current and redirects to index.html
+             * @param {string} groupId - ID of the group to enter
+             */
             window.enterGroup = function(groupId) {
                 setCurrentGroup(groupId);
                 showMessage('Entering group...');
@@ -222,7 +335,12 @@
                 }, 500);
             };
             
-            // Leave group confirmation modal
+            /**
+             * Show confirmation modal before leaving a group
+             * Creates a modal overlay with warning message
+             * @param {string} groupName - Name of the group (for display)
+             * @returns {Promise<boolean>} Resolves to true if user confirms, false if cancelled
+             */
             function askLeaveGroupConfirm(groupName) {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -266,6 +384,12 @@
                 });
             }
 
+            /**
+             * Confirm and execute leaving a group
+             * Shows confirmation modal and calls leaveGroup if user confirms
+             * @param {string} groupId - ID of the group to leave
+             * @param {string} groupName - Name of the group (for display)
+             */
             window.confirmLeaveGroup = async function(groupId, groupName) {
                 const confirmed = await askLeaveGroupConfirm(groupName);
                 if (confirmed) {
@@ -273,6 +397,11 @@
                 }
             };
             
+            /**
+             * Remove current user from a group
+             * If last member leaves, deletes the group and cleans up all group data
+             * @param {string} groupId - ID of the group to leave
+             */
             function leaveGroup(groupId) {
                 const session = getSession();
                 if (!session) return;
@@ -304,6 +433,11 @@
                 renderGroups();
             }
             
+            /**
+             * Remove all localStorage data associated with a group
+             * Finds and deletes all keys that contain the groupId
+             * @param {string} groupId - ID of the group to clean up
+             */
             function cleanupGroupData(groupId) {
                 // Remove group-specific localStorage entries
                 const keysToRemove = [];
@@ -316,17 +450,31 @@
                 keysToRemove.forEach(key => localStorage.removeItem(key));
             }
             
-            // Event listeners
+            // ===================================================================
+            // EVENT LISTENERS - UI interaction handlers
+            // ===================================================================
+            
+            /**
+             * Show create group form when button is clicked
+             */
             createGroupBtn.addEventListener('click', () => {
                 createGroupForm.classList.remove('hidden');
                 document.getElementById('group-name').focus();
             });
             
+            /**
+             * Hide create group form when cancel button is clicked
+             */
             cancelCreateBtn.addEventListener('click', () => {
                 createGroupForm.classList.add('hidden');
                 groupForm.reset();
             });
             
+            /**
+             * Handle group creation form submission
+             * Creates new group with provided name and description
+             * Adds current user as creator and first member
+             */
             groupForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
@@ -361,7 +509,11 @@
                 renderGroups();
             });
             
-            // Logout confirmation modal
+            /**
+             * Show logout confirmation modal
+             * Creates a modal overlay asking user to confirm logout
+             * @returns {Promise<boolean>} Resolves to true if user confirms, false if cancelled
+             */
             function askLogoutConfirm() {
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -404,6 +556,11 @@
                 });
             }
 
+            /**
+             * Handle logout button click
+             * Shows confirmation modal and logs out if confirmed
+             * Clears session and current group from localStorage
+             */
             logoutBtn.addEventListener('click', async () => {
                 const confirmed = await askLogoutConfirm();
                 if (confirmed) {
@@ -416,7 +573,14 @@
                 }
             });
             
-            // Initialize page
+            // ===================================================================
+            // INITIALIZATION - Page setup on load
+            // ===================================================================
+            
+            /**
+             * Initialize the groups page
+             * Checks authentication and renders user's groups
+             */
             const session = checkAuth();
             if (session) {
                 welcomeUser.textContent = `Welcome, ${session.username}!`;

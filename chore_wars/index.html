@@ -100,18 +100,78 @@
   <footer class="site-footer">
     <div class="container">
       <p>© <span id="year"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
-      </p>
+      <p id="group-display" style="margin-top: 8px; font-size: 0.9em; opacity: 0.8;"></p>
     </div>
   </footer>
 
   <!-- vvvv Java Script vvvv -->
 
+  <!-- =========================================================================
+    JAVASCRIPT ARCHITECTURE OVERVIEW
+    =========================================================================
+    
+    This page contains several independent JavaScript modules:
+    
+    1. FOOTER YEAR UPDATER
+       - Simple utility to display current year in copyright
+    
+    2. AUTHENTICATION & GROUP SYSTEM
+       - Validates user login and group selection
+       - Redirects to login.html if no session
+       - Redirects to groups.html if no group selected
+       - Updates navigation with Groups link and Logout button
+       - Displays group ID in footer
+    
+    3. CORE CHORE MANAGEMENT SYSTEM (Main Module)
+       - Chore CRUD operations (Create, Read, Update, Delete, Edit)
+       - Points banking system for up to 10 players
+       - Column/player management (dynamic 3-10 players)
+       - Three assignment modes:
+         a) Random: Balanced random distribution
+         b) Auction: Players bid on chores (starting 50pts, decrements by 5)
+         c) Draft: Rate chores as Easy (5-10pts) or Hard (15-25pts)
+       - Manual assignment in draft mode
+       - Chore completion (awards points, unassigns chore)
+       - Inline editing of player names (8 char limit for P1/P2)
+       - localStorage persistence (all data scoped by group)
+    
+    4. ADD/REMOVE PLAYER COLUMN SYSTEM
+       - Dynamically adds/removes player columns (3-10 players)
+       - Manages column positioning and reordering
+       - Syncs with points, headers, and chore assignments
+       - Handles chore reassignment when player removed
+       - Updates CSS grid layout dynamically
+    
+    KEY DATA STRUCTURES:
+    - Chore: { id, name, points, loc, difficulty? }
+    - Points: { left, right, extra1-extra8 }
+    - Headers: { left, right, extra1-extra8 }
+    - ExtraState: { extra1-extra8: boolean }
+    
+    STORAGE KEYS (all group-scoped):
+    - tcg_chores_v1_${groupId}
+    - tcg_points_v1_${groupId}
+    - tcg_column_headers_v1_${groupId}
+    - tcg_extra_cols_v1_${groupId}
+    - tcg_player_positions_v1_${groupId}
+    
+  ========================================================================= -->
+
   <script>
+    // ===================================
+    // FOOTER: Display current year
+    // ===================================
+    // Updates the footer copyright year dynamically to current year
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 
   <script>
-    // Authentication and group system
+    // ===================================
+    // AUTHENTICATION & GROUP SYSTEM
+    // ===================================
+    // Handles user login validation, group selection enforcement, and logout functionality
+    // Redirects to login if no session, redirects to groups if no group selected
+    // Updates navigation with Groups link and Logout button when authenticated
     (function() {
       const SESSION_KEY = 'tcg_session_v1';
       const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
@@ -151,11 +211,10 @@
       const authData = checkAuthAndGroup();
       if (!authData) return;
       
-      // Update navigation to show group context
+      // Update navigation
       const headerBtns = document.querySelector('.main-nav');
       if (headerBtns) {
         headerBtns.innerHTML = `
-          <span class="user-welcome">Group: ${authData.currentGroup.substring(6)}</span>
           <a class="header-btn" href="index.html">Home</a>
           <a class="header-btn" href="shop.html">Shop</a>
           <a class="header-btn" href="groups.html">Groups</a>
@@ -172,6 +231,12 @@
             }
           });
         });
+      }
+      
+      // Add group ID to footer
+      const groupDisplay = document.getElementById('group-display');
+      if (groupDisplay) {
+        groupDisplay.textContent = `Group: ${authData.currentGroup.substring(6)}`;
       }
       
       // Logout confirmation modal
@@ -220,21 +285,33 @@
   </script>
 
   <script>
-    // chores: add, render, persist (localStorage) - now group-scoped
+    // ===================================
+    // CORE CHORE MANAGEMENT SYSTEM
+    // ===================================
+    // Main chore tracking system with localStorage persistence (group-scoped)
+    // Handles: chore creation, assignment, completion, deletion, and column management
+    // Supports up to 10 players with dynamic column addition/removal
+    // Manages points banking system and column header editing
     (function () {
-      // Get current group for scoped storage
+      // ===================================
+      // STORAGE KEYS & CONFIGURATION
+      // ===================================
+      // Get current group for scoped storage - all data is isolated per group
       function getCurrentGroup() {
         return localStorage.getItem('tcg_current_group_v1') || 'default';
       }
       
       const currentGroup = getCurrentGroup();
-      const STORAGE_KEY = `tcg_chores_v1_${currentGroup}`;
-      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
-      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
-      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
+      const STORAGE_KEY = `tcg_chores_v1_${currentGroup}`;  // Chores data storage
+      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;  // Player names storage
+      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;  // Points bank storage
+      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;  // Tracks which extra columns are active
       const HEADER_MAX = 8; // Max characters allowed for left/right headers
 
-      // points helpers
+      // ===================================
+      // POINTS SYSTEM
+      // ===================================
+      // Loads points from localStorage for all players (left, right, extra1-8)
       function loadPoints() {
         try {
           const raw = localStorage.getItem(POINTS_KEY);
@@ -255,7 +332,10 @@
           return { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 };
         }
       }
+      // Saves points object to localStorage
       function savePoints(p) { localStorage.setItem(POINTS_KEY, JSON.stringify(p)); }
+      
+      // Updates all points displays in the DOM
       function renderPoints() {
         const p = loadPoints();
         const leftEl = document.getElementById('left-points');
@@ -280,7 +360,10 @@
         if (extra8El) extra8El.textContent = String(p.extra8 || 0);
       }
 
-      // extra columns presence helpers
+      // ===================================
+      // EXTRA COLUMNS MANAGEMENT
+      // ===================================
+      // Tracks which extra player columns (3-10) are currently active
       function loadExtraState() {
         try {
           const raw = localStorage.getItem(EXTRA_STATE_KEY);
@@ -299,22 +382,30 @@
           return { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
         }
       }
+      // Saves extra columns state to localStorage
       function saveExtraState(s) { localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
 
-      // headers helpers for extras
+      // ===================================
+      // HEADER MANAGEMENT (Player Names)
+      // ===================================
+      // Loads all column headers (player names) from localStorage
       function loadAllHeaders() {
         try {
           const raw = localStorage.getItem(HEADERS_KEY);
           return raw ? JSON.parse(raw) : {};
         } catch (e) { return {}; }
       }
+      // Saves a single header field (player name) to localStorage
       function saveHeaderField(field, value) {
         const obj = loadAllHeaders();
         obj[field] = value;
         localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
       }
 
-      // wire up quick controls (left/right buttons exist for left/right columns)
+      // ===================================
+      // POINTS QUICK CONTROLS
+      // ===================================
+      // Add 10 points or reset buttons for left/right players (if they exist in DOM)
       document.addEventListener('DOMContentLoaded', () => {
         const leftAdd = document.getElementById('left-add-10');
         const leftReset = document.getElementById('left-reset');
@@ -348,10 +439,15 @@
       });
 
 
-      // header elements (editable)
+      // ===================================
+      // EDITABLE HEADERS (Player 1 & 2)
+      // ===================================
+      // Makes left and right column headers (player names) editable inline
+      // Enforces max character limit and saves on blur/enter
       const leftHeaderEl = document.querySelector('.grid-3 .column:nth-child(1) .column-header');
       const rightHeaderEl = document.querySelector('.grid-3 .column:nth-child(3) .column-header');
 
+      // Loads left/right player names from localStorage or uses defaults
       function loadHeaders() {
         try {
           const raw = localStorage.getItem(HEADERS_KEY);
@@ -368,6 +464,7 @@
         }
       }
 
+      // Saves left/right headers to localStorage (enforces character limit)
       function saveHeaders() {
         if (!leftHeaderEl || !rightHeaderEl) return;
         const leftText = (leftHeaderEl.textContent || '').replace(/[\r\n]+/g, '').trim().slice(0, HEADER_MAX);
@@ -377,14 +474,16 @@
         localStorage.setItem(HEADERS_KEY, JSON.stringify(payload));
       }
 
-      // apply saved headers immediately
+      // Apply saved headers immediately on page load
       const savedHeaders = loadHeaders();
       if (leftHeaderEl) leftHeaderEl.textContent = savedHeaders.left;
       if (rightHeaderEl) rightHeaderEl.textContent = savedHeaders.right;
-      // save any normalization (optional)
-      saveHeaders();
+      saveHeaders(); // Save any normalization
 
-      // DOM elements used by the chores logic (ensure these are wired up)
+      // ===================================
+      // DOM ELEMENTS & STATE
+      // ===================================
+      // Main DOM elements used throughout the chore system
       const leftListEl = document.getElementById('left-list');
       const unchosenListEl = document.getElementById('chores-list');
       const rightListEl = document.getElementById('right-list');
@@ -392,10 +491,13 @@
       const nameInput = document.getElementById('chore-name');
       const msgEl = document.getElementById('chore-msg');
 
-      // Track whether we're in draft mode (show manual assign buttons)
+      // Track whether we're in draft mode (enables manual assign buttons on chores)
       let draftMode = false;
 
-      // helper to show a transient message if msgEl exists
+      // ===================================
+      // NOTIFICATION HELPER
+      // ===================================
+      // Shows temporary message in the form message area
       function notify(message, durationMs = 1800) {
         if (!msgEl) return;
         msgEl.textContent = message || '';
@@ -404,7 +506,13 @@
         }
       }
 
-      // chores have shape: { id, name, points, loc } where loc is 'unchosen'|'left'|'right'
+      // ===================================
+      // CHORE DATA PERSISTENCE
+      // ===================================
+      // Chores have structure: { id, name, points, loc, difficulty? }
+      // loc can be: 'unchosen', 'left', 'right', 'extra1'-'extra8'
+      
+      // Loads all chores from localStorage
       function loadChores() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
@@ -414,10 +522,17 @@
         }
       }
 
+      // Saves chores array to localStorage
       function saveChores(chores) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
       }
 
+      // ===================================
+      // CHORE CARD RENDERING
+      // ===================================
+      // Creates a chore card DOM element with buttons based on location and draft mode
+      // Shows different buttons: Complete/Unassign for assigned chores
+      // Shows Assign buttons in draft mode, Delete and Edit buttons for all chores
       function makeChoreCard(chore) {
         const art = document.createElement('article');
         art.className = 'card chore';
@@ -616,11 +731,127 @@
         del.dataset.action = 'delete';
         actions.appendChild(del);
 
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'btn';
+        edit.textContent = 'Edit';
+        edit.dataset.action = 'edit';
+        actions.appendChild(edit);
+
         wrap.appendChild(actions);
         art.appendChild(wrap);
         return art;
       }
 
+      // ===================================
+      // EDIT CHORE MODAL
+      // ===================================
+      // Opens a modal to edit chore name and points (5-50 pts, multiples of 5)
+      // Validates inputs and updates chore in localStorage
+      function editChore(choreId) {
+        const chores = loadChores();
+        const idx = chores.findIndex(c => c.id === choreId);
+        if (idx === -1) return;
+        const chore = chores[idx];
+
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+          
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+          
+          modal.innerHTML = `
+            <p><strong>Edit Chore</strong></p>
+            <div style="margin: 15px 0;">
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">Chore Name:</label>
+              <input type="text" id="edit-chore-name" value="${chore.name}" 
+                     style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+            </div>
+            <div style="margin: 15px 0;">
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">Points:</label>
+              <input type="number" id="edit-chore-points" value="${chore.points}" min="5" max="50" step="5" 
+                     style="width: 100%; padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;" />
+            </div>
+            <div class="tcg-modal-actions">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-confirm">Save</button>
+            </div>
+          `;
+          
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          
+          const nameInput = modal.querySelector('#edit-chore-name');
+          const pointsInput = modal.querySelector('#edit-chore-points');
+          nameInput.focus();
+          nameInput.select();
+          
+          function cleanup() {
+            document.body.removeChild(overlay);
+          }
+          
+          function onConfirm() {
+            const newName = nameInput.value.trim();
+            const newPoints = parseInt(pointsInput.value) || 5;
+            
+            if (!newName) {
+              nameInput.focus();
+              return;
+            }
+            
+            // Round points to nearest 5 and cap at 50
+            let roundedPoints = Math.round(newPoints / 5) * 5;
+            roundedPoints = Math.max(5, Math.min(50, roundedPoints));
+            
+            // Update the chore
+            chores[idx].name = newName;
+            chores[idx].points = roundedPoints;
+            saveChores(chores);
+            render();
+            
+            cleanup();
+            notify(`Chore updated: ${newName} (${roundedPoints} pts)`, 1800);
+            resolve(true);
+          }
+          
+          function onCancel() {
+            cleanup();
+            resolve(false);
+          }
+          
+          modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+          modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) onCancel();
+          });
+          
+          nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onConfirm();
+            } else if (e.key === 'Escape') {
+              onCancel();
+            }
+          });
+          
+          pointsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onConfirm();
+            } else if (e.key === 'Escape') {
+              onCancel();
+            }
+          });
+        });
+      }
+
+      // ===================================
+      // MAIN RENDER FUNCTION
+      // ===================================
+      // Renders all chores to appropriate columns (left, right, extra1-8, unchosen)
+      // Updates DOM with chore cards and placeholder messages
+      // Manages extra column visibility and player count CSS variable
       function render() {
         const chores = loadChores();
 
@@ -767,6 +998,12 @@
         }
       }
 
+      // ===================================
+      // ADD CHORE FORM HANDLER
+      // ===================================
+      // Handles chore creation from the form
+      // Creates chore with default 10 points and unique ID
+      // Disables draft mode when new chore is added
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -787,7 +1024,11 @@
         form.reset();
       });
 
-      // delegated action handler for all three lists
+      // ===================================
+      // CHORE ACTION HANDLER (Event Delegation)
+      // ===================================
+      // Handles all button clicks on chore cards: complete, unassign, assign, delete, edit
+      // Uses event delegation on grid-3 container for performance
       document.querySelector('.grid-3').addEventListener('click', function (e) {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
@@ -799,7 +1040,10 @@
         const idx = chores.findIndex(c => c.id === id);
         if (idx === -1) return;
 
-        // complete action: add chore.points to correct bank (left/right/extra1/extra2)
+        // ===================================
+        // COMPLETE ACTION
+        // ===================================
+        // Awards points to player, then unassigns chore (moves back to unassigned column)
         if (action === 'complete') {
           const chore = chores[idx];
           const loc = chore.loc;
@@ -812,8 +1056,8 @@
           savePoints(points);
           renderPoints();
 
-          // remove the chore after completion
-          chores.splice(idx, 1);
+          // unassign the chore after completion instead of deleting
+          chores[idx].loc = null;
           saveChores(chores);
           render();
 
@@ -853,6 +1097,10 @@
           return;
         }
 
+        // ===================================
+        // ASSIGN ACTIONS (Manual Assignment in Draft Mode)
+        // ===================================
+        // Assigns chore to specific player column
         if (action === 'assign-left') {
           chores[idx].loc = 'left';
           saveChores(chores);
@@ -913,14 +1161,20 @@
           render();
           return;
         }
+        // Unassigns chore back to unchosen column and enables draft mode
         if (action === 'unassign') {
           chores[idx].loc = 'unchosen';
-          // After unassigning, enable draft mode so manual assign buttons appear in the unassigned list
-          draftMode = true;
+          draftMode = true; // Enable draft mode so manual assign buttons appear
           saveChores(chores);
           render();
           return;
         }
+        // Opens edit modal for the chore
+        if (action === 'edit') {
+          editChore(id);
+          return;
+        }
+        // Deletes chore immediately without confirmation
         if (action === 'delete') {
           // delete immediately without confirmation
           chores.splice(idx, 1);
@@ -931,7 +1185,11 @@
         }
       });
 
-      // random assign button: distribute unchosen chores randomly to all active players
+      // ===================================
+      // RANDOM ASSIGN BUTTON
+      // ===================================
+      // Distributes all unassigned chores randomly across all active players
+      // Uses balanced assignment (aims for equal counts, max difference of 1)
       const randomAssignBtn = document.getElementById('random-assign-btn');
       if (randomAssignBtn) {
         // balanced assignment: aim for equal counts (difference at most 1)
@@ -1104,7 +1362,11 @@
         });
       }
 
-      // Helper for Draft: ask Easy or Hard with Quit option
+      // ===================================
+      // DRAFT MODE: HIGH/LOW MODAL
+      // ===================================
+      // Asks user to rate chore difficulty (Easy or Hard) with option to quit draft
+      // Returns 'easy', 'difficult', or null (if quit)
       function askHighOrLow(choreName) {
         return new Promise(resolve => {
           const overlay = document.createElement('div');
@@ -1213,7 +1475,12 @@
         }
       }
 
-      // Function to show all players simultaneously and collect their decisions
+      // ===================================
+      // AUCTION MODE: ALL PLAYERS MODAL
+      // ===================================
+      // Shows simultaneous decision interface for all players
+      // Each player chooses "Stay In" or "Pass" at current price
+      // Returns array of players who stayed in the auction
       function askAllPlayersSimultaneous(chore, bidders, currentPrice) {
         return new Promise(resolve => {
           const overlay = document.createElement('div');
@@ -1560,6 +1827,12 @@
         }
       }
 
+      // ===================================
+      // RUN AUCTION MAIN FUNCTION
+      // ===================================
+      // Orchestrates auction for all unassigned chores
+      // Gets active players, runs auction for each chore sequentially
+      // Can be aborted mid-auction, saves results to localStorage
       async function runAuction() {
         const chores = loadChores();
         const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
@@ -1596,12 +1869,22 @@
         draftMode = false; // Disable manual assignment buttons
       }
 
+      // ===================================
+      // AUCTION BUTTON & SYSTEM
+      // ===================================
+      // Auction mode: Players bid on each chore, winner gets it assigned
+      // Uses modal prompts for each player to bid, highest bidder wins
       const auctionBtn = document.getElementById('auction-btn');
       if (auctionBtn) {
         auctionBtn.addEventListener('click', () => { runAuction(); });
       }
 
-      // Draft flow: ask High/Low for each chore and assign random points
+      // ===================================
+      // DRAFT BUTTON & SYSTEM
+      // ===================================
+      // Draft mode: For each chore, asks if it's High or Low difficulty
+      // Assigns random points (15-25 for High, 5-10 for Low) in multiples of 5
+      // Marks chores with difficulty rating for manual assignment later
       function randomInRange(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
@@ -1741,7 +2024,10 @@
         render();
       });
 
-      // Unassign All button functionality
+      // ===================================
+      // UNASSIGN ALL BUTTON
+      // ===================================
+      // Moves all assigned chores back to unassigned column with confirmation modal
       const unassignAllBtn = document.getElementById('unassign-all-btn');
       if (unassignAllBtn) {
         unassignAllBtn.addEventListener('click', async function () {
@@ -1861,13 +2147,21 @@
   </script>
 
   <script>
-    // Add/Remove column functionality
+    // ===================================
+    // ADD/REMOVE PLAYER COLUMN SYSTEM
+    // ===================================
+    // Manages dynamic player columns (Players 3-10)
+    // Handles column creation, removal, reordering, and DOM manipulation
+    // Syncs with points bank, headers, and chore assignments
     (function () {
       const addColumnBtn = document.getElementById('add-column-btn');
       const removeColumnBtn = document.getElementById('remove-column-btn');
       const gridSection = document.querySelector('.grid-3');
 
-      // Local storage keys (scoped here to avoid cross-IIFE references) - now group-scoped
+      // ===================================
+      // STORAGE KEYS & CONFIGURATION
+      // ===================================
+      // Group-scoped storage for column management
       function getCurrentGroup() {
         return localStorage.getItem('tcg_current_group_v1') || 'default';
       }
@@ -1876,9 +2170,9 @@
       const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
       const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
       const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
-      const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;
+      const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;  // Tracks column order
 
-      // Player colors for extra columns
+      // Player color scheme for columns 3-10
       const extraColors = {
         extra1: 'orange',
         extra2: 'limegreen',
@@ -1890,7 +2184,7 @@
         extra8: 'teal'
       };
 
-      // Default player names
+      // Default names for extra players
       const defaultNames = {
         extra1: 'Player 3',
         extra2: 'Player 4',
@@ -1902,7 +2196,10 @@
         extra8: 'Player 10'
       };
 
-      // Minimal helpers replicated locally for this module
+      // ===================================
+      // HELPER FUNCTIONS
+      // ===================================
+      // Local storage helpers for column management module
       function loadAllHeaders() {
         try { const raw = localStorage.getItem(HEADERS_KEY); return raw ? JSON.parse(raw) : {}; }
         catch (e) { return {}; }
@@ -2499,7 +2796,15 @@
         const choresCol = document.getElementById('chores-column');
         if (!choresCol) return;
         const st = loadExtraState();
+        const baseState = loadBasePlayerState();
         const hasAnyExtras = Object.values(st).some(Boolean);
+        
+        // Count total visible players (base + extras)
+        let totalVisiblePlayers = 0;
+        if (baseState.left !== false) totalVisiblePlayers++;
+        if (baseState.right !== false) totalVisiblePlayers++;
+        totalVisiblePlayers += Object.values(st).filter(Boolean).length;
+        
         if (hasAnyExtras) {
           // Calculate the maximum row needed based on active players
           const activeExtras = getActiveExtraPlayers();
@@ -2516,6 +2821,10 @@
           choresCol.style.gridColumn = '';
           choresCol.style.gridRow = '';
         }
+        
+        // For mobile: set grid-row to span all visible players
+        // This uses a CSS variable that the media query can use
+        choresCol.style.setProperty('--total-players', totalVisiblePlayers);
       }
 
       function attachExtraHeaderHandlers(headerEl, field) {
