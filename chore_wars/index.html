@@ -156,6 +156,22 @@
     - tcg_player_positions_v1_${groupId}
     
   ========================================================================= -->
+  <!-- ========================================================================
+    SUPER SIMPLE STORY (Kid-Friendly Explanation)
+    ========================================================================
+    Think of this page like a big toy shelf:
+    - Each CHORE is a little task card (like a toy) that can sit on a shelf.
+    - The SHELVES are the player columns (Player 1, Player 2, etc.).
+    - The UNASSIGNED area is a pile of toys waiting to be picked.
+    - When you "assign" a chore, you move the toy from the pile onto someone's shelf.
+    - When a player "completes" a chore, they earn POINTS (like gold stars) and the toy goes back to the pile so someone can pick it later again.
+    - RANDOM puts toys on shelves evenly so nobody gets too many.
+    - AUCTION lets everyone say "I want it" until only one person still wants it. That person pays points (the price falls each round) and gets the chore.
+    - DRAFT first asks: Is this chore EASY or HARD? That sets how many points it gives. Then you can manually give chores to players.
+    - DRAG & DROP is like picking up a toy card and placing it on a different shelf.
+    - Adding a PLAYER makes a new shelf appear; removing one hides a shelf and returns their toys to the pile.
+    All the data (toys, shelves, points) is saved in your browser so if you refresh, your game stays the same for your group.
+  ======================================================================== -->
 
   <script>
     // ===================================
@@ -313,6 +329,8 @@
       // ===================================
       // Loads points from localStorage for all players (left, right, extra1-8)
       function loadPoints() {
+        // Kid-Friendly: "Load the scoreboards"
+        // We open the saved box of points. If a player is missing, we give them 0.
         try {
           const raw = localStorage.getItem(POINTS_KEY);
           const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
@@ -337,6 +355,8 @@
       
       // Updates all points displays in the DOM
       function renderPoints() {
+        // Kid-Friendly: "Update the scoreboard displays"
+        // We look at the stored points and set the numbers on the page.
         const p = loadPoints();
         const leftEl = document.getElementById('left-points');
         const rightEl = document.getElementById('right-points');
@@ -511,6 +531,9 @@
       // ===================================
       // Chores have structure: { id, name, points, loc, difficulty? }
       // loc can be: 'unchosen', 'left', 'right', 'extra1'-'extra8'
+      // Kid-Friendly: Think of a chore object like a trading card:
+      // id = its unique number, name = what to do, points = how shiny it is,
+      // loc = which shelf it's sitting on, difficulty = easy or hard sticker.
       
       // Loads all chores from localStorage
       function loadChores() {
@@ -534,6 +557,9 @@
       // Shows different buttons: Complete/Unassign for assigned chores
       // Shows Assign buttons in draft mode, Delete and Edit buttons for all chores
       function makeChoreCard(chore) {
+        // Kid-Friendly: This builds a little "card" that shows the chore.
+        // It can have buttons to: give it to someone, finish it, edit it, or delete it.
+        // If we are in DRAFT MODE and the chore has a difficulty, we show lots of assign buttons.
         const art = document.createElement('article');
         art.className = 'card chore';
         art.dataset.id = String(chore.id);
@@ -541,11 +567,13 @@
         // Drag & Drop enablement for chore reassignment
         art.draggable = true;
         art.addEventListener('dragstart', (e) => {
+          // Kid-Friendly: We pick up the chore card. Store its id so we know which one it is when dropped.
           e.dataTransfer.setData('text/chore-id', String(chore.id));
           e.dataTransfer.effectAllowed = 'move';
           art.classList.add('dragging');
         });
         art.addEventListener('dragend', () => {
+          // Kid-Friendly: We let go of the card. Remove the "dragging" look.
           art.classList.remove('dragging');
         });
 
@@ -759,6 +787,7 @@
         // DRAG & DROP SETUP
         // ===================================
         function initDropZones() {
+          // Kid-Friendly: Mark all the shelves and the pile so we can drop chore cards onto them.
           const zoneDefs = [
             { id: 'chores-list', loc: 'unchosen' },
             { id: 'left-list', loc: 'left' },
@@ -805,6 +834,7 @@
           if (!chore) return;
           const loc = zone.dataset.loc || 'unchosen';
           if (loc === 'unchosen') { chore.loc = 'unchosen'; draftMode = true; } else { chore.loc = loc; }
+          // Kid-Friendly: We moved the card to a new shelf (or back to the pile). Then we redraw everything so it looks right.
           saveChores(chores);
           render();
         });
@@ -817,6 +847,7 @@
       // Opens a modal to edit chore name and points (5-50 pts, multiples of 5)
       // Validates inputs and updates chore in localStorage
       function editChore(choreId) {
+        // Kid-Friendly: Show a mini window where we can change the chore's name and points.
         const chores = loadChores();
         const idx = chores.findIndex(c => c.id === choreId);
         if (idx === -1) return;
@@ -921,6 +952,9 @@
       // Updates DOM with chore cards and placeholder messages
       // Manages extra column visibility and player count CSS variable
       function render() {
+        // Kid-Friendly: "Redraw the world"
+        // Clear each shelf and rebuild it with its chore cards.
+        // If a shelf is empty, show a friendly placeholder message.
         const chores = loadChores();
 
         leftListEl.innerHTML = '';
@@ -1100,6 +1134,8 @@
       // Handles all button clicks on chore cards: complete, unassign, assign, delete, edit
       // Uses event delegation on grid-3 container for performance
       document.querySelector('.grid-3').addEventListener('click', function (e) {
+        // Kid-Friendly: One big ear listens for ANY button on ANY chore card.
+        // This way we don't have to put a separate ear on every single card.
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
         const action = btn.dataset.action;
@@ -1904,6 +1940,8 @@
       // Gets active players, runs auction for each chore sequentially
       // Can be aborted mid-auction, saves results to localStorage
       async function runAuction() {
+        // Kid-Friendly: Auction = everyone raises their hand to keep playing until only one hand is still up.
+        // The price (points) goes DOWN, making it easier for someone to win later.
         const chores = loadChores();
         const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
         if (!unchosen.length) {
@@ -1964,6 +2002,9 @@
       }
 
       async function runDraft() {
+        // Kid-Friendly: Draft = we look at each chore and say "Easy" or "Hard".
+        // Easy chores give smaller points. Hard chores give bigger points.
+        // After rating them, we can manually give them to players.
         const chores = loadChores();
         const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
         if (!unchosen.length) {
@@ -2956,6 +2997,8 @@
       }
 
       function createExtraColumn(extraNum) {
+        // Kid-Friendly: Make a brand new player shelf.
+        // We copy Player 1's shelf, change its color and name, empty its chores, and place it nicely.
         const columnLeft = document.getElementById('column-left');
         if (!columnLeft) return null;
 

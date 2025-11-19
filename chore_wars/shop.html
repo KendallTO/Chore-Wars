@@ -238,6 +238,19 @@
         - tcg_column_headers_v1_${groupId} (shared with index.html)
         
     ========================================================================= -->
+    <!-- =====================================================================
+        SUPER SIMPLE STORY (Kid-Friendly Explanation)
+        =====================================================================
+        Pretend this is a candy stand:
+        - Each product card is a candy with a name, price (points), and maybe a limit.
+        - Your points are your allowance you can spend.
+        - Buying puts the candy into your personal bag (inventory).
+        - A "Group Goal" is a giant jar everyone fills together using 5-point scoops.
+        - When the jar is full (goal complete) no more scoops can be added and you can't edit it.
+        - If a candy runs out of stock, it disappears from the stand.
+        - Edit changes the candy label, Delete throws it away forever.
+        Everything is saved so the candy stand looks the same when you come back.
+    ===================================================================== -->
 
     <script>
         // ===================================
@@ -387,6 +400,7 @@
             // Tracks which items each player owns
             // Structure: { playerLoc: [itemId1, itemId2, ...] }
             function loadInventories() {
+                // Kid-Friendly: Open each player's candy bag. If no bag yet, give them an empty one.
                 try {
                     const raw = localStorage.getItem(INVENTORY_KEY);
                     return raw ? JSON.parse(raw) : {};
@@ -406,6 +420,7 @@
             
             // Adds purchased item to player's inventory (with quantity tracking)
             function addItemToInventory(playerLoc, itemId, itemName, itemDesc) {
+                // Kid-Friendly: Put a candy in the bag. If it's already there, just increase the number.
                 const inventories = loadInventories();
                 if (!inventories[playerLoc]) {
                     inventories[playerLoc] = [];
@@ -430,6 +445,7 @@
             
             // Removes one quantity of item from player's inventory (or deletes if qty = 0)
             function useItemFromInventory(playerLoc, itemId) {
+                // Kid-Friendly: Use (eat) one candy. If none left, remove it from the bag.
                 const inventories = loadInventories();
                 if (!inventories[playerLoc]) return;
                 
@@ -453,6 +469,7 @@
             // Displays player's inventory with item cards, quantity, and use button
             // Shows "No items" message if inventory is empty
             function renderInventory(playerLoc) {
+                // Kid-Friendly: Lay out all candies in the bag so the player can see them.
                 const inventories = loadInventories();
                 const container = document.getElementById(`${playerLoc}-inventory`);
                 if (!container) return;
@@ -513,6 +530,7 @@
             // Handles dropdown toggles for viewing player inventories
             // Shows/hides inventory when clicking "View Inventory" buttons
             function initInventoryToggles() {
+                // Kid-Friendly: Clicking the button shows or hides the candy bag.
                 const toggleButtons = document.querySelectorAll('.inventory-toggle');
                 toggleButtons.forEach(button => {
                     button.addEventListener('click', () => {
@@ -571,6 +589,7 @@
             // Migrates old oneTime format to stock format
             // Initializes group goal properties if missing
             function loadItems() {
+                // Kid-Friendly: Look at the candy stand. If it's empty, we set out example candies.
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
                     const items = raw ? JSON.parse(raw) : defaultItems.slice();
@@ -609,6 +628,8 @@
             // Disables edit button for completed group goals
             // Dynamic font sizing based on title length (15 char max)
             function createCard(item) {
+                // Kid-Friendly: Build a card showing a candy or a shared jar.
+                // Group goal? Show a filling bar; normal candy? Show its price.
                 const art = document.createElement('article');
                 art.className = 'card product';
                 art.dataset.id = String(item.id);
@@ -751,6 +772,7 @@
 
             // Renders all shop items to the products grid
             function render() {
+                // Kid-Friendly: Clear the stand and put back every candy card fresh.
                 const items = loadItems();
                 productsEl.innerHTML = '';
                 items.forEach(it => productsEl.appendChild(createCard(it)));
@@ -764,6 +786,7 @@
             // Reads group goal checkbox to create group goal items
             // Creates item with unique ID and saves to localStorage
             form.addEventListener('submit', function (e) {
+                // Kid-Friendly: Add a new candy. We check name and price are okay first.
                 e.preventDefault();
                 msgEl.textContent = '';
 
@@ -824,6 +847,7 @@
             // Handles all button clicks on product cards: purchase, delete, edit
             // Uses event delegation on products grid for performance
             productsEl.addEventListener('click', function (e) {
+                // Kid-Friendly: One big ear listens for Buy, Edit, or Delete buttons on any candy.
                 const btn = e.target.closest('button[data-action]');
                 if (!btn) return;
                 const action = btn.dataset.action;
@@ -846,6 +870,7 @@
             // Color-coded buttons matching player colors from index.html
             // Returns selected player or null if cancelled
             function askPayerChoice(players, price, itemName) {
+                // Kid-Friendly: Show all players; pick who spends their allowance.
                 // players is an array of {loc: 'left'|'right'|'extra1'|'extra2', name: 'Name'}
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
@@ -1000,6 +1025,7 @@
             // ===================================
             // Simple information modal with OK button
             function showInfo(message, okLabel = 'OK') {
+                // Kid-Friendly: Simple popup that just says something and waits for OK.
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
                     overlay.className = 'tcg-modal-overlay';
@@ -1024,6 +1050,7 @@
 
             // Purchase confirmation modal with Confirm/Cancel buttons
             function askConfirmPurchase(itemName, price) {
+                // Kid-Friendly: Double-check before spending allowance on a candy.
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
                     overlay.className = 'tcg-modal-overlay';
@@ -1058,6 +1085,7 @@
             // Enforces multiples of 5, validates against player's available points
             // Returns contributed amount or 0 if cancelled
             function askContributionAmount(playerName, maxAmount, remaining) {
+                // Kid-Friendly: Ask how many points (in 5s) to pour into the shared jar.
                 return new Promise((resolve) => {
                     const overlay = document.createElement('div');
                     overlay.className = 'tcg-modal-overlay';
@@ -1157,6 +1185,8 @@
             // Validates stock availability, player points, and completion status
             // Deducts points, updates inventory, manages stock and group goal progress
             async function purchaseItem(id) {
+                // Kid-Friendly: Either buy a candy OR donate points to a jar.
+                // Steps: choose player -> check points -> spend -> update bag or jar.
                 const items = loadItems();
                 const idx = items.findIndex(i => i.id === id);
                 if (idx === -1) return;
@@ -1290,6 +1320,7 @@
             // Preserves group goal properties (contributed, isComplete, isGroupGoal)
             // Validates inputs and updates item in localStorage
             function editItem(id) {
+                // Kid-Friendly: Change a candy's name, description, price, or how many are left.
                 const items = loadItems();
                 const idx = items.findIndex(i => i.id === id);
                 if (idx === -1) return;
@@ -1406,6 +1437,7 @@
             }
 
             function deleteItem(id) {
+                // Kid-Friendly: Throw the candy away from the stand (no undo!)
                 const items = loadItems();
                 const idx = items.findIndex(i => i.id === id);
                 if (idx === -1) return;
@@ -1424,6 +1456,7 @@
             // Loads points from group-scoped localStorage
             // Syncs with index.html for consistent point tracking
             function loadPoints() {
+                // Kid-Friendly: Open the allowance box to see how many points everyone has.
                 try {
                     const raw = localStorage.getItem(`tcg_points_v1_${currentGroup}`);
                     const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
@@ -1447,6 +1480,7 @@
             // Loads player headers (names) from group-scoped localStorage
             // Shared with index.html for consistent naming
             function loadHeaders() {
+                // Kid-Friendly: Get player names so we can label their allowance boxes.
                 try {
                     const raw = localStorage.getItem(`tcg_column_headers_v1_${currentGroup}`);
                     const parsed = raw ? JSON.parse(raw) : {};
@@ -1479,6 +1513,7 @@
             }
 
             function loadExtraState() {
+                // Kid-Friendly: Check which extra players are playing so we show their boxes.
                 try {
                     const raw = localStorage.getItem(`tcg_extra_cols_v1_${currentGroup}`);
                     const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
@@ -1499,6 +1534,7 @@
 
             // Position storage functions - now group-scoped
             function loadPositions() {
+                // Kid-Friendly: Remember where extra player boxes sit so they don't jump around.
                 try {
                     const raw = localStorage.getItem(`tcg_player_positions_v1_${currentGroup}`);
                     return raw ? JSON.parse(raw) : {};
@@ -1509,6 +1545,7 @@
 
             // Base player state management - now group-scoped
             function loadBasePlayerState() {
+                // Kid-Friendly: See if Player 1 or Player 2 were turned off so we can hide them.
                 try {
                     const raw = localStorage.getItem(`base-player-state_${currentGroup}`);
                     const p = raw ? JSON.parse(raw) : { left: true, right: true };
@@ -1524,6 +1561,7 @@
             // Checks base player state and extra columns state
             // Returns array of player objects with loc and name
             function getActivePlayers() {
+                // Kid-Friendly: Make a list of all players that are currently visible.
                 const headers = loadHeaders();
                 const st = loadExtraState();
                 const baseState = loadBasePlayerState();
@@ -1554,6 +1592,7 @@
 
             // Function to get current active extra players in position order
             function getActiveExtraPlayers() {
+                // Kid-Friendly: List only the extra players so we can position them.
                 const st = loadExtraState();
                 const activeExtras = [];
 
@@ -1573,6 +1612,7 @@
 
             // Function to calculate optimal grid positions without gaps
             function calculateOptimalPositions() {
+                // Kid-Friendly: Decide neat rows so there are no empty gaps between player boxes.
                 const baseState = loadBasePlayerState();
                 const activeExtras = getActiveExtraPlayers();
                 
@@ -1607,6 +1647,7 @@
 
             // Function to reposition all extra point boxes to eliminate gaps
             function repositionAllExtraBoxes() {
+                // Kid-Friendly: Move each extra player's box to the spot we chose.
                 const positions = calculateOptimalPositions();
 
                 // Update all existing extra boxes with their new positions
@@ -1628,6 +1669,7 @@
 
             // Position the center shop-management so its extended form passes between extra players
             function updateShopManagementPosition() {
+                // Kid-Friendly: Stretch the middle section if lots of players are around.
                 const shopSection = document.querySelector('.shop-management');
                 if (!shopSection) return;
                 const extras = loadExtraState();
@@ -1650,6 +1692,7 @@
             // Shows/hides player boxes based on active state from index.html
             // Handles base players and extra columns (Players 3-10)
             function renderPoints() {
+                // Kid-Friendly: Refresh all allowance numbers and hide boxes for players not here.
                 const points = loadPoints();
                 const headers = loadHeaders();
                 const extras = loadExtraState();
@@ -1732,6 +1775,7 @@
             // Re-render when localStorage changes (cross-tab sync)
             // Watches for points, headers, extra columns, and base player state changes
             window.addEventListener('storage', (e) => {
+                // Kid-Friendly: If another tab changed points or names, update here too.
                 if (e.key === `tcg_points_v1_${currentGroup}` || e.key === `tcg_column_headers_v1_${currentGroup}` || e.key === `tcg_extra_cols_v1_${currentGroup}` || e.key === `base-player-state_${currentGroup}`) {
                     renderPoints();
                     updateShopManagementPosition();
@@ -1744,11 +1788,13 @@
             // Listen for player add/remove events from index.html
             // Updates points display and shop positioning when columns change
             window.addEventListener('extraColumnAdded', () => {
+                // Kid-Friendly: A new player joined — show their allowance box.
                 renderPoints();
                 updateShopManagementPosition();
             });
 
             window.addEventListener('extraColumnRemoved', () => {
+                // Kid-Friendly: A player left — hide their allowance box.
                 renderPoints();
                 updateShopManagementPosition();
             });
@@ -1760,6 +1806,7 @@
             const toggleBtn = document.getElementById('toggle-add-form');
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', () => {
+                    // Kid-Friendly: Show or hide the candy add form.
                     const form = document.getElementById('add-item-form');
                     const isHidden = form.classList.contains('hidden');
 
@@ -1780,6 +1827,7 @@
                 // Auto-close form on successful item add
                 const originalSubmitHandler = form.onsubmit;
                 form.addEventListener('submit', (e) => {
+                    // Kid-Friendly: After adding a candy successfully, tuck the form away again.
                     if (e.defaultPrevented) return; // if validation failed
                     form.classList.add('hidden');
                     toggleBtn.setAttribute('aria-expanded', 'false');
