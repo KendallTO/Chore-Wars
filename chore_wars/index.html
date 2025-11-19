@@ -43,7 +43,7 @@
         </div>
 
         <!-- left column chores -->
-        <div id="left-list">
+        <div id="left-list" class="chore-dropzone" data-loc="left">
           <article class="card chore-placeholder">No chores assigned.</article>
         </div>
       </div>
@@ -59,7 +59,7 @@
         </div>
 
         <!-- unchosen chores list (rendered by JS) -->
-        <div id="chores-list">
+        <div id="chores-list" class="chore-dropzone" data-loc="unchosen">
           <article class="card chore-placeholder">No chores yet — add one below.</article>
         </div>
 
@@ -82,7 +82,7 @@
         </div>
 
         <!-- right column chores -->
-        <div id="right-list">
+        <div id="right-list" class="chore-dropzone" data-loc="right">
           <article class="card chore-placeholder">No chores assigned.</article>
         </div>
       </div>
@@ -549,49 +549,7 @@
           art.classList.remove('dragging');
         });
 
-      // ===================================
-      // DRAG & DROP SETUP
-      // ===================================
-      function initDropZones() {
-        const zoneDefs = [
-          { id: 'chores-list', loc: 'unchosen' },
-          { id: 'left-list', loc: 'left' },
-          { id: 'right-list', loc: 'right' },
-          { id: 'extra1-list', loc: 'extra1' },
-          { id: 'extra2-list', loc: 'extra2' },
-          { id: 'extra3-list', loc: 'extra3' },
-          { id: 'extra4-list', loc: 'extra4' },
-          { id: 'extra5-list', loc: 'extra5' },
-          { id: 'extra6-list', loc: 'extra6' },
-          { id: 'extra7-list', loc: 'extra7' },
-          { id: 'extra8-list', loc: 'extra8' }
-        ];
-        zoneDefs.forEach(def => {
-          const el = document.getElementById(def.id);
-          if (!el || el.dataset.dropzone === 'true') return;
-            el.dataset.dropzone = 'true';
-            el.addEventListener('dragenter', (e) => {
-              e.preventDefault();
-              el.classList.add('drop-target');
-            });
-            el.addEventListener('dragover', (e) => { e.preventDefault(); });
-            el.addEventListener('dragleave', () => { el.classList.remove('drop-target'); });
-            el.addEventListener('drop', (e) => {
-              e.preventDefault();
-              el.classList.remove('drop-target');
-              const id = e.dataTransfer.getData('text/chore-id');
-              if (!id) return;
-              const chores = loadChores();
-              const chore = chores.find(c => String(c.id) === id);
-              if (!chore) return;
-              if (def.loc === 'unchosen') { chore.loc = 'unchosen'; draftMode = true; } else { chore.loc = def.loc; }
-              saveChores(chores);
-              render();
-            });
-        });
-      }
-      // Initialize drop zones on first load
-      initDropZones();
+      
 
         const wrap = document.createElement('div');
         wrap.style.width = '100%';
@@ -797,6 +755,62 @@
         return art;
       }
 
+        // ===================================
+        // DRAG & DROP SETUP
+        // ===================================
+        function initDropZones() {
+          const zoneDefs = [
+            { id: 'chores-list', loc: 'unchosen' },
+            { id: 'left-list', loc: 'left' },
+            { id: 'right-list', loc: 'right' },
+            { id: 'extra1-list', loc: 'extra1' },
+            { id: 'extra2-list', loc: 'extra2' },
+            { id: 'extra3-list', loc: 'extra3' },
+            { id: 'extra4-list', loc: 'extra4' },
+            { id: 'extra5-list', loc: 'extra5' },
+            { id: 'extra6-list', loc: 'extra6' },
+            { id: 'extra7-list', loc: 'extra7' },
+            { id: 'extra8-list', loc: 'extra8' }
+          ];
+          zoneDefs.forEach(def => {
+            const el = document.getElementById(def.id);
+            if (el) {
+              el.dataset.loc = def.loc;
+              el.classList.add('chore-dropzone');
+            }
+          });
+        }
+        // Delegated drag events for dynamic columns
+        document.addEventListener('dragenter', (e) => {
+          const zone = e.target.closest('.chore-dropzone');
+          if (zone) { e.preventDefault(); zone.classList.add('drop-target'); }
+        });
+        document.addEventListener('dragover', (e) => {
+          const zone = e.target.closest('.chore-dropzone');
+          if (zone) e.preventDefault();
+        });
+        document.addEventListener('dragleave', (e) => {
+          const zone = e.target.closest('.chore-dropzone');
+          if (zone) zone.classList.remove('drop-target');
+        });
+        document.addEventListener('drop', (e) => {
+          const zone = e.target.closest('.chore-dropzone');
+          if (!zone) return;
+          e.preventDefault();
+          zone.classList.remove('drop-target');
+          const id = e.dataTransfer.getData('text/chore-id');
+          if (!id) return;
+          const chores = loadChores();
+          const chore = chores.find(c => String(c.id) === id);
+          if (!chore) return;
+          const loc = zone.dataset.loc || 'unchosen';
+          if (loc === 'unchosen') { chore.loc = 'unchosen'; draftMode = true; } else { chore.loc = loc; }
+          saveChores(chores);
+          render();
+        });
+        document.addEventListener('extra-column-created', () => initDropZones());
+        // Initialize on load
+        initDropZones();
       // ===================================
       // EDIT CHORE MODAL
       // ===================================
@@ -2986,6 +3000,8 @@
         const listDiv = newColumn.querySelector('#left-list');
         if (listDiv) {
           listDiv.id = `${extraKey}-list`;
+          listDiv.classList.add('chore-dropzone');
+          listDiv.dataset.loc = extraKey;
           // Clear any cloned chores from column-left
           listDiv.innerHTML = '<article class="card chore-placeholder">No chores assigned.</article>';
         }
@@ -3005,6 +3021,8 @@
 
         // Reposition unassigned column if needed
         updateUnassignedPosition();
+        // Notify drag & drop system that a new column exists
+        document.dispatchEvent(new CustomEvent('extra-column-created', { detail: { key: extraKey } }));
         return newColumn;
       }
 
