@@ -620,6 +620,17 @@
   }
 }
 
+  .card.chore.dragging {
+    opacity: 0.5;
+    transform: scale(0.97);
+  }
+
+  .drop-target {
+    outline: 2px dashed var(--accent);
+    background: rgba(43,108,176,0.08);
+    transition: outline 0.15s ease, background 0.15s ease;
+  }
+
 /* Extra small screens - maintain two-column but with even tighter spacing */
 @media (max-width: 480px) {
   .site-main .grid-3 {

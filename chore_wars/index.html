@@ -538,6 +538,60 @@
         art.className = 'card chore';
         art.dataset.id = String(chore.id);
         art.dataset.loc = chore.loc || 'unchosen';
+        // Drag & Drop enablement for chore reassignment
+        art.draggable = true;
+        art.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/chore-id', String(chore.id));
+          e.dataTransfer.effectAllowed = 'move';
+          art.classList.add('dragging');
+        });
+        art.addEventListener('dragend', () => {
+          art.classList.remove('dragging');
+        });
+
+      // ===================================
+      // DRAG & DROP SETUP
+      // ===================================
+      function initDropZones() {
+        const zoneDefs = [
+          { id: 'chores-list', loc: 'unchosen' },
+          { id: 'left-list', loc: 'left' },
+          { id: 'right-list', loc: 'right' },
+          { id: 'extra1-list', loc: 'extra1' },
+          { id: 'extra2-list', loc: 'extra2' },
+          { id: 'extra3-list', loc: 'extra3' },
+          { id: 'extra4-list', loc: 'extra4' },
+          { id: 'extra5-list', loc: 'extra5' },
+          { id: 'extra6-list', loc: 'extra6' },
+          { id: 'extra7-list', loc: 'extra7' },
+          { id: 'extra8-list', loc: 'extra8' }
+        ];
+        zoneDefs.forEach(def => {
+          const el = document.getElementById(def.id);
+          if (!el || el.dataset.dropzone === 'true') return;
+            el.dataset.dropzone = 'true';
+            el.addEventListener('dragenter', (e) => {
+              e.preventDefault();
+              el.classList.add('drop-target');
+            });
+            el.addEventListener('dragover', (e) => { e.preventDefault(); });
+            el.addEventListener('dragleave', () => { el.classList.remove('drop-target'); });
+            el.addEventListener('drop', (e) => {
+              e.preventDefault();
+              el.classList.remove('drop-target');
+              const id = e.dataTransfer.getData('text/chore-id');
+              if (!id) return;
+              const chores = loadChores();
+              const chore = chores.find(c => String(c.id) === id);
+              if (!chore) return;
+              if (def.loc === 'unchosen') { chore.loc = 'unchosen'; draftMode = true; } else { chore.loc = def.loc; }
+              saveChores(chores);
+              render();
+            });
+        });
+      }
+      // Initialize drop zones on first load
+      initDropZones();
 
         const wrap = document.createElement('div');
         wrap.style.width = '100%';
@@ -996,6 +1050,8 @@
             extra8.forEach(c => extra8ListEl.appendChild(makeChoreCard(c)));
           }
         }
+        // Refresh drag & drop zones after rendering (handles dynamic columns)
+        initDropZones();
       }
 
       // ===================================
