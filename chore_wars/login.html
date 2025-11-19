@@ -96,38 +96,36 @@
         
         This page contains authentication functionality:
         
-        1. SESSION MANAGEMENT
-           - Checks for existing session on page load
-           - Auto-redirects logged-in users to groups.html
-           - Creates and stores session data in localStorage
+          1. SESSION MANAGEMENT
+              - Checks for existing session on page load
+              - Auto-redirects logged-in users to groups.html
+              - Creates and stores session data in localStorage
         
-        2. USER AUTHENTICATION
-           - Login form validation and verification
-           - Password checking against stored credentials
-           - Error handling for invalid credentials
+          2. USER AUTHENTICATION (Server-backed)
+              - Login form validation and verification
+              - Sends credentials to /api/login (server)
+              - Server reads/writes users in a text file (JSON lines)
+              - Error handling for invalid credentials
         
-        3. USER REGISTRATION
-           - New account creation
-           - Username uniqueness validation
-           - Password matching confirmation
-           - Minimum length requirements (username: 3, password: 4)
+          3. USER REGISTRATION (Server-backed)
+              - New account creation
+              - Username uniqueness validation (server-side)
+              - Password matching confirmation (client-side)
+              - Minimum length requirements (username: 3, password: 4)
+              - Sends data to /api/register to persist to users.txt
         
         4. FORM UI MANAGEMENT
            - Toggle between login and register forms
            - Message display system (success/error)
            - Auto-hide messages after 3 seconds
         
-        STORAGE KEYS:
-        - tcg_users_v1: Object with all registered users
-          Structure: { username_lowercase: { username, email, password, created } }
-        - tcg_session_v1: Current user session
+                STORAGE KEYS:
+                - tcg_session_v1: Current user session (client)
           Structure: { username, email, loginTime }
         
         SECURITY NOTE:
-        - This is a client-side only authentication system for demo purposes
-        - Passwords are stored in plain text in localStorage (NOT production-ready)
-        - No encryption or server-side validation
-        - Suitable only for local/demo use
+        - Passwords are currently stored in plain text on the server text file (to be hashed later)
+        - This is for functional verification only; do not use in production as-is
         
     ========================================================================= -->
 
@@ -141,10 +139,10 @@
         // AUTHENTICATION SYSTEM
         // ===================================
         // Handles user login, registration, and session management
-        // Uses localStorage for client-side storage (demo purposes only)
+        // Uses a simple server API (/api/register, /api/login) to store users in a text file
         (function() {
-            const USERS_KEY = 'tcg_users_v1';  // Storage key for all users
             const SESSION_KEY = 'tcg_session_v1';  // Storage key for current session
+            const API_BASE = '';
             
             // DOM elements
             const loginForm = document.getElementById('login-form');
@@ -187,23 +185,21 @@
             }
             
             // ===================================
-            // USER DATA MANAGEMENT
+            // USER DATA MANAGEMENT (Server-backed)
             // ===================================
-            
-            // Loads all registered users from localStorage
-            // Returns object with lowercase usernames as keys
-            function loadUsers() {
-                try {
-                    const usersData = localStorage.getItem(USERS_KEY);
-                    return usersData ? JSON.parse(usersData) : {};
-                } catch (e) {
-                    return {};
+            // POST helper
+            async function postJSON(url, payload) {
+                const res = await fetch(API_BASE + url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || data.ok === false) {
+                    const msg = data && (data.error || data.message) ? (data.error || data.message) : `Request failed (${res.status})`;
+                    throw new Error(msg);
                 }
-            }
-            
-            // Saves users object to localStorage
-            function saveUsers(users) {
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                return data;
             }
             
             // ===================================
@@ -242,8 +238,8 @@
             // ===================================
             // LOGIN HANDLER
             // ===================================
-            // Validates credentials and creates session if successful
-            loginForm.addEventListener('submit', (e) => {
+            // Validates credentials via server and creates session if successful
+            loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const username = document.getElementById('login-username').value.trim();
@@ -254,36 +250,21 @@
                     showMessage('Please fill in all fields', true);
                     return;
                 }
-                
-                const users = loadUsers();
-                const user = users[username.toLowerCase()];
-                
-                // Check if user exists
-                if (!user) {
-                    showMessage('Username not found', true);
-                    return;
+                try {
+                    const result = await postJSON('/api/login', { username, password });
+                    setSession(result.username || username, result.email || '');
+                    showMessage('Login successful! Redirecting...');
+                    setTimeout(() => { window.location.href = 'groups.html'; }, 800);
+                } catch (err) {
+                    showMessage(err.message || 'Login failed', true);
                 }
-                
-                // Verify password
-                if (user.password !== password) {
-                    showMessage('Incorrect password', true);
-                    return;
-                }
-                
-                // Login successful - create session and redirect
-                setSession(username, user.email);
-                showMessage('Login successful! Redirecting...');
-                
-                setTimeout(() => {
-                    window.location.href = 'groups.html';
-                }, 1000);
             });
             
             // ===================================
             // REGISTRATION HANDLER
             // ===================================
-            // Creates new user account with validation
-            registerForm.addEventListener('submit', (e) => {
+            // Creates new user account with validation (server-backed)
+            registerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const username = document.getElementById('register-username').value.trim();
@@ -315,30 +296,14 @@
                     return;
                 }
                 
-                const users = loadUsers();
-                
-                // Check if username already exists (case-insensitive)
-                if (users[username.toLowerCase()]) {
-                    showMessage('Username already exists', true);
-                    return;
+                try {
+                    await postJSON('/api/register', { username, email, password });
+                    setSession(username, email);
+                    showMessage('Account created successfully! Redirecting...');
+                    setTimeout(() => { window.location.href = 'groups.html'; }, 800);
+                } catch (err) {
+                    showMessage(err.message || 'Registration failed', true);
                 }
-                
-                // Create new user account
-                users[username.toLowerCase()] = {
-                    username: username,
-                    email: email,
-                    password: password,
-                    created: Date.now()
-                };
-                
-                saveUsers(users);
-                setSession(username, email);
-                
-                showMessage('Account created successfully! Redirecting...');
-                
-                setTimeout(() => {
-                    window.location.href = 'groups.html';
-                }, 1000);
             });
             
             // ===================================
