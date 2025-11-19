@@ -78,6 +78,7 @@ body {
   overflow-x: hidden; /* Prevents container from overflowing horizontally */
 }
 
+/* Home, Shop, Groups */
 .header-btn {
   background-color: var(--header_btn_back);
   color: var(--button_hover);
@@ -123,7 +124,7 @@ body {
   grid-row: 3/4;
 }
 
-.logo {
+.logo /*img*/ {
   max-width: 17%;
   margin-top: 5px;
   position: relative;
@@ -131,6 +132,7 @@ body {
   flex-shrink: 0;
 }
 
+/*chore wars: life is a game*/
 .container-logo img {
   position: absolute;
   left: 50%;
@@ -138,10 +140,10 @@ body {
   transform: translate(-50%, -50%);
   margin-top: 0.5vw;
   pointer-events: none;
-  z-index: 5;
+  overflow: hidden;
 }
 
-/*.j Lines 99-101 (below) is unused*/
+/*.j this is unused*/
 .logo-text {
   max-width: 20%;
 }
@@ -156,7 +158,6 @@ body {
 
 .main-nav {
   position: relative;
-  z-index: 10;
   flex-shrink: 0;
 }
 
@@ -168,12 +169,13 @@ body {
   border-radius: 6px;
 }
 
+/*huge wrapper for everything that's not header/footer. doesn't seem to do anything?*/
 .site-main {
   padding: 24px 0;
   flex: 1 0 auto;
 }
 
-
+/*main grid for the full screen version*/
 .grid-3 {
     display: grid;
     /* Scale the gap with viewport width within sensible bounds */
@@ -183,26 +185,24 @@ body {
     margin: 0 auto;
 }
 
+/*column? this doesn't seem to do anything*/
 .column {
-    /*.j Lines 129-130 don't seem to do anything*/
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
 
-#column-left h3,
-#left-header,
-#left-points-box {
+/* Player headers & point banks */
+#column-left h3, #left-header, #left-points-box {
   text-align: center;
   background-color: var(--player1_color);
   font-size: 4vw;
   font-family: var(--names_font);
 }
 
-#column-right h3,
-#right-header,
-#right-points-box {
+/* Corrected player 2 color */
+#column-right h3, #right-header, #right-points-box {
   text-align: center;
   background-color: var(--player2_color);
   font-size: 4vw;
@@ -228,7 +228,7 @@ body {
   font-weight: 600;
 }
 
-
+/*all buttons in the main element, except COMPLETE, PURCHASE, and DELETE*/
 .btn {
   background-color: var(--button_back);
   color: var(--button_hover);
@@ -245,6 +245,7 @@ body {
   color: var(--button_back);
 }
 
+/*purchase also applies to complete*/
 .btn-purchase {
   background: #16a34a;
   color: #fff;
@@ -257,12 +258,14 @@ body {
   text-transform: uppercase;
 }
 
+/*.j I think it looks better without this, keep or no?*/
 /* Center the delete button on chore cards in the unassigned (middle) column */
 #chores-column .card .btn-delete {
   display: block;
   margin: 8px auto 0;
 }
 
+/*when user clicks the button*/
 .btn:focus {
   outline: 3px solid rgba(59, 130, 246, 0.15);
   outline-offset: 2px;
@@ -340,47 +343,20 @@ body {
 
 
 
-/* Responsive layout adjustments */
+/* medium screens: */
 @media (max-width: 900px) {
   .grid-3 {
     grid-template-columns: repeat(2, 1fr);
   }
-}
-
-/* Medium screens: adjust logo size and spacing to prevent overlap */
-@media (max-width: 800px) {
-  .logo {
-    max-width: 15%;
-  }
-  
-  .container-logo img {
-    width: 22vw;
-  }
-  
-  .main-nav a, .header-btn, #logout-btn {
-    margin-left: 8px;
-    padding: 6px 8px;
-    font-size: 0.85rem;
+  .main-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
   }
 }
 
-@media (max-width: 680px) {
-  .logo {
-    max-width: 12%;
-  }
-  
-  .container-logo img {
-    width: 20vw;
-  }
-  
-  .main-nav a, .header-btn, #logout-btn {
-    margin-left: 6px;
-    padding: 5px 7px;
-    font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 580px) {
+/*small screens: */
+@media (max-width: 750px) {
   .site-header .container {
     flex-direction: column;
     align-items: flex-start;

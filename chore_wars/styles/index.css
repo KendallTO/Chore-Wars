@@ -27,8 +27,8 @@
   height: auto; /* Allow natural expansion based on content */
 }
 
-
-#left-list {
+/*player columns*/
+#left-list, #right-list {
   width: 100%;
   align-self: center;
   display: flex;
@@ -36,26 +36,6 @@
   align-items: center;
 }
 
-#right-list {
-  width: 100%;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#chores-list {
-  width: 100%;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Fill available space within fixed-height column */
-  flex: 1 1 0; /* Grow to fill available space, but column height is constrained */
-  min-height: 0; /* Allow shrinking */
-  overflow-y: auto; /* Add scrolling if content exceeds available space */
-  overflow-x: hidden;
-}
 
 /* Add gaps between unassigned chore items and allow dynamic expansion */
 #chores-list .card {
@@ -116,14 +96,42 @@
   text-align: center;
 }
 
-.site-main .grid-3 .column .column-header {
-  width: 100%;
+
+/*player title cards*/
+.column-header {
+  width:100%;
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 1rem;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text);
+  border: 1px dashed transparent;
+  text-transform: uppercase;
 }
 
 /* Increase minimum width of headers and articles on index by 20% */
 .site-main .grid-3 .column .column-header,
 .site-main .grid-3 .column article.card {
   max-width: 100%;
+}
+
+/* make editable header visually clear when focused */
+.column-header[contenteditable="true"]:focus {
+  outline: none;
+  border-color: rgba(43, 108, 176, 0.25);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.06);
+}
+
+/*point counter for players*/
+.points-bank {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  color: #374151;
+  font-size: 0.95rem;
+  text-align: right;
 }
 
 /* Set left and right padding to 5px for articles on index.html */
@@ -181,6 +189,7 @@
   align-self: center;
 }
 
+/*.j i dont see this doing anything, also no #column-left either*/
 #column-right {
   grid-area: 1 / 3;
 }
@@ -221,16 +230,19 @@
   overflow: hidden;
 }
 
+/*remove player hover. !important overrides all other instances*/
 #remove-column-btn:not(:disabled):hover {
   background-color: #E24A4A !important;
   color: white !important;
 }
 
+/*add player hover*/
 #add-column-btn:not(:disabled):hover {
   background-color: #4CAF50 !important;
   color: white !important;
 }
 
+/*style for the bottom three buttons on main page*/
 #bottom-buttons {
   display: flex;
   justify-content: space-between;
@@ -241,17 +253,7 @@
 }
 
 
-.column-header {
-  margin: 0;
-  padding: 6px 8px;
-  font-size: 1rem;
-  background: transparent;
-  border-radius: 6px;
-  color: var(--text);
-  border: 1px dashed transparent;
-  text-transform: uppercase;
-}
-
+/*the entire center column*/
 #chores-column {
   justify-self: center;
   background-color: var(--header_footer);
@@ -268,13 +270,39 @@
   overflow: hidden; /* Prevent content from breaking out */
 }
 
+/*UNASSIGNED CHORES title label yellow thing*/
 #chores-column h3 {
   text-align: center;
   background-color: var(--center_column);
   font-family: var(--header_font);
 }
 
+/*legit just to add a gap between the three buttons*/
+#auction-btn {
+  margin: 0 5px;
+}
 
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+/*all of the unassigned chores container*/
+#chores-list {
+  width: 100%;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Fill available space within fixed-height column */
+  flex: 1 1 0; /* Grow to fill available space, but column height is constrained */
+  min-height: 0; /* Allow shrinking */
+  overflow-y: auto; /* Add scrolling if content exceeds available space */
+  overflow-x: hidden;
+}
+
+/*individual unassigned chores*/
 .card {
   min-height: 120px;
   background: #f9fafb;
@@ -292,16 +320,7 @@
   box-sizing: border-box;
 }
 
-
-/* make editable header visually clear when focused */
-.column-header[contenteditable="true"]:focus {
-  outline: none;
-  border-color: rgba(43, 108, 176, 0.25);
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.06);
-}
-
-
+/*Chore Name Add thing*/
 .chore-form {
   background: #fff;
   border: 1px solid #e6e7eb;
@@ -315,12 +334,14 @@
   max-width: 400px;
 }
 
+/*doesnt really do anything noticeable but it is just for good form if we do add anything to this specific element*/
 .form-row {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
+/*Chore Name input typing box*/
 .form-row input {
   margin-top: 0;
   width: 100%;
@@ -337,35 +358,13 @@
   font: inherit;
 }
 
-/* placeholder chore card style */
+/* placeholder chore card stylization*/
 .chore-placeholder {
   background: #fff;
   color: #6b7280;
   border-style: dashed;
 }
 
-.points-bank {
-  background: transparent;
-  border: none;
-  padding: 6px;
-  color: #374151;
-  font-size: 0.95rem;
-  text-align: right;
-}
-
-#auction-btn {
-  border: none;
-  padding: 8px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin: 0 5px;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center;
-  margin: 1rem 0;
-}
 
 @media (max-width: 750px) {
   /* Two-column mobile layout: players on left, unassigned chores on right */
@@ -620,6 +619,17 @@
     padding: clamp(2px, 0.5vw, 4px);
   }
 }
+
+  .card.chore.dragging {
+    opacity: 0.5;
+    transform: scale(0.97);
+  }
+
+  .drop-target {
+    outline: 2px dashed var(--accent);
+    background: rgba(43,108,176,0.08);
+    transition: outline 0.15s ease, background 0.15s ease;
+  }
 
 /* Extra small screens - maintain two-column but with even tighter spacing */
 @media (max-width: 480px) {

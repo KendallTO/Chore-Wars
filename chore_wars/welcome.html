@@ -129,14 +129,49 @@
         </div>
     </footer>
 
+    <!-- =========================================================================
+        JAVASCRIPT ARCHITECTURE OVERVIEW - WELCOME PAGE
+        =========================================================================
+        
+        This landing page contains minimal JavaScript for basic functionality:
+        
+        1. FOOTER YEAR UPDATER
+           - Displays current year in copyright footer
+        
+        2. AUTO-REDIRECT SYSTEM
+           - Checks if user is already logged in
+           - Redirects to index.html if user has session + group selected
+           - Redirects to groups.html if user has session but no group
+           - Stays on welcome page if no session (not logged in)
+        
+        PURPOSE:
+        - Provides seamless UX by skipping login for authenticated users
+        - Ensures users land on correct page based on their session state
+        - Acts as smart entry point for the application
+        
+        STORAGE KEYS CHECKED:
+        - tcg_session_v1: Contains { username, ... }
+        - tcg_current_group_v1: Contains selected group ID
+        
+    ========================================================================= -->
+
     <script>
+        // ===================================
+        // FOOTER: Display current year
+        // ===================================
+        // Updates the footer copyright year dynamically to current year
         document.getElementById('year').textContent = new Date().getFullYear();
         
-        // Auto-redirect if user is already logged in
+        // ===================================
+        // AUTO-REDIRECT FOR LOGGED-IN USERS
+        // ===================================
+        // Automatically redirects authenticated users to appropriate page
+        // Skips login screen if user already has valid session
         (function() {
             const SESSION_KEY = 'tcg_session_v1';
             const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
             
+            // Retrieves user session from localStorage
             function getSession() {
                 try {
                     const sessionData = localStorage.getItem(SESSION_KEY);
@@ -146,10 +181,12 @@
                 }
             }
             
+            // Retrieves currently selected group ID from localStorage
             function getCurrentGroup() {
                 return localStorage.getItem(CURRENT_GROUP_KEY);
             }
             
+            // Check session and redirect accordingly
             const session = getSession();
             const currentGroup = getCurrentGroup();
             
@@ -162,6 +199,7 @@
                     window.location.href = 'groups.html';
                 }
             }
+            // If no session, stay on welcome page (user needs to login)
         })();
     </script>
 </body>
