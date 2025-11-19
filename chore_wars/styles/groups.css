@@ -14,6 +14,8 @@
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px 0;
+    overflow: hidden;
+    width: 100%;
 }
 
 
@@ -97,6 +99,9 @@
     transition: border-color 0.2s ease;
     box-sizing: border-box;
     resize: vertical;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /*the text entry box when ur typing*/
@@ -128,9 +133,15 @@
 /* all of the Groups */
 .groups-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    /* Fixed column width to keep cards consistent; remaining space centered */
+    grid-template-columns: repeat(auto-fill, 350px);
     gap: 24px;
     margin-bottom: 32px;
+    align-items: start;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    justify-content: center;
 }
 
 .groups-grid.hidden {
@@ -149,6 +160,12 @@
     flex-direction: column;
     justify-content: space-between;
     min-height: 180px;
+    overflow: hidden;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    /* Critical for grid items: allow content to shrink to track size */
+    min-width: 0;
 }
 
 .group-card:hover {
@@ -160,6 +177,7 @@
 .group-info {
     flex-grow: 1;
     margin-bottom: 16px;
+    min-width: 0;
 }
 
 /*what it says*/
@@ -169,6 +187,8 @@
     font-family: var(--header_font);
     font-size: 1.25rem;
     line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /*optional group description style*/
@@ -178,10 +198,14 @@
     font-size: 0.9rem;
     line-height: 1.4;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    /* Stronger wrapping for long unspaced strings */
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    width: 100%;
+    white-space: pre-wrap;
+    hyphens: auto;
 }
 
 /*how many members and when created*/
