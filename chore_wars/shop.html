@@ -31,9 +31,11 @@
     <main class="site-main container">
         <!-- points display with shop management in center -->
         <div class="points-display grid-3">
-            <div class="points-box" id="left-points-box">
+            <div class="points-box" id="left-points-box" style="display:none;">
                 <h3 id="left-header">Left Column</h3>
-                <div class="points-value"><strong id="shop-left-points">0</strong> pts</div>
+                <div class="points-value">
+                    <strong id="shop-left-points">0</strong> pts
+                </div>
                 <button type="button" class="inventory-toggle" data-player="left">
                     <span class="toggle-text">View Inventory</span>
                     <span class="toggle-icon">▼</span>
@@ -89,9 +91,11 @@
                 </form>
             </section>
 
-            <div class="points-box" id="right-points-box">
+            <div class="points-box" id="right-points-box" style="display:none;">
                 <h3 id="right-header">Right Column</h3>
-                <div class="points-value"><strong id="shop-right-points">0</strong> pts</div>
+                <div class="points-value">
+                    <strong id="shop-right-points">0</strong> pts
+                </div>
                 <button type="button" class="inventory-toggle" data-player="right">
                     <span class="toggle-text">View Inventory</span>
                     <span class="toggle-icon">▼</span>
@@ -100,7 +104,7 @@
             </div>
 
             <!-- Extra player points boxes (row 2). Shown only if extras exist in index.html -->
-            <div class="points-box" id="extra1-points-box">
+            <div class="points-box" id="extra1-points-box" style="display:none;">
                 <h3 id="extra1-header">Player 3</h3>
                 <div class="points-value"><strong id="shop-extra1-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra1">
@@ -109,7 +113,8 @@
                 </button>
                 <div class="inventory-dropdown hidden" id="extra1-inventory"></div>
             </div>
-            <div class="points-box" id="extra2-points-box">
+
+            <div class="points-box" id="extra2-points-box" style="display:none;">
                 <h3 id="extra2-header">Player 4</h3>
                 <div class="points-value"><strong id="shop-extra2-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra2">
@@ -118,7 +123,8 @@
                 </button>
                 <div class="inventory-dropdown hidden" id="extra2-inventory"></div>
             </div>
-            <div class="points-box" id="extra3-points-box">
+
+            <div class="points-box" id="extra3-points-box" style="display:none;">
                 <h3 id="extra3-header">Player 5</h3>
                 <div class="points-value"><strong id="shop-extra3-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra3">
@@ -127,7 +133,8 @@
                 </button>
                 <div class="inventory-dropdown hidden" id="extra3-inventory"></div>
             </div>
-            <div class="points-box" id="extra4-points-box">
+
+            <div class="points-box" id="extra4-points-box" style="display:none;">
                 <h3 id="extra4-header">Player 6</h3>
                 <div class="points-value"><strong id="shop-extra4-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra4">
@@ -136,7 +143,8 @@
                 </button>
                 <div class="inventory-dropdown hidden" id="extra4-inventory"></div>
             </div>
-            <div class="points-box" id="extra5-points-box">
+
+            <div class="points-box" id="extra5-points-box" style="display:none;">
                 <h3 id="extra5-header">Player 7</h3>
                 <div class="points-value"><strong id="shop-extra5-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra5">
@@ -145,7 +153,8 @@
                 </button>
                 <div class="inventory-dropdown hidden" id="extra5-inventory"></div>
             </div>
-            <div class="points-box" id="extra6-points-box">
+
+            <div class="points-box" id="extra6-points-box" style="display:none;">
                 <h3 id="extra6-header">Player 8</h3>
                 <div class="points-value"><strong id="shop-extra6-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra6">
@@ -154,7 +163,8 @@
                 </button>
                 <div class="inventory-dropdown hidden" id="extra6-inventory"></div>
             </div>
-            <div class="points-box" id="extra7-points-box">
+
+            <div class="points-box" id="extra7-points-box" style="display:none;">
                 <h3 id="extra7-header">Player 9</h3>
                 <div class="points-value"><strong id="shop-extra7-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra7">
@@ -163,7 +173,8 @@
                 </button>
                 <div class="inventory-dropdown hidden" id="extra7-inventory"></div>
             </div>
-            <div class="points-box" id="extra8-points-box">
+
+            <div class="points-box" id="extra8-points-box" style="display:none;">
                 <h3 id="extra8-header">Player 10</h3>
                 <div class="points-value"><strong id="shop-extra8-points">0</strong> pts</div>
                 <button type="button" class="inventory-toggle" data-player="extra8">
@@ -393,7 +404,150 @@
             const currentGroup = getCurrentGroup();
             const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;  // Shop items storage
             const INVENTORY_KEY = `tcg_player_inventories_v1_${currentGroup}`;  // Player inventories
-            
+                        // ===================================
+            // SERVER SYNC HELPERS (DB persistence)
+            // ===================================
+            // These mirror the helpers used on index.html so that
+            // points, headers, and shop data are saved in MySQL
+            // and follow you across devices.
+
+            const SESSION_KEY_SERVER = 'tcg_session_v1';
+
+            function getSessionForServer() {
+                try {
+                    const raw = localStorage.getItem(SESSION_KEY_SERVER);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // ----- Shop-specific state: items + inventories -----
+
+            function buildShopState() {
+                return {
+                    items: loadItems(),
+                    inventories: loadInventories()
+                };
+            }
+
+            async function saveShopStateToServer(fullState) {
+                const session = getSessionForServer();
+                if (!session || !session.userId) return;
+                if (!currentGroup || currentGroup === 'default') return;
+
+                try {
+                    await fetch('/api/save_shop_state.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            groupId: currentGroup,
+                            data: fullState
+                        })
+                    });
+                } catch (e) {
+                    console.error('Error saving shop state to server', e);
+                }
+            }
+
+            let shopSaveTimeoutId = null;
+            function queueShopServerSave() {
+                const state = buildShopState();
+                if (shopSaveTimeoutId) {
+                    clearTimeout(shopSaveTimeoutId);
+                }
+                shopSaveTimeoutId = setTimeout(() => {
+                    saveShopStateToServer(state);
+                }, 500);
+            }
+
+            // Pull shop items + inventories from DB into localStorage
+            async function loadShopStateFromServer() {
+                if (!currentGroup || currentGroup === 'default') return;
+
+                try {
+                    const res = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(currentGroup)}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (!data) return;
+
+                    if (Array.isArray(data.items) && data.items.length > 0) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.items));
+                    }
+                    if (data.inventories && Object.keys(data.inventories).length > 0) {
+                        localStorage.setItem(INVENTORY_KEY, JSON.stringify(data.inventories));
+                    }
+                } catch (e) {
+                    console.error('Error loading shop state from server', e);
+                }
+            }
+
+            // ----- Shared game state: points + headers + extra columns -----
+            // These are owned by the index.html chore board, but the shop
+            // both reads them and updates the points when you buy things.
+
+            async function syncGameStateFromServer() {
+                // Kid-Friendly: Ask the big chore board on the server
+                // what the latest scores and player names are.
+                if (!currentGroup || currentGroup === 'default') return;
+
+                try {
+                    const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (!data) return;
+
+                    if (data.points) {
+                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(data.points));
+                    }
+                    if (data.headers) {
+                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify(data.headers));
+                    }
+                    if (data.extraState) {
+                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify(data.extraState));
+                    }
+                } catch (e) {
+                    console.error('Error syncing game state to shop page', e);
+                }
+            }
+
+            // From the shop page we sometimes change points (when buying things).
+            // This helper fetches the existing game state, updates just "points",
+            // and writes it back using save_game_state.php.
+            async function saveUpdatedPointsToServerFromShop() {
+                const session = getSessionForServer();
+                if (!session || !session.userId) return;
+                if (!currentGroup || currentGroup === 'default') return;
+
+                try {
+                    const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
+                    const existing = res.ok ? await res.json() : {};
+                    const fullState = existing || {};
+                    fullState.points = loadPoints(); // use latest local points
+
+                    await fetch('/api/save_game_state.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            groupId: currentGroup,
+                            data: fullState
+                        })
+                    });
+                } catch (e) {
+                    console.error('Error saving updated points from shop', e);
+                }
+            }
+
+            let gamePointsSaveTimeoutId = null;
+            function queueGamePointsServerSave() {
+                if (gamePointsSaveTimeoutId) {
+                    clearTimeout(gamePointsSaveTimeoutId);
+                }
+                gamePointsSaveTimeoutId = setTimeout(() => {
+                    saveUpdatedPointsToServerFromShop();
+                }, 500);
+            }
+
             // ===================================
             // INVENTORY SYSTEM
             // ===================================
@@ -416,6 +570,8 @@
                 } catch (e) {
                     console.error('Failed to save inventories:', e);
                 }
+                // Also persist to the database so inventories follow you
+                queueShopServerSave();
             }
             
             // Adds purchased item to player's inventory (with quantity tracking)
@@ -592,32 +748,41 @@
                 // Kid-Friendly: Look at the candy stand. If it's empty, we set out example candies.
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
-                    const items = raw ? JSON.parse(raw) : defaultItems.slice();
-                    
+                    let items = raw ? JSON.parse(raw) : defaultItems.slice();
+
+                    // If we somehow have no items stored ([], null, etc.), use defaults
+                    if (!Array.isArray(items) || items.length === 0) {
+                        items = defaultItems.slice();
+                    }
+
                     // Migrate old oneTime format to new stock format
                     items.forEach(item => {
-                        if (item.hasOwnProperty('oneTime')) {
+                        if (item && item.hasOwnProperty('oneTime')) {
                             item.stock = item.oneTime ? 1 : null;
                             delete item.oneTime;
                         }
                         // Initialize group goal properties if missing
-                        if (item.isGroupGoal && item.contributed === undefined) {
+                        if (item && item.isGroupGoal && item.contributed === undefined) {
                             item.contributed = 0;
                         }
-                        if (item.isGroupGoal && item.isComplete === undefined) {
+                        if (item && item.isGroupGoal && item.isComplete === undefined) {
                             item.isComplete = false;
                         }
                     });
-                    
+
                     return items;
                 } catch (e) {
+                    // On any error, fall back to your preloaded defaults
                     return defaultItems.slice();
                 }
             }
 
+
             // Saves shop items array to localStorage
             function saveItems(items) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+                // Also persist to the database so shop items follow you
+                queueShopServerSave();
             }
 
             // ===================================
@@ -1246,7 +1411,10 @@
                     points[payerLoc] = current - contribution;
                     try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
                     try { renderPoints(); } catch (e) { }
-                    
+                    // Persist new point totals to the shared game state in the DB
+                    queueGamePointsServerSave();
+
+
                     // Add contribution to item
                     item.contributed = (item.contributed || 0) + contribution;
                     
@@ -1291,9 +1459,12 @@
                 try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
                 // update the on-page point displays immediately
                 try { renderPoints(); } catch (e) { }
+                // Persist new point totals to the shared game state in the DB
+                queueGamePointsServerSave();
 
                 // Add item to player's inventory
                 addItemToInventory(payerLoc, item.id, item.name, item.description);
+
 
                 // Handle stock reduction for limited items
                 if (item.stock !== null && item.stock !== undefined) {
@@ -1762,12 +1933,25 @@
             }
 
             // ===================================
-            // INITIALIZATION
+            // INITIALIZATION (load from server, then render)
             // ===================================
-            // Set footer year and perform initial renders
-            document.getElementById('year2').textContent = new Date().getFullYear();
-            render();
-            renderPoints(); // render initial points
+            (async function initShopPage() {
+                // Footer year
+                document.getElementById('year2').textContent = new Date().getFullYear();
+
+                // 1) Sync the shared game-state (points, player names, extra columns)
+                await syncGameStateFromServer();
+
+                // 2) Sync shop items + inventories from DB
+                await loadShopStateFromServer();
+
+                // 3) Render UI from whatever is now in localStorage
+                render();
+                renderPoints();
+
+                // 4) Make sure we have a copy of current shop state in the DB
+                queueShopServerSave();
+            })();
 
             // ===================================
             // STORAGE EVENT LISTENERS
