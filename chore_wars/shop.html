@@ -296,54 +296,6 @@
             const authData = checkAuthAndGroup();
             if (!authData) return;
             
-
-            // ------------------------
-            // LOAD SHOP FROM SERVER
-            // ------------------------
-            async function loadShopStateFromServer() {
-            if (!GROUP_ID) return; // no group selected
-
-            try {
-                const res = await fetch(`/api/get_shop_state.php?groupId=${GROUP_ID}`);
-                if (!res.ok) return;
-
-                const data = await res.json();
-                if (data.items) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data.items));
-                }
-                if (data.inventories) {
-                localStorage.setItem(INVENTORY_KEY, JSON.stringify(data.inventories));
-                }
-            } catch (err) {
-                console.error('Failed to load shop state:', err);
-            }
-            }
-
-            // ------------------------
-            // SAVE SHOP TO SERVER
-            // ------------------------
-            let shopSaveTimer = null;
-            function saveShopStateToServer() {
-            if (!GROUP_ID) return;
-
-            if (shopSaveTimer) clearTimeout(shopSaveTimer);
-
-            shopSaveTimer = setTimeout(async () => {
-                const items       = loadItems();        // your existing function
-                const inventories = loadInventories();  // your existing function
-
-                try {
-                await fetch('/api/save_shop_state.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ groupId: GROUP_ID, items, inventories })
-                });
-                } catch (err) {
-                console.error('Failed to save shop state:', err);
-                }
-            }, 400); // debounce a bit
-            }
-
             // ===================================
             // NAVIGATION UPDATE
             // ===================================
@@ -441,75 +393,7 @@
             const currentGroup = getCurrentGroup();
             const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;  // Shop items storage
             const INVENTORY_KEY = `tcg_player_inventories_v1_${currentGroup}`;  // Player inventories
-            // numeric group id used for DB
-            const GROUP_ID = parseInt(currentGroup, 10) || 0;
-             // Numeric group id for DB (if currentGroup is already "3", this is just 3)
-            const GROUP_ID = parseInt(currentGroup, 10) || 0;
-
-            // Build the full game state object (same structure index.html uses)
-            function buildFullGameStateForServer() {
-                const choresRaw  = localStorage.getItem(`tcg_chores_v1_${currentGroup}`);
-                const pointsRaw  = localStorage.getItem(`tcg_points_v1_${currentGroup}`);
-                const headersRaw = localStorage.getItem(`tcg_column_headers_v1_${currentGroup}`);
-                const extraRaw   = localStorage.getItem(`tcg_extra_cols_v1_${currentGroup}`);
-
-                let chores     = [];
-                let points     = { left: 0, right: 0 };
-                let headers    = {};
-                let extraState = {};
-
-                try { if (choresRaw)  chores = JSON.parse(choresRaw); } catch (e) {}
-                try { if (pointsRaw)  points = JSON.parse(pointsRaw); } catch (e) {}
-                try { if (headersRaw) headers = JSON.parse(headersRaw); } catch (e) {}
-                try { if (extraRaw)   extraState = JSON.parse(extraRaw); } catch (e) {}
-
-                return { chores, points, headers, extraState };
-            }
-
-            // Debounced save: update the same game_state table index.html uses
-            let gameStateSaveTimer = null;
-            function saveGamePointsFromShop() {
-                if (!GROUP_ID) return;
-
-                if (gameStateSaveTimer) clearTimeout(gameStateSaveTimer);
-
-                gameStateSaveTimer = setTimeout(async () => {
-                    const data = buildFullGameStateForServer();
-                    try {
-                        await fetch('/api/save_game_state.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                groupId: GROUP_ID,
-                                data
-                            })
-                        });
-                    } catch (err) {
-                        console.error('Failed to save game state from shop:', err);
-                    }
-                }, 400); // wait 0.4s after last change
-            }
-            // Load shop items + inventories from DB for this group
-            async function loadShopStateFromServer() {
-                if (!GROUP_ID) return;
-
-                try {
-                    const res = await fetch(`/api/get_shop_state.php?groupId=${GROUP_ID}`);
-                    if (!res.ok) return; // nothing to load
-
-                    const data = await res.json();
-
-                    if (data.items) {
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.items));
-                    }
-                    if (data.inventories) {
-                        localStorage.setItem(INVENTORY_KEY, JSON.stringify(data.inventories));
-                    }
-                } catch (err) {
-                    console.error('Failed to load shop state:', err);
-                }
-            }
-
+            
             // ===================================
             // INVENTORY SYSTEM
             // ===================================
@@ -529,7 +413,6 @@
             function saveInventories(inventories) {
                 try {
                     localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventories));
-                    saveShopStateToServer();    // NEW
                 } catch (e) {
                     console.error('Failed to save inventories:', e);
                 }
@@ -735,38 +618,6 @@
             // Saves shop items array to localStorage
             function saveItems(items) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-                saveShopStateToServer();        // NEW
-            }
-
-
-
-
-            // Save updated points into the same game_state table used by index.html
-            let gameStateSaveTimer = null;
-            async function saveGamePointsFromShop() {
-            if (!GROUP_ID) return;
-
-            if (gameStateSaveTimer) clearTimeout(gameStateSaveTimer);
-
-            gameStateSaveTimer = setTimeout(async () => {
-                // read existing board state from localStorage
-                const chores  = JSON.parse(localStorage.getItem(`tcg_chores_v1_${currentGroup}`) || '[]');
-                const points  = JSON.parse(localStorage.getItem(`tcg_points_v1_${currentGroup}`) || '{"left":0,"right":0}');
-                const headers = JSON.parse(localStorage.getItem(`tcg_column_headers_v1_${currentGroup}`) || '{}');
-                const extra   = JSON.parse(localStorage.getItem(`tcg_extra_cols_v1_${currentGroup}`) || '{}');
-
-                const data = { chores, points, headers, extraState: extra };
-
-                try {
-                await fetch('/api/save_game_state.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ groupId: GROUP_ID, data })
-                });
-                } catch (err) {
-                console.error('Failed to save game state from shop:', err);
-                }
-            }, 400);
             }
 
             // ===================================
@@ -1395,10 +1246,7 @@
                     points[payerLoc] = current - contribution;
                     try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
                     try { renderPoints(); } catch (e) { }
-
-                    // NEW: sync updated points/board to DB
-                    saveGamePointsFromShop();
-
+                    
                     // Add contribution to item
                     item.contributed = (item.contributed || 0) + contribution;
                     
@@ -1443,9 +1291,6 @@
                 try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
                 // update the on-page point displays immediately
                 try { renderPoints(); } catch (e) { }
-
-                // NEW: sync updated points/board to DB
-                saveGamePointsFromShop();
 
                 // Add item to player's inventory
                 addItemToInventory(payerLoc, item.id, item.name, item.description);
@@ -1919,24 +1764,10 @@
             // ===================================
             // INITIALIZATION
             // ===================================
-           // Set footer year
+            // Set footer year and perform initial renders
             document.getElementById('year2').textContent = new Date().getFullYear();
-
-            // First load shop state from server (if any), then render UI
-            loadShopStateFromServer().then(() => {
-                // After shop state is loaded into localStorage,
-                // render shop items and points
-                render();
-                renderPoints();
-
-                // Re-render each player's inventory if you have extra players
-                try {
-                    const players = getActivePlayers(); // your existing function
-                    players.forEach(p => renderInventory(p.loc));
-                } catch (e) {
-                    console.error('Failed to render inventories:', e);
-                }
-            });
+            render();
+            renderPoints(); // render initial points
 
             // ===================================
             // STORAGE EVENT LISTENERS
