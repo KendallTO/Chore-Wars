@@ -322,6 +322,84 @@
       const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;  // Player names storage
       const POINTS_KEY = `tcg_points_v1_${currentGroup}`;  // Points bank storage
       const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;  // Tracks which extra columns are active
+
+      const SESSION_KEY_SERVER = 'tcg_session_v1';
+
+      function getSessionForServer() {
+        try {
+          const raw = localStorage.getItem(SESSION_KEY_SERVER);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // Build a full snapshot of the game state to send to the server
+      function buildFullGameState() {
+        return {
+          chores: loadChores(),
+          points: loadPoints(),
+          headers: loadAllHeaders(),
+          extraState: loadExtraState()
+        };
+      }
+
+      async function saveStateToServer(fullState) {
+        const session = getSessionForServer();
+        if (!session || !session.userId) return;
+        if (!currentGroup || currentGroup === 'default') return;
+
+        try {
+          await fetch('/api/save_game_state.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              groupId: currentGroup,
+              data: fullState
+            })
+          });
+        } catch (e) {
+          console.error('Error saving game state to server', e);
+        }
+      }
+
+      let serverSaveTimeoutId = null;
+      function queueServerSave() {
+        const state = buildFullGameState();
+        if (serverSaveTimeoutId) {
+          clearTimeout(serverSaveTimeoutId);
+        }
+        serverSaveTimeoutId = setTimeout(() => {
+          saveStateToServer(state);
+        }, 500);
+      }
+
+      async function loadStateFromServer() {
+        if (!currentGroup || currentGroup === 'default') return;
+
+        try {
+          const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data) return;
+
+          if (data.chores) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.chores));
+          }
+          if (data.points) {
+            localStorage.setItem(POINTS_KEY, JSON.stringify(data.points));
+          }
+          if (data.headers) {
+            localStorage.setItem(HEADERS_KEY, JSON.stringify(data.headers));
+          }
+          if (data.extraState) {
+            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(data.extraState));
+          }
+        } catch (e) {
+          console.error('Error loading game state from server', e);
+        }
+      }
+
       const HEADER_MAX = 8; // Max characters allowed for left/right headers
 
       // ===================================
@@ -351,7 +429,7 @@
         }
       }
       // Saves points object to localStorage
-      function savePoints(p) { localStorage.setItem(POINTS_KEY, JSON.stringify(p)); }
+      function savePoints(p) { localStorage.setItem(POINTS_KEY, JSON.stringify(p)); queueServerSave(); }
       
       // Updates all points displays in the DOM
       function renderPoints() {
@@ -403,7 +481,7 @@
         }
       }
       // Saves extra columns state to localStorage
-      function saveExtraState(s) { localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); }
+      function saveExtraState(s) { localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); queueServerSave(); }
 
       // ===================================
       // HEADER MANAGEMENT (Player Names)
@@ -420,6 +498,7 @@
         const obj = loadAllHeaders();
         obj[field] = value;
         localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
+        queueServerSave();
       }
 
       // ===================================
@@ -545,9 +624,10 @@
         }
       }
 
-      // Saves chores array to localStorage
+      // Saves chores array to localStorage and syncs to server
       function saveChores(chores) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
+        queueServerSave();
       }
 
       // ===================================
@@ -2114,10 +2194,13 @@
         });
       });
 
-      // initial render
-      render();
-      // ensure point display is correct now (in case script ran before DOMContentLoaded)
-      renderPoints();
+      // initial render - load from server first if available, then render
+      (async function () {
+        await loadStateFromServer();
+        render();
+        // ensure point display is correct now (in case script ran before DOMContentLoaded)
+        renderPoints();
+      })();
 
       // Re-render when extra columns are initialized from storage
       window.addEventListener('extraColumnsReady', () => {
