@@ -6,7 +6,6 @@
  * This file should be placed outside the public web directory for security
  * or protected with .htaccess
  */
-
 // Prevent direct access
 defined('DB_CONFIG_LOADED') or define('DB_CONFIG_LOADED', true);
 
