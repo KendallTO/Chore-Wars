@@ -47,7 +47,8 @@ body {
 html {
   scrollbar-width: none; /* Firefox */
   overscroll-behavior: none; /* Prevents overscroll/bounce on all directions */
-}
+
+  height: 100%;}
 body {
   overscroll-behavior: none; /* Prevents overscroll/bounce on body */
   overflow-x: hidden; /* Prevents horizontal scrolling */
@@ -175,13 +176,21 @@ body {
   flex: 1 0 auto;
 }
 
+/* Root wrapper for shop pages so footer sticks to bottom */
+#shop-app-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
+
 /*main grid for the full screen version*/
 .grid-3 {
     display: grid;
     /* Scale the gap with viewport width within sensible bounds */
     gap: clamp(12px, 4vw, 48px);
     /* Flexible sides with a clamped center column for consistent proportions */
-    grid-template-columns: minmax(220px, 1fr) clamp(260px, 30vw, 560px) minmax(220px, 1fr);
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
     margin: 0 auto;
 }
 
