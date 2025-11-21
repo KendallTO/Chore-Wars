@@ -1,5 +1,11 @@
 <?php
-// api/ensure_user.php
+// api/ensure_user.php (deprecated - replaced by auth.php with password-based signup/login)
+// Keeping file for backward compatibility; returns error directing clients to new endpoint.
+<?php
+header('Content-Type: application/json');
+http_response_code(410); // Gone
+echo json_encode(['error' => 'Deprecated. Use /api/auth.php for signup/login/session.']);
+?>
 header('Content-Type: application/json; charset=utf-8');
 require __DIR__ . '/db.php';
 

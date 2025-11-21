@@ -61,7 +61,7 @@ if (!$conn) {
 }
 
 // Start transaction for data integrity
-// Verify user exists (defensive; ensure_user.php should have created it)
+// Verify user exists (defensive; legacy ensure_user.php deprecated; unified auth sets session)
 $userCheckStmt = $conn->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
 $userCheckStmt->bind_param("i", $userId);
 if (!$userCheckStmt->execute()) {
@@ -91,7 +91,7 @@ try {
 
     // Attempt 1: insert with NULL invite_code (modern schema)
     $insertGroupStmt = $conn->prepare(
-        "INSERT INTO groups (name, description, invite_code, created_at) VALUES (?, ?, NULL, NOW())"
+        "INSERT INTO `groups` (name, description, invite_code, created_at) VALUES (?, ?, NULL, NOW())"
     );
     $insertGroupStmt->bind_param("ss", $groupName, $description);
     $execOk = $insertGroupStmt->execute();
@@ -107,7 +107,7 @@ try {
             $attempts = 0;
             do {
                 $inviteCode = generateInviteCode();
-                $check = $conn->prepare("SELECT id FROM groups WHERE invite_code = ? LIMIT 1");
+                $check = $conn->prepare("SELECT id FROM `groups` WHERE invite_code = ? LIMIT 1");
                 $check->bind_param("s", $inviteCode);
                 $check->execute();
                 $resCheck = $check->get_result();
@@ -119,7 +119,7 @@ try {
                 throw new Exception('Failed to generate unique invite code after multiple attempts.');
             }
             $fallbackStmt = $conn->prepare(
-                "INSERT INTO groups (name, description, invite_code, created_at) VALUES (?, ?, ?, NOW())"
+                "INSERT INTO `groups` (name, description, invite_code, created_at) VALUES (?, ?, ?, NOW())"
             );
             $fallbackStmt->bind_param("sss", $groupName, $description, $inviteCode);
             if (!$fallbackStmt->execute()) {

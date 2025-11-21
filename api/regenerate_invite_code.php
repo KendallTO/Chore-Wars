@@ -80,7 +80,7 @@ try {
     }
     
     // 2. Check if new invite code is already in use by another group
-    $checkCodeStmt = $conn->prepare("SELECT id FROM groups WHERE invite_code = ? AND id != ?");
+    $checkCodeStmt = $conn->prepare("SELECT id FROM `groups` WHERE invite_code = ? AND id != ?");
     $checkCodeStmt->bind_param("si", $newInviteCode, $groupId);
     $checkCodeStmt->execute();
     $codeResult = $checkCodeStmt->get_result();
@@ -92,7 +92,7 @@ try {
     $checkCodeStmt->close();
     
     // 3. Update the group's invite code
-    $updateStmt = $conn->prepare("UPDATE groups SET invite_code = ? WHERE id = ?");
+    $updateStmt = $conn->prepare("UPDATE `groups` SET invite_code = ? WHERE id = ?");
     $updateStmt->bind_param("si", $newInviteCode, $groupId);
     
     if (!$updateStmt->execute()) {

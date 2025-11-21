@@ -210,9 +210,16 @@
       // Create a group on the server (no invite code at creation)
       // DATABASE: Insert group with NULL invite_code; owner can generate later
        async function createGroup(name, description) {
-         const session = getSession();
-         if (!session || !session.userId) {
+         let session = getSession();
+         if (!session || !session.username) {
            alert('You must be logged in.');
+           window.location.href = 'login.html';
+           return null;
+         }
+
+         // Session now guaranteed via unified auth; if missing userId force re-login
+         if (!session.userId) {
+           showMessage('Session expired. Please login again.', true);
            window.location.href = 'login.html';
            return null;
          }
@@ -232,9 +239,10 @@
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify({
-             userId: session.userId,
-             name,
-             description
+            userId: session.userId,
+            username: session.username, // informational only (server ignores presently)
+            name,
+            description
            })
          });
 
@@ -734,7 +742,10 @@
 
            const msg = newGroup.fallbackUsed
              ? 'Group created (legacy schema required immediate invite code).'
-             : 'Group created successfully!';
+            : 'Group created successfully!';
+          if (!session.userId) {
+            msg += ' (UserId fallback used)';
+          }
            showMessage(msg);
            createGroupForm.classList.add('hidden');
            groupForm.reset();

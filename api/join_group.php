@@ -59,7 +59,7 @@ $conn->begin_transaction();
 
 try {
     // 1. Find the group by invite code
-    $findGroupStmt = $conn->prepare("SELECT id, name, description FROM groups WHERE invite_code = ?");
+    $findGroupStmt = $conn->prepare("SELECT id, name, description FROM `groups` WHERE invite_code = ?");
     $findGroupStmt->bind_param("s", $inviteCode);
     $findGroupStmt->execute();
     $groupResult = $findGroupStmt->get_result();

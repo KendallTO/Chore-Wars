@@ -60,7 +60,7 @@ try {
                 WHEN gm.role = 'owner' THEN g.invite_code
                 ELSE NULL
             END as inviteCode
-        FROM groups g
+        FROM `groups` g
         INNER JOIN group_members gm ON g.id = gm.group_id
         WHERE gm.user_id = ?
         ORDER BY g.created_at DESC

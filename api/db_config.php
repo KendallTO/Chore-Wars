@@ -18,10 +18,6 @@ define('DB_USER', 'dbu5466581');
 define('DB_PASS', 'passwordfordatabase1');
 define('DB_CHARSET', 'utf8mb4');
 
-You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'groups g INNER JOIN group_members gm ON g.id = gm.group_id WHERE' at line 11
-
-
-
 
 /**
  * Create a database connection using mysqli
