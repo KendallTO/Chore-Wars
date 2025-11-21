@@ -31,10 +31,35 @@
         <div class="groups-container">
             <div class="groups-header">
                 <h1>Your Groups</h1>
-                <button id="create-group-btn" class="btn btn-primary">
-                    <span class="btn-icon">+</span>
-                    Create New Group
-                </button>
+                <div class="header-buttons">
+                    <button id="join-group-btn" class="btn btn-secondary">
+                        <span class="btn-icon">🔗</span>
+                        Join Group
+                    </button>
+                    <button id="create-group-btn" class="btn btn-primary">
+                        <span class="btn-icon">+</span>
+                        Create New Group
+                    </button>
+                </div>
+            </div>
+
+            <!-- Join Group Form -->
+            <div id="join-group-form" class="group-form-card hidden">
+                <h2>Join a Group</h2>
+                <p class="form-help-text">Enter the invitation code provided by a group owner to join their group.</p>
+                <form id="join-form">
+                    <div class="form-group">
+                        <label for="invite-code">Invitation Code</label>
+                        <input type="text" id="invite-code" name="inviteCode" required 
+                               placeholder="Enter 8-character code (e.g., ABC12XYZ)" maxlength="8" 
+                               pattern="[A-Z0-9]{8}" style="text-transform: uppercase;">
+                        <small class="form-hint">Codes are case-insensitive and contain letters and numbers</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Join Group</button>
+                        <button type="button" id="cancel-join" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
             </div>
 
             <!-- Create Group Form -->
@@ -100,6 +125,10 @@
        const createGroupForm = document.getElementById('create-group-form');
        const cancelCreateBtn = document.getElementById('cancel-create');
        const groupForm = document.getElementById('group-form');
+       const joinGroupBtn = document.getElementById('join-group-btn');
+       const joinGroupForm = document.getElementById('join-group-form');
+       const cancelJoinBtn = document.getElementById('cancel-join');
+       const joinForm = document.getElementById('join-form');
        const groupsList = document.getElementById('groups-list');
        const emptyState = document.getElementById('empty-state');
        const messageEl = document.getElementById('message');
@@ -139,7 +168,18 @@
        // SERVER HELPERS
        // ===================================================================
 
+       // Generate a random 8-character invite code (alphanumeric, uppercase)
+       function generateInviteCode() {
+         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+         let code = '';
+         for (let i = 0; i < 8; i++) {
+           code += chars.charAt(Math.floor(Math.random() * chars.length));
+         }
+         return code;
+       }
+
        // Create a group on the server (Option A: MySQL + PHP)
+       // DATABASE: When creating a group, generate and store an invite code
        async function createGroup(name, description) {
          const session = getSession();
          if (!session || !session.userId) {
@@ -148,13 +188,29 @@
            return null;
          }
 
+         // Generate a unique invite code for this group
+         const inviteCode = generateInviteCode();
+
+         // DATABASE CALL: Send to server to create group with invite code
+         // Expected API endpoint: POST /api/create_group.php
+         // Request body should include:
+         // - userId: the creator's user ID
+         // - name: group name
+         // - description: group description
+         // - inviteCode: the generated invite code
+         // 
+         // Database operations needed:
+         // 1. INSERT into groups table (id, name, description, invite_code, created_at)
+         // 2. INSERT into group_members table (group_id, user_id, role='owner', joined_at)
+         // 3. Ensure invite_code is unique (regenerate if collision occurs)
          const res = await fetch('/api/create_group.php', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify({
              userId: session.userId,
              name,
-             description
+             description,
+             inviteCode
            })
          });
 
@@ -163,11 +219,23 @@
            alert(data.error);
            return null;
          }
-         return data; // { id, name, description }
+         return data; // { id, name, description, inviteCode }
        }
 
        // Get all groups this user belongs to from the server
+       // DATABASE: Fetch groups with their invite codes (only visible to owners)
        async function fetchGroupsForUser(userId) {
+         // DATABASE CALL: Retrieve all groups for this user
+         // Expected API endpoint: GET /api/get_groups.php?userId={userId}
+         // 
+         // Database operations needed:
+         // SELECT g.id, g.name, g.description, g.created_at, g.invite_code,
+         //        gm.role
+         // FROM groups g
+         // JOIN group_members gm ON g.id = gm.group_id
+         // WHERE gm.user_id = {userId}
+         // 
+         // Note: Only return invite_code if the user's role is 'owner'
          const res = await fetch(`/api/get_groups.php?userId=${encodeURIComponent(userId)}`);
          const data = await res.json();
          if (data.error) {
@@ -175,8 +243,142 @@
            return [];
          }
          // data is an array of rows like:
-         // { id, name, description, created_at, role }
+         // { id, name, description, created_at, role, inviteCode (if owner) }
          return Array.isArray(data) ? data : [];
+       }
+
+       // Join a group using an invite code
+       // DATABASE: Look up group by invite code and add user as member
+       async function joinGroupByCode(inviteCode) {
+         const session = getSession();
+         if (!session || !session.userId) {
+           alert('You must be logged in.');
+           window.location.href = 'login.html';
+           return null;
+         }
+
+         // DATABASE CALL: Join group using invite code
+         // Expected API endpoint: POST /api/join_group.php
+         // Request body should include:
+         // - userId: the user joining the group
+         // - inviteCode: the code to look up the group
+         // 
+         // Database operations needed:
+         // 1. SELECT id FROM groups WHERE invite_code = {inviteCode}
+         // 2. Check if user is already a member: SELECT * FROM group_members WHERE group_id = {groupId} AND user_id = {userId}
+         // 3. If not a member, INSERT into group_members (group_id, user_id, role='member', joined_at)
+         // 4. Return group details: { id, name, description }
+         // 
+         // Error cases to handle:
+         // - Invalid code (no group found)
+         // - User already in the group
+         const res = await fetch('/api/join_group.php', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+             userId: session.userId,
+             inviteCode: inviteCode.toUpperCase()
+           })
+         });
+
+         const data = await res.json();
+         if (data.error) {
+           return { error: data.error };
+         }
+         return data; // { success: true, group: { id, name, description } }
+       }
+
+       // Regenerate invite code for a group (owner only)
+       // DATABASE: Generate new code and update the group record
+       async function regenerateInviteCode(groupId) {
+         const session = getSession();
+         if (!session || !session.userId) {
+           alert('You must be logged in.');
+           return;
+         }
+
+         // Confirm with user before regenerating
+         const confirmed = confirm('Are you sure you want to generate a new invite code? The old code will no longer work.');
+         if (!confirmed) return;
+
+         // Generate a new unique invite code
+         const newInviteCode = generateInviteCode();
+
+         // DATABASE CALL: Update the group's invite code
+         // Expected API endpoint: POST /api/regenerate_invite_code.php
+         // Request body should include:
+         // - userId: to verify ownership
+         // - groupId: the group to update
+         // - newInviteCode: the new code to set
+         // 
+         // Database operations needed:
+         // 1. Verify user is owner: SELECT role FROM group_members WHERE group_id = {groupId} AND user_id = {userId}
+         // 2. If owner, UPDATE groups SET invite_code = {newInviteCode} WHERE id = {groupId}
+         // 3. Ensure new code is unique (regenerate if collision)
+         // 4. Return success: { success: true, inviteCode: {newInviteCode} }
+         try {
+           const res = await fetch('/api/regenerate_invite_code.php', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               userId: session.userId,
+               groupId,
+               newInviteCode
+             })
+           });
+
+           const data = await res.json();
+           if (data.error) {
+             showMessage(data.error, true);
+             return;
+           }
+
+           // Update the displayed code in the UI
+           const codeElement = document.getElementById(`code-${groupId}`);
+           if (codeElement) {
+             codeElement.textContent = data.inviteCode;
+           }
+
+           // Update the copy button's data attribute
+           const copyBtn = document.querySelector(`[data-code]`);
+           if (copyBtn) {
+             copyBtn.setAttribute('data-code', data.inviteCode);
+           }
+
+           showMessage('New invite code generated successfully!');
+         } catch (err) {
+           console.error(err);
+           showMessage('Error generating new code. Please try again.', true);
+         }
+       }
+
+       // Copy invite code to clipboard
+       function copyInviteCode(code) {
+         if (!code) {
+           showMessage('No code to copy', true);
+           return;
+         }
+
+         // Use the Clipboard API to copy the code
+         navigator.clipboard.writeText(code).then(() => {
+           showMessage('Invite code copied to clipboard!');
+         }).catch(err => {
+           console.error('Failed to copy:', err);
+           // Fallback for older browsers
+           const textArea = document.createElement('textarea');
+           textArea.value = code;
+           textArea.style.position = 'fixed';
+           textArea.style.opacity = '0';
+           document.body.appendChild(textArea);
+           textArea.select();
+           try {
+             document.execCommand('copy');
+             showMessage('Invite code copied to clipboard!');
+           } catch (err) {
+             showMessage('Failed to copy code', true);
+           }
+           document.body.removeChild(textArea);
+         });
        }
 
        // ===================================================================
@@ -213,19 +415,53 @@
                 <div class="group-meta">
                   <span class="member-count">${roleText}</span>
                   ${createdDate ? `<span class="created-date">Created ${createdDate}</span>` : ''}
-     </div>
-     </div>
+                </div>
+                ${group.role === 'owner' ? `
+                <div class="invite-code-section">
+                  <div class="invite-code-header">
+                    <span class="invite-label">Invite Code:</span>
+                    <button class="btn-copy-code" data-code="${group.inviteCode || ''}" title="Copy code">
+                      📋
+                    </button>
+                  </div>
+                  <code class="invite-code" id="code-${group.id}">${group.inviteCode || 'Loading...'}</code>
+                  <button class="btn-regenerate-code btn-link" data-group-id="${group.id}">
+                    🔄 Generate New Code
+                  </button>
+                </div>
+                ` : ''}
+              </div>
               <div class="group-actions">
-                <button class="btn btn-primary" data-group-id="${group.id}">
+                <button class="btn btn-primary enter-group-btn" data-group-id="${group.id}">
                   Enter Group
-     </button>
-     </div>
+                </button>
+              </div>
             `;
 
-         // hook up the Enter button
-         card.querySelector('button').addEventListener('click', () => {
+         // Hook up the Enter button
+         card.querySelector('.enter-group-btn').addEventListener('click', () => {
            enterGroup(group.id);
          });
+
+         // Hook up copy code button (if owner)
+         if (group.role === 'owner') {
+           const copyBtn = card.querySelector('.btn-copy-code');
+           if (copyBtn) {
+             copyBtn.addEventListener('click', (e) => {
+               e.preventDefault();
+               copyInviteCode(group.inviteCode);
+             });
+           }
+
+           // Hook up regenerate code button
+           const regenBtn = card.querySelector('.btn-regenerate-code');
+           if (regenBtn) {
+             regenBtn.addEventListener('click', async (e) => {
+               e.preventDefault();
+               await regenerateInviteCode(group.id);
+             });
+           }
+         }
 
          return card;
        }
@@ -334,12 +570,58 @@
        // ===================================================================
        createGroupBtn.addEventListener('click', () => {
          createGroupForm.classList.remove('hidden');
+         joinGroupForm.classList.add('hidden');
          document.getElementById('group-name').focus();
        });
 
        cancelCreateBtn.addEventListener('click', () => {
          createGroupForm.classList.add('hidden');
          groupForm.reset();
+       });
+
+       // ===================================================================
+       // EVENT LISTENERS - JOIN GROUP UI
+       // ===================================================================
+       joinGroupBtn.addEventListener('click', () => {
+         joinGroupForm.classList.remove('hidden');
+         createGroupForm.classList.add('hidden');
+         document.getElementById('invite-code').focus();
+       });
+
+       cancelJoinBtn.addEventListener('click', () => {
+         joinGroupForm.classList.add('hidden');
+         joinForm.reset();
+       });
+
+       joinForm.addEventListener('submit', async (e) => {
+         e.preventDefault();
+
+         const session = checkAuth();
+         if (!session) return;
+
+         const inviteCode = document.getElementById('invite-code').value.trim().toUpperCase();
+
+         if (!inviteCode || inviteCode.length !== 8) {
+           showMessage('Please enter a valid 8-character invite code', true);
+           return;
+         }
+
+         try {
+           const result = await joinGroupByCode(inviteCode);
+           
+           if (result.error) {
+             showMessage(result.error, true);
+             return;
+           }
+
+           showMessage(`Successfully joined "${result.group.name}"!`);
+           joinGroupForm.classList.add('hidden');
+           joinForm.reset();
+           await renderGroups(); // Reload groups list to show the new group
+         } catch (err) {
+           console.error(err);
+           showMessage('Error joining group. Please try again.', true);
+         }
        });
 
        groupForm.addEventListener('submit', async (e) => {
@@ -379,6 +661,147 @@
          renderGroups();
        }
      })();
+
+     // ===================================================================
+     // TABLE OF CONTENTS - Quick Navigation Guide
+     // ===================================================================
+     /*
+     
+     ┌─────────────────────────────────────────────────────────────────┐
+     │                    GROUPS.HTML CODE STRUCTURE                   │
+     └─────────────────────────────────────────────────────────────────┘
+     
+     1. CONSTANTS - LocalStorage keys
+        - SESSION_KEY
+        - CURRENT_GROUP_KEY
+     
+     2. DOM ELEMENTS
+        - Form elements (create, join, cancel buttons)
+        - Display elements (groups list, empty state, messages)
+        - Navigation elements (welcome user, logout button)
+     
+     3. SESSION / AUTH HELPERS
+        - getSession()
+        - checkAuth()
+        - setCurrentGroup()
+     
+     4. SERVER HELPERS & **DATABASE INTEGRATION POINTS**
+        ┌────────────────────────────────────────────────────────────┐
+        │ ⚠️  DATABASE CALL: generateInviteCode()                    │
+        │    - Client-side code generation                          │
+        │    - No database call needed here                         │
+        └────────────────────────────────────────────────────────────┘
+        
+        ┌────────────────────────────────────────────────────────────┐
+        │ 🔴 DATABASE CALL: createGroup(name, description)           │
+        │    API Endpoint: POST /api/create_group.php               │
+        │    Request: { userId, name, description, inviteCode }     │
+        │    Database Operations:                                   │
+        │    - INSERT into groups table with invite_code            │
+        │    - INSERT into group_members (role='owner')             │
+        │    - Ensure invite_code is UNIQUE (regenerate if needed)  │
+        │    Response: { id, name, description, inviteCode }        │
+        └────────────────────────────────────────────────────────────┘
+        
+        ┌────────────────────────────────────────────────────────────┐
+        │ 🔴 DATABASE CALL: fetchGroupsForUser(userId)               │
+        │    API Endpoint: GET /api/get_groups.php?userId={userId}  │
+        │    Database Operations:                                   │
+        │    - SELECT from groups JOIN group_members                │
+        │    - Return invite_code ONLY if user role='owner'         │
+        │    - Include: id, name, description, created_at, role,    │
+        │               inviteCode (conditional)                    │
+        │    Response: Array of group objects                       │
+        └────────────────────────────────────────────────────────────┘
+        
+        ┌────────────────────────────────────────────────────────────┐
+        │ 🔴 DATABASE CALL: joinGroupByCode(inviteCode)              │
+        │    API Endpoint: POST /api/join_group.php                 │
+        │    Request: { userId, inviteCode }                        │
+        │    Database Operations:                                   │
+        │    - SELECT id FROM groups WHERE invite_code={code}       │
+        │    - Check if already member (avoid duplicates)           │
+        │    - INSERT into group_members (role='member')            │
+        │    Error Handling:                                        │
+        │    - Invalid code (no matching group)                     │
+        │    - User already in group                                │
+        │    Response: { success, group: { id, name, description }} │
+        └────────────────────────────────────────────────────────────┘
+        
+        ┌────────────────────────────────────────────────────────────┐
+        │ 🔴 DATABASE CALL: regenerateInviteCode(groupId)            │
+        │    API Endpoint: POST /api/regenerate_invite_code.php     │
+        │    Request: { userId, groupId, newInviteCode }            │
+        │    Database Operations:                                   │
+        │    - Verify user role='owner' for this group              │
+        │    - UPDATE groups SET invite_code={new} WHERE id={id}    │
+        │    - Ensure new invite_code is UNIQUE                     │
+        │    Response: { success: true, inviteCode: {newCode} }     │
+        └────────────────────────────────────────────────────────────┘
+        
+        - copyInviteCode(code) - Client-side clipboard operation
+     
+     5. UI HELPERS
+        - showMessage(message, isError)
+        - escapeHtml(text)
+        - createGroupCard(group)
+          └─> Renders invite code section for owners
+     
+     6. RENDER GROUPS
+        - renderGroups() - Main display function
+          └─> Calls fetchGroupsForUser() **[DATABASE]**
+     
+     7. GROUP ACTIONS
+        - enterGroup(groupId) - Navigate to group view
+     
+     8. LOGOUT FUNCTIONALITY
+        - askLogoutConfirm() - Confirmation modal
+        - Logout event listener
+     
+     9. EVENT LISTENERS
+        - Create Group Form (show/hide/submit)
+        - Join Group Form (show/hide/submit)
+          └─> Calls joinGroupByCode() **[DATABASE]**
+     
+     10. INITIALIZATION
+         - Check authentication
+         - Display welcome message
+         - Load and render groups **[DATABASE]**
+     
+     ┌─────────────────────────────────────────────────────────────────┐
+     │                  DATABASE SCHEMA REQUIREMENTS                   │
+     └─────────────────────────────────────────────────────────────────┘
+     
+     GROUPS TABLE:
+     - id (PRIMARY KEY)
+     - name (VARCHAR)
+     - description (TEXT, nullable)
+     - invite_code (VARCHAR(8), UNIQUE, indexed)
+     - created_at (TIMESTAMP)
+     
+     GROUP_MEMBERS TABLE:
+     - id (PRIMARY KEY)
+     - group_id (FOREIGN KEY -> groups.id)
+     - user_id (FOREIGN KEY -> users.id)
+     - role (ENUM: 'owner', 'member')
+     - joined_at (TIMESTAMP)
+     - UNIQUE constraint on (group_id, user_id)
+     
+     USERS TABLE:
+     - id (PRIMARY KEY)
+     - username (VARCHAR)
+     - [other user fields as needed]
+     
+     ┌─────────────────────────────────────────────────────────────────┐
+     │                    API ENDPOINTS NEEDED                         │
+     └─────────────────────────────────────────────────────────────────┘
+     
+     1. POST /api/create_group.php
+     2. GET  /api/get_groups.php
+     3. POST /api/join_group.php
+     4. POST /api/regenerate_invite_code.php
+     
+     */
   </script>
 
 </body>
