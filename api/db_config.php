@@ -6,16 +6,17 @@
  * This file should be placed outside the public web directory for security
  * or protected with .htaccess
  */
+
 // Prevent direct access
 defined('DB_CONFIG_LOADED') or define('DB_CONFIG_LOADED', true);
 
 // Database connection settings
 // TODO: Replace these with your actual cPanel/hosting database credentials
-define('DB_HOST', 'localhost');           // Usually 'localhost' for cPanel
-define('DB_NAME', 'your_database_name');  // Your database name from cPanel
-define('DB_USER', 'your_database_user');  // Your database username
-define('DB_PASS', 'your_database_pass');  // Your database password
-define('DB_CHARSET', 'utf8mb4');
+define('db5019042997.hosting-data.io', 'localhost');           // Usually 'localhost' for cPanel
+define('dbs14985870', 'your_database_name');  // Your database name from cPanel
+define('dbu5466581', 'your_database_user');  // Your database username
+define('passwordfordatabase1', 'your_database_pass');  // Your database password
+define('UFT-8', 'uft8mb4');
 
 /**
  * Create a database connection using mysqli
