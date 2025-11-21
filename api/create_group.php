@@ -48,6 +48,9 @@ $inviteCode = null;
 if (empty($groupName)) {
     sendError('Group name cannot be empty', 400);
 }
+if ($userId <= 0) {
+    sendError('Invalid userId', 400);
+}
 
 // No invite code length validation here (none provided at creation)
 
@@ -58,6 +61,21 @@ if (!$conn) {
 }
 
 // Start transaction for data integrity
+// Verify user exists (defensive; ensure_user.php should have created it)
+$userCheckStmt = $conn->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
+$userCheckStmt->bind_param("i", $userId);
+if (!$userCheckStmt->execute()) {
+    $err = $userCheckStmt->error;
+    $userCheckStmt->close();
+    sendError('User validation failed: ' . $err, 500);
+}
+$resUser = $userCheckStmt->get_result();
+if ($resUser->num_rows === 0) {
+    $userCheckStmt->close();
+    sendError('User does not exist', 400);
+}
+$userCheckStmt->close();
+
 $conn->begin_transaction();
 
 try {

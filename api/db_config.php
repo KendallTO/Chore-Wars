@@ -10,13 +10,13 @@
 // Prevent direct access
 defined('DB_CONFIG_LOADED') or define('DB_CONFIG_LOADED', true);
 
-// Database connection settings
-// TODO: Replace these with your actual cPanel/hosting database credentials
-define('db5019042997.hosting-data.io', 'localhost');           // Usually 'localhost' for cPanel
-define('dbs14985870', 'your_database_name');  // Your database name from cPanel
-define('dbu5466581', 'your_database_user');  // Your database username
-define('passwordfordatabase1', 'your_database_pass');  // Your database password
-define('UFT-8', 'uft8mb4');
+// Database connection settings (UPDATE THESE IF YOUR HOST CHANGES)
+// These constants were previously misnamed; they must match usage below.
+define('DB_HOST', 'db5019042997.hosting-data.io');
+define('DB_NAME', 'dbs14985870');
+define('DB_USER', 'dbu5466581');
+define('DB_PASS', 'passwordfordatabase1');
+define('DB_CHARSET', 'utf8mb4');
 
 /**
  * Create a database connection using mysqli
