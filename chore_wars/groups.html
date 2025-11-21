@@ -43,8 +43,8 @@
                 </div>
             </div>
 
-            <!-- Join Group Form (visible by default so users can join with a code) -->
-            <div id="join-group-form" class="group-form-card">
+            <!-- Join Group Form (kept hidden; we use a modal prompt when clicking the button) -->
+            <div id="join-group-form" class="group-form-card hidden">
                 <h2>Join a Group</h2>
                 <p class="form-help-text">Enter the invitation code provided by a group owner to join their group.</p>
                 <form id="join-form">
@@ -134,6 +134,35 @@
        const messageEl = document.getElementById('message');
        const welcomeUser = document.getElementById('welcome-user');
        const logoutBtn = document.getElementById('logout-btn');
+       // Safeguard: ensure Join Group button exists even if markup was altered in deployment
+       function ensureJoinButton() {
+         let headerButtons = document.querySelector('.header-buttons');
+         if (!headerButtons) {
+           // Create container if missing
+           const groupsHeader = document.querySelector('.groups-header');
+           if (groupsHeader) {
+             headerButtons = document.createElement('div');
+             headerButtons.className = 'header-buttons';
+             groupsHeader.appendChild(headerButtons);
+           }
+         }
+         if (headerButtons && !document.getElementById('join-group-btn')) {
+           const joinBtn = document.createElement('button');
+           joinBtn.id = 'join-group-btn';
+           joinBtn.className = 'btn btn-secondary';
+           joinBtn.innerHTML = '<span class="btn-icon">🔗</span>Join Group';
+           // Insert before create-group if present
+           const createBtn = document.getElementById('create-group-btn');
+           if (createBtn) {
+             headerButtons.insertBefore(joinBtn, createBtn);
+           } else {
+             headerButtons.appendChild(joinBtn);
+           }
+         }
+       }
+       ensureJoinButton();
+       // Rebind variables if we just injected the button
+       const dynamicJoinBtn = document.getElementById('join-group-btn');
 
        // ===================================================================
        // SESSION / AUTH HELPERS
@@ -577,10 +606,22 @@
        // ===================================================================
        // EVENT LISTENERS - JOIN GROUP UI
        // ===================================================================
-       joinGroupBtn.addEventListener('click', () => {
-         joinGroupForm.classList.remove('hidden');
-         createGroupForm.classList.add('hidden');
-         document.getElementById('invite-code').focus();
+       // Open a modal to enter invite code when clicking the Join button
+      (dynamicJoinBtn || joinGroupBtn).addEventListener('click', async () => {
+         const code = await promptInviteCode();
+         if (!code) return; // cancelled
+         try {
+           const result = await joinGroupByCode(code);
+           if (result.error) {
+             showMessage(result.error, true);
+             return;
+           }
+           showMessage(`Successfully joined "${result.group.name}"!`);
+           await renderGroups();
+         } catch (err) {
+           console.error(err);
+           showMessage('Error joining group. Please try again.', true);
+         }
        });
 
        cancelJoinBtn.addEventListener('click', () => {
@@ -618,6 +659,60 @@
            showMessage('Error joining group. Please try again.', true);
          }
        });
+
+       // Modal prompt to collect an invite code from the user
+       function promptInviteCode() {
+         return new Promise((resolve) => {
+           const overlay = document.createElement('div');
+           overlay.className = 'tcg-modal-overlay';
+
+           const modal = document.createElement('div');
+           modal.className = 'tcg-modal';
+
+           modal.innerHTML = `
+             <p><strong>Join a Group</strong></p>
+             <p>Enter the 8-character invite code from a group owner.</p>
+             <div style="margin: 12px 0; text-align: left;">
+               <label for="tcg-invite-input" style="display:block; font-size:0.9rem; margin-bottom:6px;">Invitation Code</label>
+               <input id="tcg-invite-input" type="text" placeholder="ABC12XYZ" maxlength="8" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:6px; text-transform:uppercase; font-family:inherit;" />
+               <small style="color:#6b7280;">Letters and numbers only</small>
+             </div>
+             <div class="tcg-modal-actions">
+               <button class="btn-confirm">Join</button>
+               <button class="btn-cancel">Cancel</button>
+             </div>
+           `;
+
+           overlay.appendChild(modal);
+           document.body.appendChild(overlay);
+
+           const input = modal.querySelector('#tcg-invite-input');
+           setTimeout(() => input.focus(), 0);
+
+           function cleanup() {
+             document.body.removeChild(overlay);
+           }
+
+           function valid(code) {
+             return /^[A-Za-z0-9]{8}$/.test(code);
+           }
+
+           function submit() {
+             const value = (input.value || '').trim().toUpperCase();
+             if (!valid(value)) {
+               input.style.borderColor = '#ef4444';
+               return;
+             }
+             cleanup();
+             resolve(value);
+           }
+
+           modal.querySelector('.btn-confirm').addEventListener('click', submit);
+           modal.querySelector('.btn-cancel').addEventListener('click', () => { cleanup(); resolve(null); });
+           overlay.addEventListener('click', (e) => { if (e.target === overlay) { cleanup(); resolve(null); } });
+           input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+         });
+       }
 
        groupForm.addEventListener('submit', async (e) => {
          e.preventDefault();

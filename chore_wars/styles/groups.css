@@ -34,6 +34,8 @@
     gap: 12px;
     position: relative;
     z-index: 20;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 /*"Your Groups"*/
@@ -52,6 +54,9 @@
     position: relative;
     z-index: 20;
     pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
 /*literally the plus in the button, can't just make it normal?*/
