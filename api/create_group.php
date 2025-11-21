@@ -40,7 +40,8 @@ if (!isset($input['userId']) || !isset($input['name'])) {
 $userId = intval($input['userId']);
 $groupName = trim($input['name']);
 $description = isset($input['description']) ? trim($input['description']) : '';
-// Invite code is optional (null until owner generates one)
+// Invite code is optional (null until owner generates one). Some legacy
+// deployments may still have NOT NULL constraint; we will fallback.
 $inviteCode = null;
 
 // Validate data
@@ -60,18 +61,63 @@ if (!$conn) {
 $conn->begin_transaction();
 
 try {
-        // Insert into groups table WITHOUT invite code (nullable field)
-        $insertGroupStmt = $conn->prepare(
-            "INSERT INTO groups (name, description, invite_code, created_at) VALUES (?, ?, NULL, NOW())"
-        );
-        $insertGroupStmt->bind_param("ss", $groupName, $description);
-    
-    if (!$insertGroupStmt->execute()) {
-        throw new Exception('Failed to create group: ' . $insertGroupStmt->error);
+    // Helper to generate an invite code if required by old schema
+    function generateInviteCode() {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+        for ($i = 0; $i < 8; $i++) {
+            $code .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $code;
     }
-    
-    $groupId = $conn->insert_id;
-    $insertGroupStmt->close();
+
+    // Attempt 1: insert with NULL invite_code (modern schema)
+    $insertGroupStmt = $conn->prepare(
+        "INSERT INTO groups (name, description, invite_code, created_at) VALUES (?, ?, NULL, NOW())"
+    );
+    $insertGroupStmt->bind_param("ss", $groupName, $description);
+    $execOk = $insertGroupStmt->execute();
+    $errorMsg = $insertGroupStmt->error;
+
+    if (!$execOk) {
+        // Check if failure likely due to NOT NULL constraint or unknown column
+        // Error codes: 1048 (Column cannot be null), 1364 (Field doesn't have a default value)
+        $errno = $insertGroupStmt->errno;
+        $insertGroupStmt->close();
+        if (in_array($errno, [1048, 1364])) {
+            // Fallback: generate unique invite code and retry
+            $attempts = 0;
+            do {
+                $inviteCode = generateInviteCode();
+                $check = $conn->prepare("SELECT id FROM groups WHERE invite_code = ? LIMIT 1");
+                $check->bind_param("s", $inviteCode);
+                $check->execute();
+                $resCheck = $check->get_result();
+                $exists = $resCheck->num_rows > 0;
+                $check->close();
+                $attempts++;
+            } while ($exists && $attempts < 5);
+            if ($exists) {
+                throw new Exception('Failed to generate unique invite code after multiple attempts.');
+            }
+            $fallbackStmt = $conn->prepare(
+                "INSERT INTO groups (name, description, invite_code, created_at) VALUES (?, ?, ?, NOW())"
+            );
+            $fallbackStmt->bind_param("sss", $groupName, $description, $inviteCode);
+            if (!$fallbackStmt->execute()) {
+                $errDetail = $fallbackStmt->error;
+                $fallbackStmt->close();
+                throw new Exception('Failed to create group (legacy schema fallback): ' . $errDetail);
+            }
+            $groupId = $conn->insert_id;
+            $fallbackStmt->close();
+        } else {
+            throw new Exception('Failed to create group: ' . $errorMsg);
+        }
+    } else {
+        $groupId = $conn->insert_id;
+        $insertGroupStmt->close();
+    }
     
     // Insert user as owner in group_members table
     $insertMemberStmt = $conn->prepare(
@@ -92,8 +138,9 @@ try {
         'id' => $groupId,
         'name' => $groupName,
         'description' => $description,
-        'inviteCode' => null,
-        'created_at' => date('Y-m-d H:i:s')
+        'inviteCode' => $inviteCode, // null on modern schema, code on legacy fallback
+        'created_at' => date('Y-m-d H:i:s'),
+        'fallbackUsed' => $inviteCode !== null
     ], 201);
     
 } catch (Exception $e) {

@@ -732,7 +732,10 @@
            const newGroup = await createGroup(groupName, description);
            if (!newGroup) return;
 
-           showMessage('Group created successfully!');
+           const msg = newGroup.fallbackUsed
+             ? 'Group created (legacy schema required immediate invite code).'
+             : 'Group created successfully!';
+           showMessage(msg);
            createGroupForm.classList.add('hidden');
            groupForm.reset();
            await renderGroups(); // reload list from DB
