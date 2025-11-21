@@ -43,8 +43,8 @@
                 </div>
             </div>
 
-            <!-- Join Group Form -->
-            <div id="join-group-form" class="group-form-card hidden">
+            <!-- Join Group Form (visible by default so users can join with a code) -->
+            <div id="join-group-form" class="group-form-card">
                 <h2>Join a Group</h2>
                 <p class="form-help-text">Enter the invitation code provided by a group owner to join their group.</p>
                 <form id="join-form">
@@ -178,8 +178,8 @@
          return code;
        }
 
-       // Create a group on the server (Option A: MySQL + PHP)
-       // DATABASE: When creating a group, generate and store an invite code
+      // Create a group on the server (no invite code at creation)
+      // DATABASE: Insert group with NULL invite_code; owner can generate later
        async function createGroup(name, description) {
          const session = getSession();
          if (!session || !session.userId) {
@@ -188,29 +188,24 @@
            return null;
          }
 
-         // Generate a unique invite code for this group
-         const inviteCode = generateInviteCode();
-
-         // DATABASE CALL: Send to server to create group with invite code
+         // DATABASE CALL: Send to server to create group WITHOUT invite code
          // Expected API endpoint: POST /api/create_group.php
          // Request body should include:
          // - userId: the creator's user ID
          // - name: group name
          // - description: group description
-         // - inviteCode: the generated invite code
          // 
          // Database operations needed:
-         // 1. INSERT into groups table (id, name, description, invite_code, created_at)
+         // 1. INSERT into groups table (id, name, description, invite_code=NULL, created_at)
          // 2. INSERT into group_members table (group_id, user_id, role='owner', joined_at)
-         // 3. Ensure invite_code is unique (regenerate if collision occurs)
+         // 3. Owner later generates invite code via regenerate endpoint
          const res = await fetch('/api/create_group.php', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify({
              userId: session.userId,
              name,
-             description,
-             inviteCode
+             description
            })
          });
 
@@ -219,7 +214,7 @@
            alert(data.error);
            return null;
          }
-         return data; // { id, name, description, inviteCode }
+         return data; // { id, name, description, inviteCode: null }
        }
 
        // Get all groups this user belongs to from the server
@@ -288,8 +283,8 @@
          return data; // { success: true, group: { id, name, description } }
        }
 
-       // Regenerate invite code for a group (owner only)
-       // DATABASE: Generate new code and update the group record
+      // Generate or regenerate invite code for a group (owner only)
+      // DATABASE: Update the group record with new invite_code
        async function regenerateInviteCode(groupId) {
          const session = getSession();
          if (!session || !session.userId) {
@@ -297,8 +292,8 @@
            return;
          }
 
-         // Confirm with user before regenerating
-         const confirmed = confirm('Are you sure you want to generate a new invite code? The old code will no longer work.');
+         // Confirm with user before generating (or regenerating)
+         const confirmed = confirm('Generate a new invite code? Existing code (if any) will stop working.');
          if (!confirmed) return;
 
          // Generate a new unique invite code
@@ -333,16 +328,16 @@
              return;
            }
 
-           // Update the displayed code in the UI
+           // Update only this group's card
            const codeElement = document.getElementById(`code-${groupId}`);
            if (codeElement) {
              codeElement.textContent = data.inviteCode;
+             codeElement.classList.remove('invite-code-empty');
            }
-
-           // Update the copy button's data attribute
-           const copyBtn = document.querySelector(`[data-code]`);
-           if (copyBtn) {
-             copyBtn.setAttribute('data-code', data.inviteCode);
+           const card = codeElement ? codeElement.closest('.group-card') : null;
+           if (card) {
+             const copyBtn = card.querySelector('.btn-copy-code');
+             if (copyBtn) copyBtn.setAttribute('data-code', data.inviteCode);
            }
 
            showMessage('New invite code generated successfully!');
@@ -398,7 +393,7 @@
          return div.innerHTML;
        }
 
-       function createGroupCard(group) {
+      function createGroupCard(group) {
          const card = document.createElement('div');
          card.className = 'group-card';
 
@@ -420,13 +415,13 @@
                 <div class="invite-code-section">
                   <div class="invite-code-header">
                     <span class="invite-label">Invite Code:</span>
-                    <button class="btn-copy-code" data-code="${group.inviteCode || ''}" title="Copy code">
+                    <button class="btn-copy-code" data-code="${group.inviteCode || ''}" title="Copy code" ${!group.inviteCode ? 'disabled' : ''}>
                       📋
                     </button>
                   </div>
-                  <code class="invite-code" id="code-${group.id}">${group.inviteCode || 'Loading...'}</code>
+                  <code class="invite-code ${!group.inviteCode ? 'invite-code-empty' : ''}" id="code-${group.id}">${group.inviteCode || 'None yet'}</code>
                   <button class="btn-regenerate-code btn-link" data-group-id="${group.id}">
-                    🔄 Generate New Code
+                    ${group.inviteCode ? '🔄 New Code' : '✨ Generate Code'}
                   </button>
                 </div>
                 ` : ''}
@@ -446,7 +441,7 @@
          // Hook up copy code button (if owner)
          if (group.role === 'owner') {
            const copyBtn = card.querySelector('.btn-copy-code');
-           if (copyBtn) {
+           if (copyBtn && group.inviteCode) {
              copyBtn.addEventListener('click', (e) => {
                e.preventDefault();
                copyInviteCode(group.inviteCode);
@@ -695,12 +690,11 @@
         ┌────────────────────────────────────────────────────────────┐
         │ 🔴 DATABASE CALL: createGroup(name, description)           │
         │    API Endpoint: POST /api/create_group.php               │
-        │    Request: { userId, name, description, inviteCode }     │
+        │    Request: { userId, name, description }                 │
         │    Database Operations:                                   │
-        │    - INSERT into groups table with invite_code            │
+        │    - INSERT into groups (invite_code=NULL initially)      │
         │    - INSERT into group_members (role='owner')             │
-        │    - Ensure invite_code is UNIQUE (regenerate if needed)  │
-        │    Response: { id, name, description, inviteCode }        │
+        │    Response: { id, name, description, inviteCode:null }   │
         └────────────────────────────────────────────────────────────┘
         
         ┌────────────────────────────────────────────────────────────┐
@@ -730,13 +724,14 @@
         
         ┌────────────────────────────────────────────────────────────┐
         │ 🔴 DATABASE CALL: regenerateInviteCode(groupId)            │
+        │    Purpose: First-time generate OR replace existing code  │
         │    API Endpoint: POST /api/regenerate_invite_code.php     │
         │    Request: { userId, groupId, newInviteCode }            │
         │    Database Operations:                                   │
-        │    - Verify user role='owner' for this group              │
+        │    - Verify ownership                                    │
         │    - UPDATE groups SET invite_code={new} WHERE id={id}    │
         │    - Ensure new invite_code is UNIQUE                     │
-        │    Response: { success: true, inviteCode: {newCode} }     │
+        │    Response: { success:true, inviteCode:{newCode} }       │
         └────────────────────────────────────────────────────────────┘
         
         - copyInviteCode(code) - Client-side clipboard operation

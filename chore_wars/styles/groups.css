@@ -287,6 +287,14 @@
     user-select: all;
 }
 
+/* Empty invite code state */
+.invite-code.invite-code-empty {
+    border: 2px dashed #d1d5db;
+    color: #9ca3af;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
 .btn-copy-code {
     background: transparent;
     border: none;
@@ -299,6 +307,11 @@
 
 .btn-copy-code:hover {
     background: #f3f4f6;
+}
+
+.btn-copy-code[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .btn-regenerate-code {

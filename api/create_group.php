@@ -3,8 +3,9 @@
  * API Endpoint: Create Group
  * POST /api/create_group.php
  * 
- * Creates a new group with the authenticated user as owner
- * and generates a unique invite code
+ * Creates a new group with the authenticated user as owner.
+ * NOTE: No invite code is generated at creation time. Owners can
+ * later generate an invite code via regenerate_invite_code.php.
  */
 
 // Enable CORS if needed
@@ -31,24 +32,23 @@ require_once __DIR__ . '/db_config.php';
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Validate input
-if (!isset($input['userId']) || !isset($input['name']) || !isset($input['inviteCode'])) {
-    sendError('Missing required fields: userId, name, inviteCode', 400);
+// Validate input (inviteCode intentionally NOT required)
+if (!isset($input['userId']) || !isset($input['name'])) {
+    sendError('Missing required fields: userId, name', 400);
 }
 
 $userId = intval($input['userId']);
 $groupName = trim($input['name']);
 $description = isset($input['description']) ? trim($input['description']) : '';
-$inviteCode = strtoupper(trim($input['inviteCode']));
+// Invite code is optional (null until owner generates one)
+$inviteCode = null;
 
 // Validate data
 if (empty($groupName)) {
     sendError('Group name cannot be empty', 400);
 }
 
-if (strlen($inviteCode) !== 8) {
-    sendError('Invite code must be 8 characters', 400);
-}
+// No invite code length validation here (none provided at creation)
 
 // Get database connection
 $conn = getDBConnection();
@@ -60,23 +60,11 @@ if (!$conn) {
 $conn->begin_transaction();
 
 try {
-    // Check if invite code already exists (ensure uniqueness)
-    $checkStmt = $conn->prepare("SELECT id FROM groups WHERE invite_code = ?");
-    $checkStmt->bind_param("s", $inviteCode);
-    $checkStmt->execute();
-    $checkResult = $checkStmt->get_result();
-    
-    if ($checkResult->num_rows > 0) {
-        $checkStmt->close();
-        throw new Exception('Invite code already exists. Please try again.');
-    }
-    $checkStmt->close();
-    
-    // Insert into groups table
-    $insertGroupStmt = $conn->prepare(
-        "INSERT INTO groups (name, description, invite_code, created_at) VALUES (?, ?, ?, NOW())"
-    );
-    $insertGroupStmt->bind_param("sss", $groupName, $description, $inviteCode);
+        // Insert into groups table WITHOUT invite code (nullable field)
+        $insertGroupStmt = $conn->prepare(
+            "INSERT INTO groups (name, description, invite_code, created_at) VALUES (?, ?, NULL, NOW())"
+        );
+        $insertGroupStmt->bind_param("ss", $groupName, $description);
     
     if (!$insertGroupStmt->execute()) {
         throw new Exception('Failed to create group: ' . $insertGroupStmt->error);
@@ -104,7 +92,7 @@ try {
         'id' => $groupId,
         'name' => $groupName,
         'description' => $description,
-        'inviteCode' => $inviteCode,
+        'inviteCode' => null,
         'created_at' => date('Y-m-d H:i:s')
     ], 201);
     
