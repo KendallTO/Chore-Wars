@@ -342,65 +342,31 @@
                 document.getElementById('logout-btn').addEventListener('click', () => {
                     askLogoutConfirm().then(confirmed => {
                         if (confirmed) {
+                            // Clear session + current group
                             localStorage.removeItem('tcg_session_v1');
                             localStorage.removeItem('tcg_current_group_v1');
+
+                            // 🔴 C.3: wipe all chore/shop data cached in this browser
+                            Object.keys(localStorage).forEach(key => {
+                                if (key.startsWith('tcg_')) {
+                                    localStorage.removeItem(key);
+                                }
+                            });
+
+                            // Go back to login
                             window.location.href = 'login.html';
                         }
                     });
                 });
             }
-            
-            // Add group ID to footer
+
             const groupDisplay = document.getElementById('group-display');
             if (groupDisplay) {
-                groupDisplay.textContent = `Group: ${authData.currentGroup.substring(6)}`;
+                const groupRaw = authData.currentGroup;
+                const groupId = groupRaw.replace(/\D+/g, ''); // remove non-digits
+                groupDisplay.textContent = `Group: ${groupId}`;
             }
-            
-            // ===================================
-            // LOGOUT CONFIRMATION MODAL
-            // ===================================
-            // Shows confirmation dialog before logging out
-            function askLogoutConfirm() {
-                return new Promise((resolve) => {
-                    const overlay = document.createElement('div');
-                    overlay.className = 'tcg-modal-overlay';
-                    
-                    const modal = document.createElement('div');
-                    modal.className = 'tcg-modal';
-                    
-                    modal.innerHTML = `
-                        <p><strong>Confirm Logout</strong></p>
-                        <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
-                        <div class="tcg-modal-actions">
-                            <button class="btn-confirm">Logout</button>
-                            <button class="btn-cancel">Cancel</button>
-                        </div>
-                    `;
-                    
-                    overlay.appendChild(modal);
-                    document.body.appendChild(overlay);
-                    
-                    function cleanup() {
-                        document.body.removeChild(overlay);
-                    }
-                    
-                    function onConfirm() {
-                        cleanup();
-                        resolve(true);
-                    }
-                    
-                    function onCancel() {
-                        cleanup();
-                        resolve(false);
-                    }
-                    
-                    modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
-                    modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
-                    overlay.addEventListener('click', (e) => {
-                        if (e.target === overlay) onCancel();
-                    });
-                });
-            }
+
         })();
     </script>
     
@@ -487,8 +453,12 @@
                     const res = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(currentGroup)}`);
                     if (!res.ok) return;
                     const data = await res.json();
-                    if (!data) return;
-
+                    if (!data) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    localStorage.removeItem(INVENTORY_KEY);
+                    return;
+                    }
+                    
                     if (Array.isArray(data.items) && data.items.length > 0) {
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(data.items));
                     }

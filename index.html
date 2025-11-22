@@ -230,74 +230,43 @@
       // Update navigation
       const headerBtns = document.querySelector('.main-nav');
       if (headerBtns) {
-        headerBtns.innerHTML = `
-          <a class="header-btn" href="index.html">Home</a>
-          <a class="header-btn" href="shop.html">Shop</a>
-          <a class="header-btn" href="groups.html">Groups</a>
-          <button id="logout-btn" class="header-btn">Logout</button>
-        `;
-        
-        // Add logout functionality
-        document.getElementById('logout-btn').addEventListener('click', () => {
-          askLogoutConfirm().then(confirmed => {
-            if (confirmed) {
-              localStorage.removeItem('tcg_session_v1');
-              localStorage.removeItem('tcg_current_group_v1');
-              window.location.href = 'login.html';
-            }
-          });
-        });
-      }
-      
-      // Add group ID to footer
-      const groupDisplay = document.getElementById('group-display');
-      if (groupDisplay) {
-        groupDisplay.textContent = `Group: ${authData.currentGroup.substring(6)}`;
-      }
-      
-      // Logout confirmation modal
-      function askLogoutConfirm() {
-        return new Promise((resolve) => {
-          const overlay = document.createElement('div');
-          overlay.className = 'tcg-modal-overlay';
-          
-          const modal = document.createElement('div');
-          modal.className = 'tcg-modal';
-          
-          modal.innerHTML = `
-            <p><strong>Confirm Logout</strong></p>
-            <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
-            <div class="tcg-modal-actions">
-              <button class="btn-confirm">Logout</button>
-              <button class="btn-cancel">Cancel</button>
-            </div>
+          headerBtns.innerHTML = `
+              <a class="header-btn" href="index.html">Home</a>
+              <a class="header-btn" href="shop.html">Shop</a>
+              <a class="header-btn" href="groups.html">Groups</a>
+              <button id="logout-btn" class="header-btn">Logout</button>
           `;
           
-          overlay.appendChild(modal);
-          document.body.appendChild(overlay);
-          
-          function cleanup() {
-            document.body.removeChild(overlay);
-          }
-          
-          function onConfirm() {
-            cleanup();
-            resolve(true);
-          }
-          
-          function onCancel() {
-            cleanup();
-            resolve(false);
-          }
-          
-          modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
-          modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
-          overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) onCancel();
+          // Add logout functionality
+          document.getElementById('logout-btn').addEventListener('click', () => {
+              askLogoutConfirm().then(confirmed => {
+                  if (confirmed) {
+                      // Clear session + current group
+                      localStorage.removeItem('tcg_session_v1');
+                      localStorage.removeItem('tcg_current_group_v1');
+
+                      // 🔴 C.3: wipe all chore/shop data cached in this browser
+                      Object.keys(localStorage).forEach(key => {
+                          if (key.startsWith('tcg_')) {
+                              localStorage.removeItem(key);
+                          }
+                      });
+
+                      // Go back to login
+                      window.location.href = 'login.html';
+                  }
+              });
           });
-        });
+        }
+
+        const groupDisplay = document.getElementById('group-display');
+        if (groupDisplay) {
+            const groupRaw = authData.currentGroup;
+            const groupId = groupRaw.replace(/\D+/g, ''); // remove non-digits
+            groupDisplay.textContent = `Group: ${groupId}`;
+        }
       }
-    })();
+    )();
   </script>
 
   <script>
@@ -381,7 +350,16 @@
           const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
           if (!res.ok) return;
           const data = await res.json();
-          if (!data) return;
+          if (!data) {
+            // no DB state for this user+group → wipe old local data
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(POINTS_KEY);
+            localStorage.removeItem(HEADERS_KEY);
+            localStorage.removeItem(EXTRA_STATE_KEY);
+            render();
+            renderPoints();
+            return;
+          }
 
           if (data.chores) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data.chores));
