@@ -24,6 +24,7 @@ if (!isset($_SESSION['user']['id'])) {
 $userId = (int)$_SESSION['user']['id'];
 
 try {
+    // IMPORTANT: backticks around `groups`
     $stmt = $pdo->prepare(
         'SELECT 
              g.id,
@@ -32,7 +33,7 @@ try {
              g.created_at,
              gm.role,
              CASE WHEN gm.role = "owner" THEN g.invite_code ELSE NULL END AS inviteCode
-         FROM groups g
+         FROM `groups` g
          INNER JOIN group_members gm ON gm.group_id = g.id
          WHERE gm.user_id = ?
          ORDER BY g.created_at DESC'
@@ -40,9 +41,12 @@ try {
     $stmt->execute([$userId]);
     $rows = $stmt->fetchAll();
 
-    send_json($rows ?? []);
+    send_json($rows ?: []);
 
 } catch (Throwable $e) {
     error_log('Get groups error: ' . $e->getMessage());
+
+    // Again, for debugging you *could* expose more detail:
+    // send_json(['error' => 'Failed to fetch groups: ' . $e->getMessage()], 500);
     send_json(['error' => 'Failed to fetch groups'], 500);
 }

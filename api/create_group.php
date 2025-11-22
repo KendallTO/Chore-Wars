@@ -5,7 +5,7 @@ declare(strict_types=1);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-require __DIR__ . '/db.php'; // uses PDO, same as auth.php
+require __DIR__ . '/db.php'; // must provide $pdo (PDO connection)
 
 function send_json(array $data, int $status = 200): void {
     http_response_code($status);
@@ -13,19 +13,17 @@ function send_json(array $data, int $status = 200): void {
     exit;
 }
 
-// Allow only POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     send_json(['error' => 'Method not allowed'], 405);
 }
 
-// Make sure user is logged in
+// Ensure user is logged in
 if (!isset($_SESSION['user']['id'])) {
     send_json(['error' => 'Not authenticated'], 401);
 }
 
 $userId = (int)$_SESSION['user']['id'];
 
-// Read JSON body
 $input = json_decode(file_get_contents('php://input'), true);
 if (!is_array($input)) {
     send_json(['error' => 'Invalid JSON body'], 400);
@@ -34,7 +32,6 @@ if (!is_array($input)) {
 $name        = trim((string)($input['name'] ?? ''));
 $description = trim((string)($input['description'] ?? ''));
 
-// Validate
 if ($name === '') {
     send_json(['error' => 'Group name cannot be empty'], 422);
 }
@@ -42,9 +39,9 @@ if ($name === '') {
 try {
     $pdo->beginTransaction();
 
-    // Create the group (no invite code yet)
+    // IMPORTANT: backticks around `groups`
     $stmt = $pdo->prepare(
-        'INSERT INTO groups (name, description, invite_code, created_at)
+        'INSERT INTO `groups` (name, description, invite_code, created_at)
          VALUES (?, ?, NULL, NOW())'
     );
     $stmt->execute([
@@ -76,6 +73,9 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    error_log('Create group error: ' . $e->getMessage());
+
+    // For debugging you *can* temporarily expose the error message:
+    // send_json(['error' => 'Failed to create group: ' . $e->getMessage()], 500);
+    // But in production, keep it generic:
     send_json(['error' => 'Failed to create group'], 500);
 }
