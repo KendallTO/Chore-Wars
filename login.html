@@ -129,68 +129,182 @@
         
     ========================================================================= -->
 
-    <script>
-        (function () {
-          const SESSION_KEY = 'tcg_session_v1';
+   <script>
+  (function () {
+    const SESSION_KEY = 'tcg_session_v1';
+    const API_URL = '/api/auth.php';
 
-          function setSession(session) {
-            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-          }
+    // If user already has a session, skip login and go straight to groups
+    try {
+      const existing = localStorage.getItem(SESSION_KEY);
+      if (existing) {
+        const sess = JSON.parse(existing);
+        if (sess && sess.userId && sess.username) {
+          window.location.href = 'groups.html';
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not parse existing session', e);
+    }
 
-          async function ensureUser(username) {
-            const res = await fetch('/api/ensure_user.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username })
-            });
+    function setSession(session) {
+      // Save session locally for other pages (groups, index, shop)
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
 
-            const data = await res.json();
-            if (data.error) {
-              throw new Error(data.error);
-            }
-            return data; // { id, username }
-          }
+    const loginForm    = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const showRegister = document.getElementById('show-register');
+    const showLogin    = document.getElementById('show-login');
+    const messageBox   = document.getElementById('auth-message');
 
-          const form = document.getElementById('login-form');
-          if (!form) {
-            console.error('login-form not found on login.html');
+    function showMessage(text, isError = false) {
+      if (!messageBox) return;
+      messageBox.textContent = text;
+      messageBox.className = 'message ' + (isError ? 'error' : 'success');
+      messageBox.classList.remove('hidden');
+      setTimeout(() => {
+        messageBox.classList.add('hidden');
+      }, 4000);
+    }
+
+    // Toggle between login and register forms
+    if (showRegister && showLogin && loginForm && registerForm) {
+      showRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        messageBox && messageBox.classList.add('hidden');
+      });
+
+      showLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        messageBox && messageBox.classList.add('hidden');
+      });
+    }
+
+    // ---------- LOGIN ----------
+    if (loginForm) {
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const usernameInput = document.getElementById('login-username');
+        const passwordInput = document.getElementById('login-password');
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!username || !password) {
+          showMessage('Please enter username and password.', true);
+          return;
+        }
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'login',
+              username,
+              password
+            })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || data.error) {
+            const msg = data && data.error ? data.error : 'Login failed.';
+            showMessage(msg, true);
             return;
           }
 
-          form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // stop normal form POST
-
-            const usernameInput = document.getElementById('login-username');
-            if (!usernameInput) {
-              alert('Username input not found');
-              return;
-            }
-
-            const username = usernameInput.value.trim();
-            if (!username) {
-              alert('Please enter a username');
-              return;
-            }
-
-            try {
-              // Ask backend to ensure user exists and get their id
-              const user = await ensureUser(username);
-
-              // Store BOTH userId + username (groups.html expects this)
-              setSession({
-                userId: user.id,
-                username: user.username
-              });
-
-              // Go to groups page after successful login
-              window.location.href = 'groups.html';
-            } catch (err) {
-              console.error(err);
-              alert('Login failed: ' + err.message);
-            }
+          // data.user = { id, username, email }
+          setSession({
+            userId: data.user.id,
+            username: data.user.username
           });
-        })();
-    </script>
+
+          // Go to groups dashboard
+          window.location.href = 'groups.html';
+        } catch (err) {
+          console.error(err);
+          showMessage('Network error while logging in.', true);
+        }
+      });
+    }
+
+    // ---------- SIGNUP ----------
+    if (registerForm) {
+      registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const usernameInput = document.getElementById('register-username');
+        const emailInput    = document.getElementById('register-email');
+        const passwordInput = document.getElementById('register-password');
+        const confirmInput  = document.getElementById('register-confirm');
+
+        const username = usernameInput.value.trim();
+        const email    = emailInput.value.trim();
+        const password = passwordInput.value;
+        const confirm  = confirmInput.value;
+
+        if (!username || !password || !confirm) {
+          showMessage('Please fill in all required fields.', true);
+          return;
+        }
+        if (password !== confirm) {
+          showMessage('Passwords do not match.', true);
+          return;
+        }
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'signup',
+              username,
+              email: email || undefined,
+              password
+            })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || data.error) {
+            const msg = data && data.error ? data.error : 'Signup failed.';
+            showMessage(msg, true);
+            return;
+          }
+
+          // User is logged in immediately after signup
+          setSession({
+            userId: data.user.id,
+            username: data.user.username
+          });
+
+          showMessage('Account created! Redirecting...', false);
+          setTimeout(() => {
+            window.location.href = 'groups.html';
+          }, 800);
+        } catch (err) {
+          console.error(err);
+          showMessage('Network error while creating account.', true);
+        }
+      });
+    }
+
+    // Footer year
+    const yearSpan = document.getElementById('year');
+    if (yearSpan) {
+      yearSpan.textContent = new Date().getFullYear();
+    }
+  })();
+</script>
+
 
 </body>
 

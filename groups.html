@@ -140,23 +140,24 @@
        // ===================================================================
 
        // Create a group on the server (Option A: MySQL + PHP)
-       async function createGroup(name, description) {
-         const session = getSession();
-         if (!session || !session.userId) {
-           alert('You must be logged in.');
-           window.location.href = 'login.html';
-           return null;
-         }
+      async function createGroup(name, description) {
+        // Still optionally check local session for nicer UX
+        const session = getSession();
+        if (!session || !session.userId) {
+          alert('You must be logged in.');
+          window.location.href = 'login.html';
+          return null;
+        }
 
-         const res = await fetch('/api/create_group.php', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({
-             userId: session.userId,
-             name,
-             description
-           })
-         });
+        const res = await fetch('/api/create_group.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            description
+          })
+        });
+
 
          const data = await res.json();
          if (data.error) {
@@ -167,9 +168,9 @@
        }
 
        // Get all groups this user belongs to from the server
-       async function fetchGroupsForUser(userId) {
-         const res = await fetch(`/api/get_groups.php?userId=${encodeURIComponent(userId)}`);
-         const data = await res.json();
+       async function fetchGroupsForUser() {
+        const res = await fetch('/api/get_groups.php');
+        const data = await res.json();
          if (data.error) {
            showMessage(data.error, true);
            return [];
@@ -238,7 +239,7 @@
          if (!session) return;
 
          try {
-           const groups = await fetchGroupsForUser(session.userId);
+           const groups = await fetchGroupsForUser();
 
            if (!groups.length) {
              groupsList.classList.add('hidden');
