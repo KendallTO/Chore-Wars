@@ -1,0 +1,468 @@
+/*start coloring*/
+#extra1-header {
+  background-color: var(--extra1_color);
+}
+
+#extra1-points-box {
+  background-color: var(--extra1_color);
+}
+
+#extra2-header {
+  background-color: var(--extra2_color);
+}
+
+#extra2-points-box {
+  background-color: var(--extra2_color);
+}
+
+#extra3-header {
+  background-color: var(--extra3_color);
+}
+
+#extra3-points-box {
+  background-color: var(--extra3_color);
+}
+
+#extra4-header {
+  background-color: var(--extra4_color);
+}
+
+#extra4-points-box {
+  background-color: var(--extra4_color);
+}
+
+#extra5-header {
+  background-color: var(--extra5_color);
+}
+
+#extra5-points-box {
+  background-color: var(--extra5_color);
+}
+
+#extra6-header {
+  background-color: var(--extra6_color);
+}
+
+#extra6-points-box {
+  background-color: var(--extra6_color);
+}
+
+#extra7-header {
+  background-color: var(--extra7_color);
+}
+
+#extra7-points-box {
+  background-color: var(--extra7_color);
+}
+
+#extra8-header {
+  background-color: var(--extra8_color);
+}
+
+#extra8-points-box {
+  background-color: var(--extra8_color);
+}
+/*end coloring*/
+
+/* Points display in shop */
+.points-display {
+  margin-bottom: 24px;
+  /* Prevent side point banks from stretching to match the center column height */
+  align-items: start;
+}
+
+/*individual player containers*/
+.points-box {
+  background: var(--muted);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/*the names of each player*/
+.points-box h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: var(--text);
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 4vw !important; 
+  font-family: var(--names_font);
+}
+
+/*the point counter for each plaeyr*/
+.points-value {
+  font-size: 1.25rem;
+  color: var(--background_color);
+  font-family: var(--names_font);
+}
+
+/* Inventory toggle button */
+.inventory-toggle {
+  background: var(--button_back);
+  color: var(--button_hover);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.inventory-toggle:hover {
+  background: var(--button_hover);
+  color: var(--button_back);
+}
+
+/*the triangle*/
+.inventory-toggle .toggle-icon {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+/*the triangle*/
+.inventory-toggle[aria-expanded="true"] .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Inventory dropdown container */
+.inventory-dropdown {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.inventory-dropdown.hidden {
+  display: none;
+}
+
+.inventory-dropdown:empty::before {
+  content: "No items in inventory";
+  display: block;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  padding: 8px;
+}
+
+/* Individual inventory item card */
+.inventory-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*last item in inventory will not have any space below it*/
+.inventory-item:last-child {
+  margin-bottom: 0;
+}
+
+/*the container of the name of the reward*/
+.inventory-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/*the name of the reward itself*/
+.inventory-item-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  flex: 1;
+}
+
+/*little blue oval saying how much of item you have*/
+.inventory-item-quantity {
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+/*some rewards will have a description */
+.inventory-item-desc {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/*container of stuff you can do with the rewards*/
+.inventory-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/*redeem my reward yay*/
+.btn-use-item {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  flex: 1;
+  transition: background 0.2s ease;
+}
+.btn-use-item:hover {
+  background: #15803d;
+}
+
+/*this the thing in the middle*/
+.shop-management {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+
+/*container for Shop Management Add Item+*/
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  font-family: var(--header_font);
+}
+
+/*opens up the new item form*/
+.btn-add {
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+/*the plus button*/
+.btn-add .btn-icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.btn-add[aria-expanded="true"] .btn-icon {
+  transform: rotate(45deg);
+}
+
+/*available items container*/
+.shop-items {
+  margin-top: 32px auto;
+  font-family: var(--header_font);
+}
+
+.shop-form {
+  background: #fff;
+  border: 1px solid #e6e7eb;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease-out;
+}
+
+.shop-form.hidden {
+  display: none;
+}
+
+.shop-form .form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.shop-form label {
+  width: 140px;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.shop-form input[type="text"],
+.shop-form input[type="number"],
+.shop-form textarea {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.shop-form button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.shop-form button:hover {
+  opacity: 0.95;
+}
+
+.shop-form .shop-form-title {
+  margin: 0 0 8px 0;
+  font-size: 1.05rem;
+  color: var(--text);
+  padding-left: 2px;
+}
+
+/*message that displays if user inputs invalid info*/
+.form-msg {
+  margin-left: 8px;
+  color: #065f46;
+  font-size: 0.9rem;
+}
+
+
+/*the thing that says available items with the lines around it*/
+.shop-items h2 {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* center the title itself */
+  gap: 12px;
+  text-align: center;
+}
+
+/* Decorative lines on both sides of the centered title */
+.shop-items h2::before,
+.shop-items h2::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.35;
+}
+
+/* Dedicated grid for Available Items products */
+.products-grid {
+  display: grid;
+  gap: clamp(12px, 2.5vw, 24px);
+  /* Equal-width columns that fill the row and respond to viewport */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/*name of the available products*/
+.product-title {
+  margin: 0 0 6px 0;
+  font-size: 2vw;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+/*description of available products*/
+.product-desc {
+  margin: 0 0 8px 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/*price of available product*/
+.product-price {
+  margin: 8px 0 0 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* when products are in the products-grid, ensure card layout */
+.products-grid .product {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  min-height: 200px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.products-grid .product:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: var(--accent);
+}
+
+
+/*that one below is too corporate. this is the product name and if there's anything fancy below it*/
+/* product title + badge layout */
+.product-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+/*the container for PURCHASE Edit DELETE*/
+.product-actions {
+  margin-top: 15px;
+  padding-top: 6px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/*the thingy below the product name in the available items shop*/
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #fff;
+  background: #6b7280;
+  margin-bottom: 15px;
+}
+
+/* limited-stock badge style */
+.badge.limited-stock {
+  background: #b45309;
+  /* amber/dark orange to indicate limited availability */
+  font-weight: 600;
+}

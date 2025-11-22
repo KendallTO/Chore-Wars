@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chore Wars</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .landing-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .landing-logo {
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .landing-title {
+            font-family: var(--header_font);
+            font-size: 2.5rem;
+            color: var(--text);
+            margin: 0 0 16px 0;
+        }
+        
+        .landing-subtitle {
+            font-size: 1.2rem;
+            color: #6b7280;
+            margin: 0 0 40px 0;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        
+        .landing-actions {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .landing-btn {
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary-large {
+            background: var(--accent);
+            color: #fff;
+        }
+        
+        .btn-primary-large:hover {
+            background: #1e56a0;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary-large {
+            background: #f3f4f6;
+            color: var(--text);
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-secondary-large:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 580px) {
+            .landing-title {
+                font-size: 2rem;
+            }
+            
+            .landing-subtitle {
+                font-size: 1rem;
+            }
+            
+            .landing-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .landing-btn {
+                width: 200px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="welcome.html">
+                <img class="logo" src="images/cwLightM.png" alt="Logo">
+            </a>
+            <div class="container-logo">
+                <a href="welcome.html">
+                    <img src="images/Chore _Wars_logo_title_new.png" alt="The Chore Game">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main container">
+        <div class="landing-container">
+            <h1 class="landing-title">Welcome to Chore Wars!</h1>
+            <p class="landing-subtitle">
+                Transform chore management into a fun, collaborative game for your family, roommates, or team. 
+                Create groups, assign tasks, earn points, and make household responsibilities engaging for everyone.
+            </p>
+            
+            <div class="landing-actions">
+                <a href="login.html" class="landing-btn btn-primary-large">Get Started</a>
+                <a href="about.html" class="landing-btn btn-secondary-large">Learn More</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
+        </div>
+    </footer>
+
+    <!-- =========================================================================
+        JAVASCRIPT ARCHITECTURE OVERVIEW - WELCOME PAGE
+        =========================================================================
+        
+        This landing page contains minimal JavaScript for basic functionality:
+        
+        1. FOOTER YEAR UPDATER
+           - Displays current year in copyright footer
+        
+        2. AUTO-REDIRECT SYSTEM
+           - Checks if user is already logged in
+           - Redirects to index.html if user has session + group selected
+           - Redirects to groups.html if user has session but no group
+           - Stays on welcome page if no session (not logged in)
+        
+        PURPOSE:
+        - Provides seamless UX by skipping login for authenticated users
+        - Ensures users land on correct page based on their session state
+        - Acts as smart entry point for the application
+        
+        STORAGE KEYS CHECKED:
+        - tcg_session_v1: Contains { username, ... }
+        - tcg_current_group_v1: Contains selected group ID
+        
+    ========================================================================= -->
+
+    <script>
+        // ===================================
+        // FOOTER: Display current year
+        // ===================================
+        // Updates the footer copyright year dynamically to current year
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // ===================================
+        // AUTO-REDIRECT FOR LOGGED-IN USERS
+        // ===================================
+        // Automatically redirects authenticated users to appropriate page
+        // Skips login screen if user already has valid session
+        (function() {
+            const SESSION_KEY = 'tcg_session_v1';
+            const CURRENT_GROUP_KEY = 'tcg_current_group_v1';
+            
+            // Retrieves user session from localStorage
+            function getSession() {
+                try {
+                    const sessionData = localStorage.getItem(SESSION_KEY);
+                    return sessionData ? JSON.parse(sessionData) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            // Retrieves currently selected group ID from localStorage
+            function getCurrentGroup() {
+                return localStorage.getItem(CURRENT_GROUP_KEY);
+            }
+            
+            // Check session and redirect accordingly
+            const session = getSession();
+            const currentGroup = getCurrentGroup();
+            
+            if (session && session.username) {
+                if (currentGroup) {
+                    // User has both session and selected group, go to main app
+                    window.location.href = 'index.html';
+                } else {
+                    // User has session but no group selected, go to groups
+                    window.location.href = 'groups.html';
+                }
+            }
+            // If no session, stay on welcome page (user needs to login)
+        })();
+    </script>
+</body>
+
+</html>

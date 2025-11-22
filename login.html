@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chore Game - Login</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/login.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="login.html">
+                <img class="logo" src="images/cwLightM.png" alt="Logo">
+            </a>
+            <div class="container-logo">
+                <a href="login.html">
+                    <img src="images/Chore _Wars_logo_title_new.png" alt="The Chore Game">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main container">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h1>Welcome to Chore Wars</h1>
+                <p class="auth-subtitle">Sign in to manage your group's chores or create a new account</p>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form">
+                    <h2>Sign In</h2>
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" name="username" required 
+                               placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" required 
+                               placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    <p class="form-switch">
+                        Don't have an account? 
+                        <a href="#" id="show-register">Create one here</a>
+                    </p>
+                </form>
+
+                <!-- Registration Form -->
+                <form id="register-form" class="auth-form hidden">
+                    <h2>Create Account</h2>
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" name="username" required 
+                               placeholder="Choose a username" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email (optional)</label>
+                        <input type="email" id="register-email" name="email" 
+                               placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" name="password" required 
+                               placeholder="Create a password" minlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">Confirm Password</label>
+                        <input type="password" id="register-confirm" name="confirmPassword" required 
+                               placeholder="Confirm your password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                    <p class="form-switch">
+                        Already have an account? 
+                        <a href="#" id="show-login">Sign in here</a>
+                    </p>
+                </form>
+
+                <div id="auth-message" class="message hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
+        </div>
+    </footer>
+
+    <!-- =========================================================================
+        JAVASCRIPT ARCHITECTURE OVERVIEW - LOGIN/REGISTER SYSTEM
+        =========================================================================
+        
+        This page contains authentication functionality:
+        
+          1. SESSION MANAGEMENT
+              - Checks for existing session on page load
+              - Auto-redirects logged-in users to groups.html
+              - Creates and stores session data in localStorage
+        
+          2. USER AUTHENTICATION (Server-backed)
+              - Login form validation and verification
+              - Sends credentials to /api/login (server)
+              - Server reads/writes users in a text file (JSON lines)
+              - Error handling for invalid credentials
+        
+          3. USER REGISTRATION (Server-backed)
+              - New account creation
+              - Username uniqueness validation (server-side)
+              - Password matching confirmation (client-side)
+              - Minimum length requirements (username: 3, password: 4)
+              - Sends data to /api/register to persist to users.txt
+        
+        4. FORM UI MANAGEMENT
+           - Toggle between login and register forms
+           - Message display system (success/error)
+           - Auto-hide messages after 3 seconds
+        
+                STORAGE KEYS:
+                - tcg_session_v1: Current user session (client)
+          Structure: { username, email, loginTime }
+        
+        SECURITY NOTE:
+        - Passwords are currently stored in plain text on the server text file (to be hashed later)
+        - This is for functional verification only; do not use in production as-is
+        
+    ========================================================================= -->
+
+    <script>
+        (function () {
+          const SESSION_KEY = 'tcg_session_v1';
+
+          function setSession(session) {
+            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+          }
+
+          async function ensureUser(username) {
+            const res = await fetch('/api/ensure_user.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username })
+            });
+
+            const data = await res.json();
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            return data; // { id, username }
+          }
+
+          const form = document.getElementById('login-form');
+          if (!form) {
+            console.error('login-form not found on login.html');
+            return;
+          }
+
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // stop normal form POST
+
+            const usernameInput = document.getElementById('login-username');
+            if (!usernameInput) {
+              alert('Username input not found');
+              return;
+            }
+
+            const username = usernameInput.value.trim();
+            if (!username) {
+              alert('Please enter a username');
+              return;
+            }
+
+            try {
+              // Ask backend to ensure user exists and get their id
+              const user = await ensureUser(username);
+
+              // Store BOTH userId + username (groups.html expects this)
+              setSession({
+                userId: user.id,
+                username: user.username
+              });
+
+              // Go to groups page after successful login
+              window.location.href = 'groups.html';
+            } catch (err) {
+              console.error(err);
+              alert('Login failed: ' + err.message);
+            }
+          });
+        })();
+    </script>
+
+</body>
+
+</html>

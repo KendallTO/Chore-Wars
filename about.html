@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Chore Wars</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .about-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .about-title {
+            font-family: var(--header_font);
+            font-size: 2.5rem;
+            color: var(--text);
+            text-align: center;
+            margin: 0 0 32px 0;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin: 40px 0;
+        }
+        
+        .feature-card {
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+        
+        .feature-title {
+            font-family: var(--header_font);
+            font-size: 1.25rem;
+            color: var(--text);
+            margin: 0 0 12px 0;
+        }
+        
+        .feature-description {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        
+        .about-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #374151;
+            margin-bottom: 32px;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 48px;
+            padding: 32px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        
+        .cta-title {
+            font-family: var(--header_font);
+            font-size: 1.5rem;
+            color: var(--text);
+            margin: 0 0 16px 0;
+        }
+        
+        .cta-text {
+            color: #6b7280;
+            margin: 0 0 24px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            background: #1e56a0;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="welcome.html">
+                <img class="logo" src="images/cwLightM.png" alt="Logo">
+            </a>
+            <div class="container-logo">
+                <a href="welcome.html">
+                    <img src="images/Chore _Wars_logo_title_new.png" alt="The Chore Game">
+                </a>
+            </div>
+            <nav class="main-nav">
+                <a class="header-btn" href="welcome.html">Welcome</a>
+                <a class="header-btn" href="login.html">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main container">
+        <div class="about-container">
+            <h1 class="about-title">About Chore Wars</h1>
+            
+            <p class="about-text">
+                Chore Wars transforms everyday household tasks into an engaging, collaborative game. 
+                Whether you're managing a family home, sharing responsibilities with roommates, or organizing 
+                team tasks, our platform makes chore management fun and effective.
+            </p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3 class="feature-title">Group Management</h3>
+                    <p class="feature-description">
+                        Create multiple groups for different households or teams. Each group has its own 
+                        independent chore system, players, and point tracking.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">Point System</h3>
+                    <p class="feature-description">
+                        Earn points by completing chores and spend them in the group shop. 
+                        Motivate everyone with rewards and friendly competition.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🛒</div>
+                    <h3 class="feature-title">Custom Shop</h3>
+                    <p class="feature-description">
+                        Create custom rewards with limited or unlimited stock. From movie nights 
+                        to special privileges, make the rewards meaningful to your group.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Dynamic Assignment</h3>
+                    <p class="feature-description">
+                        Use auction and draft systems for fair chore distribution, or manually 
+                        assign tasks. Flexible tools for different group dynamics.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3 class="feature-title">Responsive Design</h3>
+                    <p class="feature-description">
+                        Works seamlessly on all devices. Manage chores on your phone, tablet, 
+                        or computer with a consistent experience.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">Simple & Secure</h3>
+                    <p class="feature-description">
+                        Easy account creation with local storage. Your group's data stays 
+                        organized and accessible without complex setups.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h2 class="cta-title">Ready to Get Started?</h2>
+                <p class="cta-text">Join thousands of families and groups making chore management fun and effective.</p>
+                <a href="login.html" class="cta-button">Create Your Account</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© <span id="year"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+
+</html>
