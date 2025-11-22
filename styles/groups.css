@@ -27,6 +27,17 @@
     margin-bottom: 32px;
     position: relative;
 }
+
+/* Container for header buttons */
+.header-buttons {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    z-index: 20;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 /*"Your Groups"*/
 .groups-header h1 {
     margin: 15px;
@@ -37,11 +48,15 @@
     z-index: 1;
 }
 
-/*"+Create New Group"*/
-#create-group-btn {
+/*"+Create New Group" and "Join Group"*/
+#create-group-btn,
+#join-group-btn {
     position: relative;
     z-index: 20;
     pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
 /*literally the plus in the button, can't just make it normal?*/
@@ -85,6 +100,22 @@
     font-weight: 500;
     color: var(--text);
     font-size: 0.95rem;
+}
+
+/* Help text for forms */
+.form-help-text {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Form hints (small text below inputs) */
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    color: #9ca3af;
+    font-size: 0.85rem;
 }
 
 /*the text entry box*/
@@ -223,6 +254,89 @@
     align-items: center;
 }
 
+/* Invite code section (for group owners) */
+.invite-code-section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.invite-code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.invite-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.invite-code {
+    display: block;
+    background: #f3f4f6;
+    border: 2px dashed var(--accent);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 8px;
+    user-select: all;
+}
+
+/* Empty invite code state */
+.invite-code.invite-code-empty {
+    border: 2px dashed #d1d5db;
+    color: #9ca3af;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.btn-copy-code {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.btn-copy-code:hover {
+    background: #f3f4f6;
+}
+
+.btn-copy-code[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-regenerate-code {
+    font-size: 0.8rem;
+    color: #6b7280;
+    padding: 4px 0;
+    transition: color 0.2s ease;
+}
+
+.btn-regenerate-code:hover {
+    color: var(--accent);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
 /*the container for enter group leave*/
 .group-actions {
     display: flex;
@@ -314,6 +428,15 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
+    }
+    
+    .header-buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .header-buttons button {
+        width: 100%;
     }
     
     .groups-header h1 {

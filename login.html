@@ -130,66 +130,118 @@
     ========================================================================= -->
 
     <script>
-        (function () {
-          const SESSION_KEY = 'tcg_session_v1';
+      (function() {
+        const SESSION_KEY = 'tcg_session_v1';
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const msgEl = document.getElementById('auth-message');
+        const showRegister = document.getElementById('show-register');
+        const showLogin = document.getElementById('show-login');
 
-          function setSession(session) {
-            localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-          }
+        function showMessage(text, isError = false) {
+          if (!msgEl) return;
+            msgEl.textContent = text;
+            msgEl.classList.remove('hidden');
+            msgEl.classList.toggle('error', !!isError);
+            msgEl.classList.toggle('success', !isError);
+            setTimeout(() => msgEl.classList.add('hidden'), 3000);
+        }
 
-          async function ensureUser(username) {
-            const res = await fetch('/api/ensure_user.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username })
-            });
+        function setSession(user) {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({
+            userId: user.id,
+            username: user.username,
+            email: user.email || '',
+            loginTime: Date.now()
+          }));
+        }
 
+        async function authRequest(payload) {
+          const res = await fetch('/api/auth.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return res.json();
+        }
+
+        async function checkSession() {
+          try {
+            const res = await fetch('/api/auth.php?action=session');
             const data = await res.json();
-            if (data.error) {
-              throw new Error(data.error);
-            }
-            return data; // { id, username }
-          }
-
-          const form = document.getElementById('login-form');
-          if (!form) {
-            console.error('login-form not found on login.html');
-            return;
-          }
-
-          form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // stop normal form POST
-
-            const usernameInput = document.getElementById('login-username');
-            if (!usernameInput) {
-              alert('Username input not found');
-              return;
-            }
-
-            const username = usernameInput.value.trim();
-            if (!username) {
-              alert('Please enter a username');
-              return;
-            }
-
-            try {
-              // Ask backend to ensure user exists and get their id
-              const user = await ensureUser(username);
-
-              // Store BOTH userId + username (groups.html expects this)
-              setSession({
-                userId: user.id,
-                username: user.username
-              });
-
-              // Go to groups page after successful login
+            if (data.ok && data.user) {
+              // Already logged in
+              setSession(data.user);
               window.location.href = 'groups.html';
-            } catch (err) {
-              console.error(err);
-              alert('Login failed: ' + err.message);
+            }
+          } catch (e) { /* ignore */ }
+        }
+
+        // Toggle forms
+        if (showRegister) {
+          showRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+          });
+        }
+        if (showLogin) {
+          showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+          });
+        }
+
+        // Login submit
+        if (loginForm) {
+          loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) {
+              showMessage('Enter username and password', true);
+              return;
+            }
+            const data = await authRequest({ action: 'login', username, password });
+            if (data.ok && data.user) {
+              setSession(data.user);
+              window.location.href = 'groups.html';
+            } else {
+              showMessage(data.error || 'Login failed', true);
             }
           });
-        })();
+        }
+
+        // Registration submit
+        if (registerForm) {
+          registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+            if (!username || !password) {
+              showMessage('Username and password required', true);
+              return;
+            }
+            if (password !== confirm) {
+              showMessage('Passwords do not match', true);
+              return;
+            }
+            const data = await authRequest({ action: 'signup', username, password, email });
+            if (data.ok && data.user) {
+              setSession(data.user);
+              window.location.href = 'groups.html';
+            } else {
+              showMessage(data.error || 'Signup failed', true);
+            }
+          });
+        }
+
+        // Initial auto-redirect if already logged in
+        checkSession();
+      })();
     </script>
 
 </body>
