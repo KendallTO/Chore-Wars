@@ -370,12 +370,16 @@
                     if (confirmed) {
                         // Call server logout
                         try {
-                            await fetch('/api/auth.php', {
+                            const res = await fetch('/api/auth.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ action: 'logout' })
                             });
-                        } catch (e) { /* ignore */ }
+                            const data = await res.json();
+                            console.log('Logout response:', data);
+                        } catch (e) {
+                            console.error('Logout error:', e);
+                        }
                         
                         // Clear session + current group
                         localStorage.removeItem('tcg_session_v1');
