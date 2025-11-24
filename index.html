@@ -227,49 +227,6 @@
       const authData = checkAuthAndGroup();
       if (!authData) return;
       
-      // Logout confirmation modal
-      function askLogoutConfirm() {
-        return new Promise((resolve) => {
-          const overlay = document.createElement('div');
-          overlay.className = 'tcg-modal-overlay';
-
-          const modal = document.createElement('div');
-          modal.className = 'tcg-modal';
-
-          modal.innerHTML = `
-                <p><strong>Confirm Logout</strong></p>
-                <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
-                <div class="tcg-modal-actions">
-                  <button class="btn-confirm">Logout</button>
-                  <button class="btn-cancel">Cancel</button>
-     </div>
-              `;
-
-          overlay.appendChild(modal);
-          document.body.appendChild(overlay);
-
-          function cleanup() {
-            document.body.removeChild(overlay);
-          }
-
-          function onConfirm() {
-            cleanup();
-            resolve(true);
-          }
-
-          function onCancel() {
-            cleanup();
-            resolve(false);
-          }
-
-          modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
-          modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
-          overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) onCancel();
-          });
-        });
-      }
-      
       // Update navigation
       const headerBtns = document.querySelector('.main-nav');
       if (headerBtns) {
@@ -281,26 +238,18 @@
           `;
           
           // Add logout functionality
-          document.getElementById('logout-btn').addEventListener('click', async () => {
-            const confirmed = await askLogoutConfirm();
-            if (confirmed) {
-
-              // Clear session-related keys
-              localStorage.removeItem(SESSION_KEY);
-              localStorage.removeItem(CURRENT_GROUP_KEY);
-
-              // Clear all game + shop cached data to prevent contamination
-              Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('tcg_')) {
-                  localStorage.removeItem(key);
-                }
-              });
-
-              setTimeout(() => {
+          const logoutBtn = document.getElementById('logout-btn');
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+              // Show confirmation dialog
+              if (confirm('Are you sure you want to logout? You\'ll need to sign in again to access your groups.')) {
+                // Clear all localStorage data
+                localStorage.clear();
+                // Redirect to login
                 window.location.href = 'login.html';
-              }, 100);
-            }
-          });
+              }
+            });
+          }
         }
 
         const groupDisplay = document.getElementById('group-display');
