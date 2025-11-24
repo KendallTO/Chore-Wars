@@ -1,63 +1,48 @@
 <?php
 // api/save_game_state.php
-declare(strict_types=1);
-
-session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-require __DIR__ . '/db.php'; // provides $pdo
+session_start();
+require __DIR__ . '/db.php';
 
-function send_json(array $data, int $status = 200): void {
-    http_response_code($status);
-    echo json_encode($data);
+// Require login
+if (empty($_SESSION['user']) || empty($_SESSION['user']['id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Not authenticated']);
     exit;
 }
 
-// Must be logged in
-if (empty($_SESSION['user']) || empty($_SESSION['user']['id'])) {
-    send_json(['error' => 'Not authenticated'], 401);
-}
-
-$userId = (int)$_SESSION['user']['id'];
-
-// Read JSON body: { groupId, data: { chores, points, headers, extraState } }
+// Read JSON body
 $input = json_decode(file_get_contents('php://input'), true);
 if (!is_array($input)) {
-    send_json(['error' => 'Invalid JSON body'], 400);
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid JSON body']);
+    exit;
 }
 
+// groupId is just the numeric group ID (e.g. 1, 2, 3...)
 $groupId = isset($input['groupId']) ? (int)$input['groupId'] : 0;
-$data    = $input['data'] ?? null;
+$data    = $input['data'] ?? null;   // { chores, points, headers, extraState }
 
-if ($groupId <= 0) {
-    send_json(['error' => 'Missing or invalid groupId'], 400);
-}
-if (!is_array($data)) {
-    send_json(['error' => 'Missing or invalid data payload'], 400);
+if ($groupId <= 0 || $data === null || !is_array($data)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Missing or invalid groupId/data']);
+    exit;
 }
 
-// Encode the whole game state into one JSON column
 $dataJson = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-try {
-    // Assumes table:
-    // game_state(group_id INT, user_id INT, data_json LONGTEXT, PRIMARY KEY (group_id, user_id))
-    $stmt = $pdo->prepare('
-        INSERT INTO game_state (group_id, user_id, data_json)
-        VALUES (:group_id, :user_id, :data_json)
-        ON DUPLICATE KEY UPDATE
-            data_json = VALUES(data_json)
-    ');
+$stmt = $pdo->prepare('
+    INSERT INTO game_state (group_id, data_json)
+    VALUES (:group_id, :data_json)
+    ON DUPLICATE KEY UPDATE
+      data_json = VALUES(data_json),
+      updated_at = CURRENT_TIMESTAMP
+');
 
-    $stmt->execute([
-        ':group_id'  => $groupId,
-        ':user_id'   => $userId,
-        ':data_json' => $dataJson,
-    ]);
+$stmt->execute([
+    ':group_id'  => $groupId,
+    ':data_json' => $dataJson,
+]);
 
-    send_json(['ok' => true]);
-} catch (Throwable $e) {
-    // For debugging you *can* log the error:
-    // error_log("save_game_state error: " . $e->getMessage());
-    send_json(['error' => 'Failed to save game state'], 500);
-}
+echo json_encode(['ok' => true]);
