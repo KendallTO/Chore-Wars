@@ -249,6 +249,16 @@ body {
   font-size: clamp(0.75rem, 1.5vw, 1rem);
 }
 
+/* Danger button for destructive actions */
+.btn-danger {
+  background-color: #dc2626; /* red */
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
+}
+
 .btn:hover {
   background-color: var(--button_hover);
   color: var(--button_back);

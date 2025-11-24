@@ -246,6 +246,15 @@
     background: #b91c1c;
 }
 
+.btn-delete {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-delete:hover {
+  background: #b91c1c;
+}
+
 /* when youre not in any groups loser */
 .empty-state {
     text-align: center;

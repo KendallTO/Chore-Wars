@@ -134,29 +134,61 @@
        function setCurrentGroup(groupId) {
          localStorage.setItem(CURRENT_GROUP_KEY, groupId);
        }
+        // Clear all local saved data for a specific group
+        function clearLocalStateForGroup(groupId) {
+          const keys = [
+            `tcg_chores_v1_${groupId}`,
+            `tcg_column_headers_v1_${groupId}`,
+            `tcg_points_v1_${groupId}`,
+            `tcg_extra_cols_v1_${groupId}`,
+            `tcg_player_positions_v1_${groupId}`,
+            `base-player-state_${groupId}`,
+            `tcg_shop_items_v1_${groupId}`,
+            `tcg_player_inventories_v1_${groupId}`,
+          ];
+
+          keys.forEach(key => localStorage.removeItem(key));
+        }
+
+        // Call API to delete a group (owner only)
+        async function deleteGroupOnServer(groupId) {
+          const res = await fetch('/api/delete_group.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId })
+          });
+
+          const data = await res.json();
+          if (!res.ok || data.error) {
+            throw new Error(data.error || 'Failed to delete group');
+          }
+          return true;
+        }
+
 
        // ===================================================================
        // SERVER HELPERS
        // ===================================================================
 
        // Create a group on the server (Option A: MySQL + PHP)
-       async function createGroup(name, description) {
-         const session = getSession();
-         if (!session || !session.userId) {
-           alert('You must be logged in.');
-           window.location.href = 'login.html';
-           return null;
-         }
+      async function createGroup(name, description) {
+        // Still optionally check local session for nicer UX
+        const session = getSession();
+        if (!session || !session.userId) {
+          alert('You must be logged in.');
+          window.location.href = 'login.html';
+          return null;
+        }
 
-         const res = await fetch('/api/create_group.php', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({
-             userId: session.userId,
-             name,
-             description
-           })
-         });
+        const res = await fetch('/api/create_group.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            description
+          })
+        });
+
 
          const data = await res.json();
          if (data.error) {
@@ -167,9 +199,9 @@
        }
 
        // Get all groups this user belongs to from the server
-       async function fetchGroupsForUser(userId) {
-         const res = await fetch(`/api/get_groups.php?userId=${encodeURIComponent(userId)}`);
-         const data = await res.json();
+       async function fetchGroupsForUser() {
+        const res = await fetch('/api/get_groups.php');
+        const data = await res.json();
          if (data.error) {
            showMessage(data.error, true);
            return [];
@@ -178,7 +210,20 @@
          // { id, name, description, created_at, role }
          return Array.isArray(data) ? data : [];
        }
+       // Delete a group on the server (owner only)
+        async function deleteGroupOnServer(groupId) {
+          const res = await fetch('/api/delete_group.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId })
+          });
 
+          const data = await res.json();
+          if (!res.ok || data.error) {
+            throw new Error(data.error || 'Failed to delete group');
+          }
+          return true;
+        }
        // ===================================================================
        // UI HELPERS
        // ===================================================================
@@ -196,39 +241,78 @@
          return div.innerHTML;
        }
 
-       function createGroupCard(group) {
-         const card = document.createElement('div');
-         card.className = 'group-card';
+      function createGroupCard(group) {
+        const card = document.createElement('div');
+        card.className = 'group-card';
 
-         const createdDate = group.created_at
-         ? new Date(group.created_at).toLocaleDateString()
-         : '';
+        const createdDate = group.created_at
+          ? new Date(group.created_at).toLocaleDateString()
+          : '';
 
-         const roleText = group.role === 'owner' ? 'Owner' : 'Member';
+        const roleText = group.role === 'owner' ? 'Owner' : 'Member';
+        const isOwner = group.role === 'owner';
 
-         card.innerHTML = `
-              <div class="group-info">
-                <h3 class="group-name">${escapeHtml(group.name)}</h3>
-                ${group.description ? `<p class="group-description">${escapeHtml(group.description)}</p>` : ''}
-                <div class="group-meta">
-                  <span class="member-count">${roleText}</span>
-                  ${createdDate ? `<span class="created-date">Created ${createdDate}</span>` : ''}
-     </div>
-     </div>
-              <div class="group-actions">
-                <button class="btn btn-primary" data-group-id="${group.id}">
-                  Enter Group
-     </button>
-     </div>
-            `;
+        card.innerHTML = `
+          <div class="group-info">
+            <h3 class="group-name">${escapeHtml(group.name)}</h3>
+            ${group.description ? `<p class="group-description">${escapeHtml(group.description)}</p>` : ''}
+            <div class="group-meta">
+              <span class="member-count">${roleText}</span>
+              ${createdDate ? `<span class="created-date">Created ${createdDate}</span>` : ''}
+            </div>
+          </div>
+          <div class="group-actions">
+            <button class="btn btn-primary btn-enter" data-group-id="${group.id}">
+              Enter Group
+            </button>
+            ${isOwner ? `
+              <button class="btn btn-danger btn-delete" data-group-id="${group.id}">
+                Delete Group
+              </button>
+            ` : ''}
+          </div>
+        `;
 
-         // hook up the Enter button
-         card.querySelector('button').addEventListener('click', () => {
-           enterGroup(group.id);
-         });
+        // Enter group
+        const enterBtn = card.querySelector('.btn-enter');
+        enterBtn.addEventListener('click', () => {
+          enterGroup(group.id);
+        });
 
-         return card;
-       }
+        // Delete group (owner only)
+        const deleteBtn = card.querySelector('.btn-delete');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', async () => {
+            const confirmed = confirm(
+              `Delete group "${group.name}" and erase all chores, points, and shop data for it? This cannot be undone.`
+            );
+            if (!confirmed) return;
+
+            try {
+              await deleteGroupOnServer(group.id);
+
+              // If this was the current group, clear it
+              const currentGroup = localStorage.getItem(CURRENT_GROUP_KEY);
+              if (String(currentGroup) === String(group.id)) {
+                localStorage.removeItem(CURRENT_GROUP_KEY);
+              }
+
+              // Wipe local state (points, chores, shop) for this group
+              clearLocalStateForGroup(group.id);
+
+              showMessage('Group deleted.');
+              await renderGroups();
+            } catch (err) {
+              console.error(err);
+              showMessage(err.message || 'Failed to delete group.', true);
+            }
+          });
+        }
+
+        return card;
+      }
+
+
 
        // ===================================================================
        // RENDER GROUPS (NOW FROM DB)
@@ -238,7 +322,7 @@
          if (!session) return;
 
          try {
-           const groups = await fetchGroupsForUser(session.userId);
+           const groups = await fetchGroupsForUser();
 
            if (!groups.length) {
              groupsList.classList.add('hidden');
@@ -317,17 +401,27 @@
          });
        }
 
-       logoutBtn.addEventListener('click', async () => {
-         const confirmed = await askLogoutConfirm();
-         if (confirmed) {
-           localStorage.removeItem(SESSION_KEY);
-           localStorage.removeItem(CURRENT_GROUP_KEY);
-           showMessage('Logging out...');
-           setTimeout(() => {
-             window.location.href = 'login.html';
-           }, 500);
-         }
-       });
+      logoutBtn.addEventListener('click', async () => {
+        const confirmed = await askLogoutConfirm();
+        if (confirmed) {
+
+          // Clear session-related keys
+          localStorage.removeItem(SESSION_KEY);
+          localStorage.removeItem(CURRENT_GROUP_KEY);
+
+          // ⭐ C.3: Clear all game + shop cached data to prevent contamination
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('tcg_')) {
+              localStorage.removeItem(key);
+            }
+          });
+
+          showMessage('Logging out.');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 500);
+        }
+      });
 
        // ===================================================================
        // EVENT LISTENERS - CREATE GROUP UI
