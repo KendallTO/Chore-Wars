@@ -330,28 +330,45 @@
             // ===================================
             // Logout confirmation modal
             function askLogoutConfirm() {
-                return new Promise((resolve) => {
-                    const overlay = document.createElement('div');
-                    overlay.className = 'tcg-modal-overlay';
-                    const modal = document.createElement('div');
-                    modal.className = 'tcg-modal';
-                    modal.innerHTML = `
-                        <p><strong>Confirm Logout</strong></p>
-                        <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
-                        <div class="tcg-modal-actions">
-                            <button class="btn-confirm">Logout</button>
-                            <button class="btn-cancel">Cancel</button>
-                        </div>
-                    `;
-                    overlay.appendChild(modal);
-                    document.body.appendChild(overlay);
-                    function cleanup() { document.body.removeChild(overlay); }
-                    function onConfirm() { cleanup(); resolve(true); }
-                    function onCancel() { cleanup(); resolve(false); }
-                    modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
-                    modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
-                    overlay.addEventListener('click', (e) => { if (e.target === overlay) onCancel(); });
+              return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'tcg-modal-overlay';
+
+                const modal = document.createElement('div');
+                modal.className = 'tcg-modal';
+
+                modal.innerHTML = `
+                <p><strong>Confirm Logout</strong></p>
+                <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
+                <div class="tcg-modal-actions">
+                  <button class="btn-confirm">Logout</button>
+                  <button class="btn-cancel">Cancel</button>
+     </div>
+              `;
+
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                function cleanup() {
+                  document.body.removeChild(overlay);
+                }
+
+                function onConfirm() {
+                  cleanup();
+                  resolve(true);
+                }
+
+                function onCancel() {
+                  cleanup();
+                  resolve(false);
+                }
+
+                modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+                modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+                overlay.addEventListener('click', (e) => {
+                  if (e.target === overlay) onCancel();
                 });
+              });
             }
             
             // Add Groups link and Logout button to navigation
@@ -366,35 +383,24 @@
                 
                 // Add logout functionality
                 document.getElementById('logout-btn').addEventListener('click', async () => {
-                    const confirmed = await askLogoutConfirm();
-                    if (confirmed) {
-                        // Call server logout
-                        try {
-                            const res = await fetch('/api/auth.php', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ action: 'logout' })
-                            });
-                            const data = await res.json();
-                            console.log('Logout response:', data);
-                        } catch (e) {
-                            console.error('Logout error:', e);
-                        }
-                        
-                        // Clear session + current group
-                        localStorage.removeItem('tcg_session_v1');
-                        localStorage.removeItem('tcg_current_group_v1');
+                  const confirmed = await askLogoutConfirm();
+                  if (confirmed) {
 
-                        // Wipe all chore/shop data cached in this browser
-                        Object.keys(localStorage).forEach(key => {
-                            if (key.startsWith('tcg_')) {
-                                localStorage.removeItem(key);
-                            }
-                        });
+                    // Clear session-related keys
+                    localStorage.removeItem(SESSION_KEY);
+                    localStorage.removeItem(CURRENT_GROUP_KEY);
 
-                        // Go back to login
-                        window.location.href = 'login.html';
-                    }
+                    // Clear all game + shop cached data to prevent contamination
+                    Object.keys(localStorage).forEach(key => {
+                      if (key.startsWith('tcg_')) {
+                        localStorage.removeItem(key);
+                      }
+                    });
+
+                    setTimeout(() => {
+                      window.location.href = 'login.html';
+                    }, 100);
+                  }
                 });
             }
 
