@@ -349,18 +349,28 @@
         try {
           const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
           if (!res.ok) return;
+
           const data = await res.json();
+
+          // If there is no DB state yet for this group, keep any local progress
+          // and push it up to the server instead of wiping it.
           if (!data) {
-            // no DB state for this user+group → wipe old local data
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.removeItem(POINTS_KEY);
-            localStorage.removeItem(HEADERS_KEY);
-            localStorage.removeItem(EXTRA_STATE_KEY);
-            render();
-            renderPoints();
+            const localState = buildFullGameState();
+
+            const hasLocalData =
+              (localState.chores && localState.chores.length > 0) ||
+              Object.values(localState.points || {}).some(v => v) ||
+              Object.keys(localState.headers || {}).length > 0 ||
+              Object.values(localState.extraState || {}).some(v => v);
+
+            if (hasLocalData) {
+              await saveStateToServer(localState);
+            }
+
             return;
           }
 
+          // We DO have server data → hydrate localStorage from DB
           if (data.chores) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data.chores));
           }
@@ -482,8 +492,9 @@
       // ===================================
       // POINTS QUICK CONTROLS
       // ===================================
-      // Add 10 points or reset buttons for left/right players (if they exist in DOM)
-      document.addEventListener('DOMContentLoaded', () => {
+      // Add 10 points or reset buttons for left/right players (if they exist in DOM),
+      // and load the latest game state from the server on page load.
+      document.addEventListener('DOMContentLoaded', async () => {
         const leftAdd = document.getElementById('left-add-10');
         const leftReset = document.getElementById('left-reset');
         const rightAdd = document.getElementById('right-add-10');
@@ -491,27 +502,46 @@
 
         if (leftAdd) {
           leftAdd.addEventListener('click', () => {
-            const p = loadPoints(); p.left = (p.left || 0) + 10; savePoints(p); renderPoints();
+            const p = loadPoints();
+            p.left = (p.left || 0) + 10;
+            savePoints(p);
+            renderPoints();
           });
         }
         if (leftReset) {
           leftReset.addEventListener('click', () => {
             if (!confirm('Reset left points to 0?')) return;
-            const p = loadPoints(); p.left = 0; savePoints(p); renderPoints();
+            const p = loadPoints();
+            p.left = 0;
+            savePoints(p);
+            renderPoints();
           });
         }
         if (rightAdd) {
           rightAdd.addEventListener('click', () => {
-            const p = loadPoints(); p.right = (p.right || 0) + 10; savePoints(p); renderPoints();
+            const p = loadPoints();
+            p.right = (p.right || 0) + 10;
+            savePoints(p);
+            renderPoints();
           });
         }
         if (rightReset) {
           rightReset.addEventListener('click', () => {
             if (!confirm('Reset right points to 0?')) return;
-            const p = loadPoints(); p.right = 0; savePoints(p); renderPoints();
+            const p = loadPoints();
+            p.right = 0;
+            savePoints(p);
+            renderPoints();
           });
         }
 
+        // First, try to load any saved state for this group from the server.
+        await loadStateFromServer();
+
+        // Then render the chores and the scoreboard based on whatever is now in storage.
+        if (typeof render === 'function') {
+          render();
+        }
         renderPoints();
       });
 
