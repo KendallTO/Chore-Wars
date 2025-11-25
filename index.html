@@ -238,9 +238,19 @@
           `;
           
           // Add logout functionality
-          document.getElementById('logout-btn').addEventListener('click', () => {
-              askLogoutConfirm().then(confirmed => {
+          document.getElementById('logout-btn').addEventListener('click', async () => {
+              askLogoutConfirm().then(async (confirmed) => {
                   if (confirmed) {
+                      // Save current user's game data before logging out (for cross-device sync)
+                      try {
+                          // Dispatch a custom event to signal save to user account
+                          window.dispatchEvent(new CustomEvent('saveUserDataBeforeLogout'));
+                          // Give time for the save to complete
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                      } catch (e) {
+                          console.error('Error saving user data before logout:', e);
+                      }
+
                       // Clear session + current group
                       localStorage.removeItem('tcg_session_v1');
                       localStorage.removeItem('tcg_current_group_v1');
@@ -343,6 +353,32 @@
         }, 500);
       }
 
+      // Saves the full game state to the user's personal account (cross-device sync)
+      async function saveUserDataToAccount() {
+        const fullState = buildFullGameState();
+        
+        try {
+          const response = await fetch('/api/save_user_data.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: fullState
+            })
+          });
+
+          if (!response.ok) {
+            console.error('Failed to save user data:', response.status);
+            return false;
+          }
+
+          const result = await response.json();
+          return result.ok === true;
+        } catch (e) {
+          console.error('Error saving user data to account:', e);
+          return false;
+        }
+      }
+
       async function loadStateFromServer() {
         if (!currentGroup || currentGroup === 'default') return;
 
@@ -385,6 +421,51 @@
           }
         } catch (e) {
           console.error('Error loading game state from server', e);
+        }
+      }
+
+      // Loads user's personal game data from their account (cross-device sync)
+      async function loadUserData() {
+        try {
+          const res = await fetch('/api/load_user_data.php');
+          if (!res.ok) return null;
+
+          const result = await res.json();
+          if (result.ok && result.data) {
+            return result.data;
+          }
+          return null;
+        } catch (e) {
+          console.error('Error loading user data from server', e);
+          return null;
+        }
+      }
+
+      // Merges user data (from account) with current local data
+      // Strategy: Use server data only if local storage is completely empty
+      async function mergeUserDataIfNeeded() {
+        const userData = await loadUserData();
+        if (!userData) return;
+
+        // Check if local storage has any data already
+        const hasLocalChores = (loadChores() || []).length > 0;
+        const hasLocalPoints = Object.values(loadPoints() || {}).some(v => v);
+
+        // If local storage is empty, restore from user account data
+        if (!hasLocalChores && !hasLocalPoints) {
+          if (userData.chores) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(userData.chores));
+          }
+          if (userData.points) {
+            localStorage.setItem(POINTS_KEY, JSON.stringify(userData.points));
+          }
+          if (userData.headers) {
+            localStorage.setItem(HEADERS_KEY, JSON.stringify(userData.headers));
+          }
+          if (userData.extraState) {
+            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(userData.extraState));
+          }
+          console.log('Restored game data from user account');
         }
       }
 
@@ -538,11 +619,19 @@
         // First, try to load any saved state for this group from the server.
         await loadStateFromServer();
 
+        // Then, try to load user's personal account data if on a new device (cross-device sync)
+        await mergeUserDataIfNeeded();
+
         // Then render the chores and the scoreboard based on whatever is now in storage.
         if (typeof render === 'function') {
           render();
         }
         renderPoints();
+      });
+
+      // Listen for logout event to save user data
+      window.addEventListener('saveUserDataBeforeLogout', async () => {
+        await saveUserDataToAccount();
       });
 
 

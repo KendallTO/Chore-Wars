@@ -112,7 +112,33 @@ if ($action === 'login') {
         'email'    => $user['email'],
     ];
 
-    send_json(['ok' => true, 'user' => $_SESSION['user']]);
+    // Load user's previously saved game data for cross-device sync
+    $userData = null;
+    try {
+        $stmt = $pdo->prepare('
+            SELECT game_data, updated_at
+            FROM user_game_data
+            WHERE user_id = :user_id
+        ');
+        $stmt->execute([':user_id' => (int)$user['id']]);
+        $row = $stmt->fetch();
+        
+        if ($row) {
+            $userData = [
+                'data' => json_decode($row['game_data'], true),
+                'updatedAt' => $row['updated_at']
+            ];
+        }
+    } catch (Exception $e) {
+        // If there's an error loading user data, continue without it
+        error_log('Error loading user game data: ' . $e->getMessage());
+    }
+
+    send_json([
+        'ok' => true,
+        'user' => $_SESSION['user'],
+        'userData' => $userData
+    ]);
 }
 
 // ---------- LOGOUT ----------
