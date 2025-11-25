@@ -2060,6 +2060,18 @@
                     }
                 });
 
+                // Periodic auto-save every 30 seconds (ensures data is saved without requiring logout or refresh)
+                setInterval(() => {
+                    const currentGroup = getCurrentGroup();
+                    if (currentGroup && currentGroup !== 'default') {
+                        const shopState = {
+                            items: loadItems(),
+                            inventories: loadInventories()
+                        };
+                        saveShopStateToServer(shopState);
+                    }
+                }, 30000);
+
                 // 6) Now that everything is ready, show the app
                 const root = document.getElementById('shop-app-root');
                 if (root) {

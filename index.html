@@ -741,6 +741,15 @@
         }
       });
 
+      // Periodic auto-save every 30 seconds (ensures data is saved without requiring logout or refresh)
+      setInterval(() => {
+        const currentGroup = getCurrentGroup();
+        if (currentGroup && currentGroup !== 'default') {
+          const fullState = buildFullGameState();
+          saveStateToServer(fullState);
+        }
+      }, 30000);
+
       // ===================================
       // EDITABLE HEADERS (Player 1 & 2)
       // ===================================
