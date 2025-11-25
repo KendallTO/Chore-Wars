@@ -338,12 +338,60 @@
                     <button id="logout-btn" class="header-btn">Logout</button>
                 `;
                 
-                // Add logout functionality
+                // Add logout functionality with confirmation modal
                 const logoutBtn = document.getElementById('logout-btn');
                 if (logoutBtn) {
-                  logoutBtn.addEventListener('click', function() {
-                    // Show confirmation dialog
-                    if (confirm('Are you sure you want to logout? You\'ll need to sign in again to access your groups.')) {
+                  // Logout confirmation modal function
+                  function askLogoutConfirm() {
+                    return new Promise((resolve) => {
+                      const overlay = document.createElement('div');
+                      overlay.className = 'tcg-modal-overlay';
+
+                      const modal = document.createElement('div');
+                      modal.className = 'tcg-modal';
+
+                      modal.innerHTML = `
+                        <p><strong>Confirm Logout</strong></p>
+                        <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
+                        <div class="tcg-modal-actions">
+                          <button class="btn-confirm">Logout</button>
+                          <button class="btn-cancel">Cancel</button>
+                        </div>
+                      `;
+
+                      overlay.appendChild(modal);
+                      document.body.appendChild(overlay);
+
+                      function cleanup() {
+                        document.body.removeChild(overlay);
+                      }
+
+                      function onConfirm() {
+                        cleanup();
+                        resolve(true);
+                      }
+
+                      function onCancel() {
+                        cleanup();
+                        resolve(false);
+                      }
+
+                      modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+                      modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+                      overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) onCancel();
+                      });
+                    });
+                  }
+
+                  logoutBtn.addEventListener('click', async () => {
+                    const confirmed = await askLogoutConfirm();
+                    if (confirmed) {
+                      // Dispatch custom events that the shop module will listen for to save state before logout
+                      window.dispatchEvent(new CustomEvent('shopLogoutRequested'));
+                      // Give time for the saves to complete
+                      await new Promise(resolve => setTimeout(resolve, 800));
+                      
                       // Clear all localStorage data
                       localStorage.clear();
                       // Redirect to login
@@ -443,24 +491,42 @@
             async function loadShopStateFromServer() {
                 if (!currentGroup || currentGroup === 'default') return;
 
+                // Clear cached shop data first
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(INVENTORY_KEY);
+                console.log('[loadShopStateFromServer] Cleared shop state cache for group', currentGroup);
+
                 try {
                     const res = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(currentGroup)}`);
-                    if (!res.ok) return;
+                    if (!res.ok) {
+                        // Initialize with empty state
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+                        localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
+                        return;
+                    }
                     const data = await res.json();
                     if (!data) {
-                    localStorage.removeItem(STORAGE_KEY);
-                    localStorage.removeItem(INVENTORY_KEY);
-                    return;
+                        // Initialize with empty state
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+                        localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
+                        return;
                     }
                     
-                    if (Array.isArray(data.items) && data.items.length > 0) {
+                    if (Array.isArray(data.items)) {
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(data.items));
+                    } else {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
                     }
-                    if (data.inventories && Object.keys(data.inventories).length > 0) {
+                    if (data.inventories && typeof data.inventories === 'object') {
                         localStorage.setItem(INVENTORY_KEY, JSON.stringify(data.inventories));
+                    } else {
+                        localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
                     }
                 } catch (e) {
                     console.error('Error loading shop state from server', e);
+                    // Initialize with empty state on error
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+                    localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
                 }
             }
 
@@ -473,23 +539,51 @@
                 // what the latest scores and player names are.
                 if (!currentGroup || currentGroup === 'default') return;
 
+                // Clear cached data first
+                localStorage.removeItem(`tcg_points_v1_${currentGroup}`);
+                localStorage.removeItem(`tcg_column_headers_v1_${currentGroup}`);
+                localStorage.removeItem(`tcg_extra_cols_v1_${currentGroup}`);
+                console.log('[syncGameStateFromServer] Cleared game state cache for group', currentGroup);
+
                 try {
                     const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
-                    if (!res.ok) return;
+                    if (!res.ok) {
+                        // Initialize with empty state
+                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
+                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+                        return;
+                    }
                     const data = await res.json();
-                    if (!data) return;
+                    if (!data) {
+                        // Initialize with empty state
+                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
+                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+                        return;
+                    }
 
                     if (data.points) {
                         localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(data.points));
+                    } else {
+                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
                     }
                     if (data.headers) {
                         localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify(data.headers));
+                    } else {
+                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
                     }
                     if (data.extraState) {
                         localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify(data.extraState));
+                    } else {
+                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
                     }
                 } catch (e) {
                     console.error('Error syncing game state to shop page', e);
+                    // Initialize with empty state on error
+                    localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+                    localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
+                    localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
                 }
             }
 
@@ -529,6 +623,71 @@
                 gamePointsSaveTimeoutId = setTimeout(() => {
                     saveUpdatedPointsToServerFromShop();
                 }, 500);
+            }
+
+            // ===================================
+            // POINTS SYSTEM
+            // ===================================
+            // Loads points for all players from localStorage
+            function loadPoints() {
+                // Kid-Friendly: "Load the scoreboards"
+                // We open the saved box of points. If a player is missing, we give them 0.
+                try {
+                    const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
+                    const raw = localStorage.getItem(POINTS_KEY);
+                    const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
+                    // ensure extra fields exist for compatibility
+                    if (typeof parsed.left !== 'number') parsed.left = 0;
+                    if (typeof parsed.right !== 'number') parsed.right = 0;
+                    if (typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
+                    if (typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
+                    if (typeof parsed.extra3 !== 'number') parsed.extra3 = 0;
+                    if (typeof parsed.extra4 !== 'number') parsed.extra4 = 0;
+                    if (typeof parsed.extra5 !== 'number') parsed.extra5 = 0;
+                    if (typeof parsed.extra6 !== 'number') parsed.extra6 = 0;
+                    if (typeof parsed.extra7 !== 'number') parsed.extra7 = 0;
+                    if (typeof parsed.extra8 !== 'number') parsed.extra8 = 0;
+                    return parsed;
+                } catch (e) {
+                    return { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 };
+                }
+            }
+
+            // Saves points object to localStorage
+            function savePoints(pointsObj) {
+                try {
+                    const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
+                    localStorage.setItem(POINTS_KEY, JSON.stringify(pointsObj));
+                } catch (e) {
+                    console.error('Error saving points to localStorage', e);
+                }
+            }
+
+            // Updates the DOM with current points for all players
+            function renderPoints() {
+                // Kid-Friendly: "Update the scoreboard displays"
+                // We look at the stored points and set the numbers on the page.
+                const p = loadPoints();
+                const leftEl = document.getElementById('shop-left-points');
+                const rightEl = document.getElementById('shop-right-points');
+                const extra1El = document.getElementById('shop-extra1-points');
+                const extra2El = document.getElementById('shop-extra2-points');
+                const extra3El = document.getElementById('shop-extra3-points');
+                const extra4El = document.getElementById('shop-extra4-points');
+                const extra5El = document.getElementById('shop-extra5-points');
+                const extra6El = document.getElementById('shop-extra6-points');
+                const extra7El = document.getElementById('shop-extra7-points');
+                const extra8El = document.getElementById('shop-extra8-points');
+                if (leftEl) leftEl.textContent = String(p.left || 0);
+                if (rightEl) rightEl.textContent = String(p.right || 0);
+                if (extra1El) extra1El.textContent = String(p.extra1 || 0);
+                if (extra2El) extra2El.textContent = String(p.extra2 || 0);
+                if (extra3El) extra3El.textContent = String(p.extra3 || 0);
+                if (extra4El) extra4El.textContent = String(p.extra4 || 0);
+                if (extra5El) extra5El.textContent = String(p.extra5 || 0);
+                if (extra6El) extra6El.textContent = String(p.extra6 || 0);
+                if (extra7El) extra7El.textContent = String(p.extra7 || 0);
+                if (extra8El) extra8El.textContent = String(p.extra8 || 0);
             }
 
             // ===================================
@@ -1944,6 +2103,62 @@
                 // 6) Initialize inventory dropdown toggles once
                 initInventoryToggles();
             })();
+
+            // ===================================
+            // LOGOUT EVENT LISTENER
+            // ===================================
+            // Listen for logout request from auth module and save shop state before clearing
+            window.addEventListener('shopLogoutRequested', async () => {
+              try {
+                // Save both game state and shop state before logout
+                const groupId = currentGroup;
+                if (groupId && groupId !== 'default') {
+                  const fullState = {
+                    chores: JSON.parse(localStorage.getItem(`tcg_chores_v1_${groupId}`) || '[]'),
+                    points: JSON.parse(localStorage.getItem(`tcg_points_v1_${groupId}`) || '{}'),
+                    headers: JSON.parse(localStorage.getItem(`tcg_column_headers_v1_${groupId}`) || '{}'),
+                    extraState: JSON.parse(localStorage.getItem(`tcg_extra_cols_v1_${groupId}`) || '{}')
+                  };
+
+                  // Save game state to server
+                  await fetch('/api/save_game_state.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groupId: groupId, data: fullState })
+                  });
+
+                  // Save shop state to server
+                  const shopState = buildShopState();
+                  await fetch('/api/save_shop_state.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groupId: groupId, data: shopState })
+                  });
+
+                  // Save user's personal account data as well (best-effort)
+                  const sessionRaw = localStorage.getItem(SESSION_KEY_SERVER);
+                  if (sessionRaw) {
+                    try {
+                      await fetch('/api/save_user_data.php', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: fullState })
+                      });
+                    } catch (e) {
+                      // ignore user-data save errors
+                    }
+                  }
+
+                  // small delay to allow server round-trip
+                  await new Promise(r => setTimeout(r, 300));
+                }
+              } catch (e) {
+                console.error('Error saving shop state before logout:', e);
+              }
+            });
 
             // ===================================
             // STORAGE EVENT LISTENERS

@@ -237,37 +237,108 @@
               <button id="logout-btn" class="header-btn">Logout</button>
           `;
           
+          // Add logout confirmation modal
+          function askLogoutConfirm() {
+            return new Promise((resolve) => {
+              const overlay = document.createElement('div');
+              overlay.className = 'tcg-modal-overlay';
+
+              const modal = document.createElement('div');
+              modal.className = 'tcg-modal';
+
+              modal.innerHTML = `
+                <p><strong>Confirm Logout</strong></p>
+                <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
+                <div class="tcg-modal-actions">
+                  <button class="btn-confirm">Logout</button>
+                  <button class="btn-cancel">Cancel</button>
+                </div>
+              `;
+
+              overlay.appendChild(modal);
+              document.body.appendChild(overlay);
+
+              function cleanup() {
+                document.body.removeChild(overlay);
+              }
+
+              function onConfirm() {
+                cleanup();
+                resolve(true);
+              }
+
+              function onCancel() {
+                cleanup();
+                resolve(false);
+              }
+
+              modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+              modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+              overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) onCancel();
+              });
+            });
+          }
+
           // Add logout functionality
           document.getElementById('logout-btn').addEventListener('click', async () => {
-              askLogoutConfirm().then(async (confirmed) => {
-                  if (confirmed) {
-                      // Save current user's game data before logging out (for cross-device sync)
-                        try {
-                          // Dispatch events to save group state AND user data before logout
-                          // The core module listens for these and performs the actual saves.
-                          window.dispatchEvent(new CustomEvent('saveGroupStateBeforeLogout'));
-                          window.dispatchEvent(new CustomEvent('saveUserDataBeforeLogout'));
-                          // Give time for the saves to complete
-                          await new Promise(resolve => setTimeout(resolve, 800));
-                        } catch (e) {
-                          console.error('Error saving data before logout:', e);
-                        }
+              const confirmed = await askLogoutConfirm();
+              if (confirmed) {
+                  // Attempt to persist current group state and user data before clearing
+                  try {
+                    const groupId = localStorage.getItem('tcg_current_group_v1');
+                    if (groupId && groupId !== 'default') {
+                      const fullState = {
+                        chores: JSON.parse(localStorage.getItem(`tcg_chores_v1_${groupId}`) || '[]'),
+                        points: JSON.parse(localStorage.getItem(`tcg_points_v1_${groupId}`) || '{}'),
+                        headers: JSON.parse(localStorage.getItem(`tcg_column_headers_v1_${groupId}`) || '{}'),
+                        extraState: JSON.parse(localStorage.getItem(`tcg_extra_cols_v1_${groupId}`) || '{}')
+                      };
 
-                      // Clear session + current group
-                      localStorage.removeItem('tcg_session_v1');
-                      localStorage.removeItem('tcg_current_group_v1');
-
-                      // 🔴 C.3: wipe all chore/shop data cached in this browser
-                      Object.keys(localStorage).forEach(key => {
-                          if (key.startsWith('tcg_')) {
-                              localStorage.removeItem(key);
-                          }
+                      // Save group state to server
+                      await fetch('/api/save_game_state.php', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ groupId: groupId, data: fullState })
                       });
 
-                      // Go back to login
-                      window.location.href = 'login.html';
+                      // Save user's personal account data as well (best-effort)
+                      const sessionRaw = localStorage.getItem('tcg_session_v1');
+                      if (sessionRaw) {
+                        try {
+                          await fetch('/api/save_user_data.php', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ data: fullState })
+                          });
+                        } catch (e) {
+                          // ignore user-data save errors
+                        }
+                      }
+
+                      // small delay to allow server round-trip
+                      await new Promise(r => setTimeout(r, 300));
+                    }
+                  } catch (e) {
+                    console.error('Error saving state before logout:', e);
                   }
-              });
+
+                  // Clear session + current group
+                  localStorage.removeItem('tcg_session_v1');
+                  localStorage.removeItem('tcg_current_group_v1');
+
+                  // 🔴 C.3: wipe all chore/shop data cached in this browser
+                  Object.keys(localStorage).forEach(key => {
+                      if (key.startsWith('tcg_')) {
+                          localStorage.removeItem(key);
+                      }
+                  });
+
+                  // Go back to login
+                  window.location.href = 'login.html';
+              }
           });
         }
 
@@ -386,45 +457,67 @@
       async function loadStateFromServer() {
         if (!currentGroup || currentGroup === 'default') return;
 
+        // Clear localStorage for this group before loading fresh data from server
+        // This ensures we always display the latest server data, not stale cached data
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(POINTS_KEY);
+        localStorage.removeItem(HEADERS_KEY);
+        localStorage.removeItem(EXTRA_STATE_KEY);
+        console.log('[loadStateFromServer] Cleared localStorage for group', currentGroup);
+
         try {
           const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`, { credentials: 'same-origin' });
-          if (!res.ok) return;
+          if (!res.ok) {
+            console.log('[loadStateFromServer] No response from server, using empty state');
+            // Initialize with empty state
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+            localStorage.setItem(POINTS_KEY, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+            localStorage.setItem(HEADERS_KEY, JSON.stringify({}));
+            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+            return;
+          }
 
           const data = await res.json();
 
-          // If there is no DB state yet for this group, keep any local progress
-          // and push it up to the server instead of wiping it.
+          // If there is no DB state yet for this group, initialize with empty data
           if (!data) {
-            const localState = buildFullGameState();
-
-            const hasLocalData =
-              (localState.chores && localState.chores.length > 0) ||
-              Object.values(localState.points || {}).some(v => v) ||
-              Object.keys(localState.headers || {}).length > 0 ||
-              Object.values(localState.extraState || {}).some(v => v);
-
-            if (hasLocalData) {
-              await saveStateToServer(localState);
-            }
-
+            console.log('[loadStateFromServer] No data in DB for group', currentGroup, '- initializing empty');
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+            localStorage.setItem(POINTS_KEY, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+            localStorage.setItem(HEADERS_KEY, JSON.stringify({}));
+            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
             return;
           }
 
           // We DO have server data → hydrate localStorage from DB
+          console.log('[loadStateFromServer] Loaded data from server:', data);
           if (data.chores) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data.chores));
+          } else {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
           }
           if (data.points) {
             localStorage.setItem(POINTS_KEY, JSON.stringify(data.points));
+          } else {
+            localStorage.setItem(POINTS_KEY, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
           }
           if (data.headers) {
             localStorage.setItem(HEADERS_KEY, JSON.stringify(data.headers));
+          } else {
+            localStorage.setItem(HEADERS_KEY, JSON.stringify({}));
           }
           if (data.extraState) {
             localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(data.extraState));
+          } else {
+            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
           }
         } catch (e) {
           console.error('Error loading game state from server', e);
+          // Initialize with empty state on error
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+          localStorage.setItem(POINTS_KEY, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+          localStorage.setItem(HEADERS_KEY, JSON.stringify({}));
+          localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
         }
       }
 
@@ -484,7 +577,14 @@
         // We open the saved box of points. If a player is missing, we give them 0.
         try {
           const raw = localStorage.getItem(POINTS_KEY);
-          const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
+          let parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
+          
+          // Handle case where points was stored as an array instead of object
+          if (Array.isArray(parsed)) {
+            console.warn('[loadPoints] Points was stored as array, converting to object:', parsed);
+            parsed = { left: 0, right: 0 };
+          }
+          
           // ensure extra fields exist for compatibility
           if (typeof parsed.left !== 'number') parsed.left = 0;
           if (typeof parsed.right !== 'number') parsed.right = 0;
@@ -498,17 +598,24 @@
           if (typeof parsed.extra8 !== 'number') parsed.extra8 = 0;
           return parsed;
         } catch (e) {
+          console.error('[loadPoints] Error parsing points:', e);
           return { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 };
         }
       }
       // Saves points object to localStorage
-      function savePoints(p) { localStorage.setItem(POINTS_KEY, JSON.stringify(p)); queueServerSave(); }
+      function savePoints(p) { 
+        console.log('[savePoints] Saving to localStorage with key:', POINTS_KEY, 'value:', JSON.stringify(p));
+        localStorage.setItem(POINTS_KEY, JSON.stringify(p)); 
+        console.log('[savePoints] Stored to localStorage, now calling queueServerSave');
+        queueServerSave(); 
+      }
       
       // Updates all points displays in the DOM
       function renderPoints() {
         // Kid-Friendly: "Update the scoreboard displays"
         // We look at the stored points and set the numbers on the page.
         const p = loadPoints();
+        console.log('[renderPoints] Loaded points:', JSON.stringify(p));
         const leftEl = document.getElementById('left-points');
         const rightEl = document.getElementById('right-points');
         const extra1El = document.getElementById('extra1-points');
@@ -519,8 +626,14 @@
         const extra6El = document.getElementById('extra6-points');
         const extra7El = document.getElementById('extra7-points');
         const extra8El = document.getElementById('extra8-points');
-        if (leftEl) leftEl.textContent = String(p.left || 0);
-        if (rightEl) rightEl.textContent = String(p.right || 0);
+        if (leftEl) { 
+          leftEl.textContent = String(p.left || 0); 
+          console.log('[renderPoints] Set left-points element to:', p.left, 'Element now shows:', leftEl.textContent);
+        }
+        if (rightEl) { 
+          rightEl.textContent = String(p.right || 0); 
+          console.log('[renderPoints] Set right-points element to:', p.right, 'Element now shows:', rightEl.textContent);
+        }
         if (extra1El) extra1El.textContent = String(p.extra1 || 0);
         if (extra2El) extra2El.textContent = String(p.extra2 || 0);
         if (extra3El) extra3El.textContent = String(p.extra3 || 0);
@@ -580,6 +693,16 @@
       // Add 10 points or reset buttons for left/right players (if they exist in DOM),
       // and load the latest game state from the server on page load.
       document.addEventListener('DOMContentLoaded', async () => {
+        // IMPORTANT: Check if group has changed since page loaded
+        // If so, reload to get fresh data for the new group
+        const pageLoadGroup = currentGroup;
+        const currentPageGroup = localStorage.getItem('tcg_current_group_v1') || 'default';
+        if (pageLoadGroup !== currentPageGroup) {
+          console.log('[DOMContentLoaded] Group changed from', pageLoadGroup, 'to', currentPageGroup, '- reloading page');
+          window.location.reload();
+          return;
+        }
+
         const leftAdd = document.getElementById('left-add-10');
         const leftReset = document.getElementById('left-reset');
         const rightAdd = document.getElementById('right-add-10');
@@ -646,6 +769,20 @@
       // Listen for logout event to save user data
       window.addEventListener('saveUserDataBeforeLogout', async () => {
         await saveUserDataToAccount();
+      });
+
+      // Watch for group changes and reload page if detected
+      // This ensures we always display data for the currently selected group
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          // Page came back into focus
+          const pageLoadGroup = currentGroup;
+          const currentPageGroup = localStorage.getItem('tcg_current_group_v1') || 'default';
+          if (pageLoadGroup !== currentPageGroup) {
+            console.log('[visibilitychange] Group changed from', pageLoadGroup, 'to', currentPageGroup, '- reloading page');
+            window.location.reload();
+          }
+        }
       });
 
 
@@ -1348,9 +1485,13 @@
             notify('Chore must be assigned to a column to complete.', 1800);
             return;
           }
+          console.log('[COMPLETE] Starting completion for chore:', chore.name, 'at location:', loc, 'with points:', chore.points);
           const points = loadPoints();
+          console.log('[COMPLETE] Before adding points:', JSON.stringify(points));
           points[loc] = (points[loc] || 0) + Number(chore.points || 0);
+          console.log('[COMPLETE] After adding points:', JSON.stringify(points));
           savePoints(points);
+          console.log('[COMPLETE] Called savePoints, now calling renderPoints');
           renderPoints();
 
           // unassign the chore after completion instead of deleting
