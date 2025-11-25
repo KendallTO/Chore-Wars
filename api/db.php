@@ -1,6 +1,6 @@
 <?php
 // api/db.php
-header('Content-Type: application/json; charset=utf-8');
+// Shared PDO connection - do NOT output headers here as it breaks includers
 
 $DB_HOST = 'db5019042997.hosting-data.io';   // e.g. db5019042997.hosting-data.io
 $DB_NAME = 'dbs14985870';   // e.g. dbs14985870

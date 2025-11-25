@@ -339,25 +339,18 @@
                 `;
                 
                 // Add logout functionality
-                document.getElementById('logout-btn').addEventListener('click', () => {
-                    askLogoutConfirm().then(confirmed => {
-                        if (confirmed) {
-                            // Clear session + current group
-                            localStorage.removeItem('tcg_session_v1');
-                            localStorage.removeItem('tcg_current_group_v1');
-
-                            // 🔴 C.3: wipe all chore/shop data cached in this browser
-                            Object.keys(localStorage).forEach(key => {
-                                if (key.startsWith('tcg_')) {
-                                    localStorage.removeItem(key);
-                                }
-                            });
-
-                            // Go back to login
-                            window.location.href = 'login.html';
-                        }
-                    });
-                });
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                  logoutBtn.addEventListener('click', function() {
+                    // Show confirmation dialog
+                    if (confirm('Are you sure you want to logout? You\'ll need to sign in again to access your groups.')) {
+                      // Clear all localStorage data
+                      localStorage.clear();
+                      // Redirect to login
+                      window.location.href = 'login.html';
+                    }
+                  });
+                }
             }
 
             const groupDisplay = document.getElementById('group-display');
