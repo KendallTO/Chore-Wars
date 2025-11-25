@@ -539,11 +539,20 @@
 
             async function saveShopStateToServer(fullState) {
                 const session = getSessionForServer();
-                if (!session || !session.userId) return;
-                if (!currentGroup || currentGroup === 'default') return;
+                if (!session || !session.userId) {
+                    console.warn('[SHOP SAVE] No session or userId - skipping server save');
+                    return;
+                }
+                if (!currentGroup || currentGroup === 'default') {
+                    console.warn('[SHOP SAVE] No current group or default group - skipping server save');
+                    return;
+                }
+
+                console.log('[SHOP SAVE] Saving to server for group:', currentGroup);
+                console.log('[SHOP SAVE] Full state:', fullState);
 
                 try {
-                    await fetch('/api/save_shop_state.php', {
+                    const response = await fetch('/api/save_shop_state.php', {
                         method: 'POST',
                         credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json' },
@@ -552,6 +561,15 @@
                             data: fullState
                         })
                     });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('[SHOP SAVE] Server error:', response.status, errorText);
+                        return;
+                    }
+
+                    const result = await response.json();
+                    console.log('[SHOP SAVE] Save successful:', result);
                 } catch (e) {
                     console.error('Error saving shop state to server', e);
                 }
@@ -560,10 +578,12 @@
             let shopSaveTimeoutId = null;
             function queueShopServerSave() {
                 const state = buildShopState();
+                console.log('[SHOP QUEUE] Queuing server save with state:', state);
                 if (shopSaveTimeoutId) {
                     clearTimeout(shopSaveTimeoutId);
                 }
                 shopSaveTimeoutId = setTimeout(() => {
+                    console.log('[SHOP QUEUE] Executing queued save now');
                     saveShopStateToServer(state);
                 }, 500);
             }

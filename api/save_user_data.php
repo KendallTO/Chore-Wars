@@ -61,16 +61,16 @@ try {
 
     // Insert or update
     $stmt = $pdo->prepare('
-        INSERT INTO user_game_data (user_id, game_data, updated_at)
-        VALUES (:user_id, :game_data, NOW())
+        INSERT INTO user_game_data (user_id, data_json, updated_at)
+        VALUES (:user_id, :data_json, NOW())
         ON DUPLICATE KEY UPDATE
-            game_data = VALUES(game_data),
+            data_json = VALUES(data_json),
             updated_at = VALUES(updated_at)
     ');
 
     $stmt->execute([
         ':user_id' => $userId,
-        ':game_data' => $dataJson
+        ':data_json' => $dataJson
     ]);
 
     echo json_encode(['ok' => true]);

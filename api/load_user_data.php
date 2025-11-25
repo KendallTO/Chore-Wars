@@ -43,7 +43,7 @@ $userId = (int)$_SESSION['user']['id'];
 
 try {
     $stmt = $pdo->prepare('
-        SELECT game_data, updated_at
+        SELECT data_json, updated_at
         FROM user_game_data
         WHERE user_id = :user_id
     ');
@@ -62,7 +62,7 @@ try {
     }
 
     // Decode and return the game data
-    $gameData = json_decode($row['game_data'], true);
+    $gameData = json_decode($row['data_json'], true);
 
     echo json_encode([
         'ok' => true,
