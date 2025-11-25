@@ -347,31 +347,10 @@
        // ===================================================================
        function enterGroup(groupId) {
          setCurrentGroup(groupId);
-         
-         // Clear all game-related localStorage data to ensure fresh start
-         // This prevents data from other groups from being displayed
-         clearGameDataFromLocalStorage();
-         
          showMessage('Entering group...');
          setTimeout(() => {
            window.location.href = 'index.html';
          }, 500);
-       }
-
-       // Clear all game-related data from localStorage
-       function clearGameDataFromLocalStorage() {
-         const keysToRemove = [];
-         for (let i = 0; i < localStorage.length; i++) {
-           const key = localStorage.key(i);
-           // Remove all tcg_ keys except session and current_group
-           if (key && key.startsWith('tcg_') && 
-               key !== 'tcg_session_v1' && 
-               key !== 'tcg_current_group_v1') {
-             keysToRemove.push(key);
-           }
-         }
-         keysToRemove.forEach(key => localStorage.removeItem(key));
-         console.log('[clearGameData] Removed', keysToRemove.length, 'localStorage keys');
        }
 
        // expose for inline HTML if needed
