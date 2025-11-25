@@ -461,15 +461,20 @@
         }
       }
 
-      async function loadStateFromServer() {
+      async function loadStateFromServer(forceReload = false) {
         const currentGroup = getCurrentGroup();
         if (!currentGroup || currentGroup === 'default') return;
 
-        // Always clear localStorage first to ensure fresh load
-        localStorage.removeItem(getStorageKey());
-        localStorage.removeItem(getPointsKey());
-        localStorage.removeItem(getHeadersKey());
-        localStorage.removeItem(getExtraStateKey());
+        // Check if we already have local data for this group
+        const hasLocalData = localStorage.getItem(getStorageKey()) !== null;
+        
+        // Only load from server if we don't have local data OR force reload is requested
+        if (hasLocalData && !forceReload) {
+          console.log('[loadStateFromServer] Using existing localStorage for group', currentGroup);
+          return;
+        }
+
+        console.log('[loadStateFromServer] Loading from server for group', currentGroup);
 
         try {
           const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`, { credentials: 'same-origin' });

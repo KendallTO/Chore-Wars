@@ -348,10 +348,6 @@
        function enterGroup(groupId) {
          setCurrentGroup(groupId);
          
-         // Clear localStorage for THIS specific group to force fresh load from server
-         // This ensures we always see the current server state for the group
-         clearLocalStateForGroup(groupId);
-         
          showMessage('Entering group...');
          setTimeout(() => {
            window.location.href = 'index.html';
