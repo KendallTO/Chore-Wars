@@ -611,6 +611,13 @@
                 } catch (e) {
                     console.error('Error saving points to localStorage', e);
                 }
+                // Also persist updated points to the server (debounced)
+                // so scores from the shop stay in sync with the chore board.
+                try {
+                    if (typeof queueGamePointsServerSave === 'function') {
+                        queueGamePointsServerSave();
+                    }
+                } catch (_) {}
             }
 
             // Updates the DOM with current points for all players
