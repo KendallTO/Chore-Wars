@@ -532,6 +532,12 @@
       // Merges user data (from account) with current local data
       // Strategy: Use server data only if local storage is completely empty
       async function mergeUserDataIfNeeded() {
+        // DISABLED: This legacy cross-device sync is incompatible with group-based storage.
+        // Group data is now loaded via loadStateFromServer() which is group-aware.
+        // Keeping this function would overwrite empty new groups with old non-group data.
+        return;
+        
+        /* OLD CODE - DISABLED
         const userData = await loadUserData();
         if (!userData) return;
 
@@ -555,6 +561,7 @@
           }
           console.log('Restored game data from user account');
         }
+        */
       }
 
       const HEADER_MAX = 8; // Max characters allowed for left/right headers
