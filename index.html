@@ -223,6 +223,49 @@
         return localStorage.getItem(CURRENT_GROUP_KEY);
       }
       
+      // Logout confirmation modal
+      function askLogoutConfirm() {
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+
+          modal.innerHTML = `
+            <p><strong>Confirm Logout</strong></p>
+            <p>Are you sure you want to logout? You'll need to sign in again to access your groups.</p>
+            <div class="tcg-modal-actions">
+              <button class="btn-confirm">Logout</button>
+              <button class="btn-cancel">Cancel</button>
+            </div>
+          `;
+
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+
+          function cleanup() {
+            document.body.removeChild(overlay);
+          }
+
+          function onConfirm() {
+            cleanup();
+            resolve(true);
+          }
+
+          function onCancel() {
+            cleanup();
+            resolve(false);
+          }
+
+          modal.querySelector('.btn-confirm').addEventListener('click', onConfirm);
+          modal.querySelector('.btn-cancel').addEventListener('click', onCancel);
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) onCancel();
+          });
+        });
+      }
+      
       // Initialize auth check
       const authData = checkAuthAndGroup();
       if (!authData) return;
@@ -238,47 +281,71 @@
           `;
           
           // Add logout functionality
-          document.getElementById('logout-btn').addEventListener('click', async () => {
-              askLogoutConfirm().then(async (confirmed) => {
-                  if (confirmed) {
-                      // Save current user's game data before logging out (for cross-device sync)
-                        try {
-                          // Dispatch events to save group state AND user data before logout
-                          // The core module listens for these and performs the actual saves.
-                          window.dispatchEvent(new CustomEvent('saveGroupStateBeforeLogout'));
-                          window.dispatchEvent(new CustomEvent('saveUserDataBeforeLogout'));
-                          // Give time for the saves to complete
-                          await new Promise(resolve => setTimeout(resolve, 800));
-                        } catch (e) {
-                          console.error('Error saving data before logout:', e);
-                        }
+          const logoutBtn = document.getElementById('logout-btn');
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+            const confirmed = await askLogoutConfirm();
+            if (confirmed) {
 
-                      // Clear session + current group
-                      localStorage.removeItem('tcg_session_v1');
-                      localStorage.removeItem('tcg_current_group_v1');
+              // Attempt to persist current group state and user data before clearing
+              try {
+                const groupId = localStorage.getItem(CURRENT_GROUP_KEY);
+                if (groupId && groupId !== 'default') {
+                  const fullState = {
+                    chores: JSON.parse(localStorage.getItem(`tcg_chores_v1_${groupId}`) || '[]'),
+                    points: JSON.parse(localStorage.getItem(`tcg_points_v1_${groupId}`) || '{}'),
+                    headers: JSON.parse(localStorage.getItem(`tcg_column_headers_v1_${groupId}`) || '{}'),
+                    extraState: JSON.parse(localStorage.getItem(`tcg_extra_cols_v1_${groupId}`) || '{}')
+                  };
 
-                      // 🔴 C.3: wipe all chore/shop data cached in this browser
-                      Object.keys(localStorage).forEach(key => {
-                          if (key.startsWith('tcg_')) {
-                              localStorage.removeItem(key);
-                          }
+                  // Save group state to server
+                  await fetch('/api/save_game_state.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groupId: groupId, data: fullState })
+                  });
+
+                  // Save user's personal account data as well (best-effort)
+                  const sessionRaw = localStorage.getItem(SESSION_KEY);
+                  if (sessionRaw) {
+                    try {
+                      await fetch('/api/save_user_data.php', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: fullState })
                       });
-
-                      // Go back to login
-                      window.location.href = 'login.html';
+                    } catch (e) {
+                      // ignore user-data save errors
+                    }
                   }
-              });
-          });
-        }
 
-        const groupDisplay = document.getElementById('group-display');
-        if (groupDisplay) {
-            const groupRaw = authData.currentGroup;
-            const groupId = groupRaw.replace(/\D+/g, ''); // remove non-digits
-            groupDisplay.textContent = `Group: ${groupId}`;
+                  // small delay to allow server round-trip
+                  await new Promise(r => setTimeout(r, 300));
+                }
+              } catch (e) {
+                console.error('Error saving state before logout:', e);
+              }
+
+              // Clear session-related keys
+              localStorage.removeItem(SESSION_KEY);
+              localStorage.removeItem(CURRENT_GROUP_KEY);
+
+              // ⭐ C.3: Clear all game + shop cached data to prevent contamination
+              Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('tcg_')) {
+                  localStorage.removeItem(key);
+                }
+              });
+
+              // Redirect to login
+              window.location.href = 'login.html';
+            }
+            });
+          }
         }
-      }
-    )();
+    })();
   </script>
 
   <script>
