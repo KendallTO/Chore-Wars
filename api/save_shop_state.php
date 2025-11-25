@@ -48,18 +48,11 @@ $stmt = $pdo->prepare('
         inventories_json = VALUES(inventories_json)
 ');
 
-try {
-    $stmt->execute([
-        ':group_id'    => $groupId,
-        ':user_id'     => $userId,
-        ':items'       => $itemsJson,
-        ':inventories' => $inventJson,
-    ]);
-    echo json_encode(['ok' => true]);
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        'ok' => false,
-        'error' => 'Database error: ' . $e->getMessage()
-    ]);
-}
+$stmt->execute([
+    ':group_id'    => $groupId,
+    ':user_id'     => $userId,
+    ':items'       => $itemsJson,
+    ':inventories' => $inventJson,
+]);
+
+echo json_encode(['ok' => true]);
