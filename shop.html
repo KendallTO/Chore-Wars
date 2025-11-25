@@ -540,12 +540,19 @@
 
                 try {
                     const res = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(currentGroup)}`);
-                    if (!res.ok) return;
+                    if (!res.ok) {
+                        console.error('Failed to load shop state from server:', res.status);
+                        return;
+                    }
+                    
                     const data = await res.json();
                     
                     // If there is no DB state yet for this group, it's a new group
-                    if (!data) {
-                        // New group - keep it blank
+                    if (!data || data === null) {
+                        // New group with no server data yet
+                        // Clear localStorage for this group to start fresh
+                        localStorage.removeItem(getStorageKey());
+                        localStorage.removeItem(getInventoryKey());
                         return;
                     }
                     
@@ -553,9 +560,14 @@
                     // This ensures all browsers/devices see the same shop data
                     if (Array.isArray(data.items) && data.items.length > 0) {
                         localStorage.setItem(getStorageKey(), JSON.stringify(data.items));
+                    } else {
+                        localStorage.removeItem(getStorageKey());
                     }
+                    
                     if (data.inventories && Object.keys(data.inventories).length > 0) {
                         localStorage.setItem(getInventoryKey(), JSON.stringify(data.inventories));
+                    } else {
+                        localStorage.removeItem(getInventoryKey());
                     }
                 } catch (e) {
                     console.error('Error loading shop state from server', e);

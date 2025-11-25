@@ -455,34 +455,58 @@
         const currentGroup = getCurrentGroup();
         if (!currentGroup || currentGroup === 'default') return;
 
+        console.log('[LOAD] Loading game state for group:', currentGroup);
+
         try {
           const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`, { credentials: 'same-origin' });
-          if (!res.ok) return;
-
-          const data = await res.json();
-
-          // If there is no DB state yet for this group, it's a new group
-          if (!data) {
-            // New group - keep it blank, don't load anything
+          if (!res.ok) {
+            console.error('[LOAD] Failed to load game state from server:', res.status);
             return;
           }
 
+          const data = await res.json();
+          console.log('[LOAD] Server response for group', currentGroup, ':', data);
+
+          // If there is no DB state yet for this group, it's a new group
+          if (!data || data === null) {
+            console.log('[LOAD] No server data for group', currentGroup, '- clearing localStorage');
+            // New group with no server data yet
+            // Clear localStorage for this group to start fresh
+            localStorage.removeItem(getStorageKey());
+            localStorage.removeItem(getPointsKey());
+            localStorage.removeItem(getHeadersKey());
+            localStorage.removeItem(getExtraStateKey());
+            return;
+          }
+
+          console.log('[LOAD] Hydrating localStorage from server data for group', currentGroup);
           // We DO have server data → hydrate localStorage from DB
           // This ensures all browsers/devices see the same data
           if (data.chores) {
             localStorage.setItem(getStorageKey(), JSON.stringify(data.chores));
+          } else {
+            localStorage.removeItem(getStorageKey());
           }
+          
           if (data.points) {
             localStorage.setItem(getPointsKey(), JSON.stringify(data.points));
+          } else {
+            localStorage.removeItem(getPointsKey());
           }
+          
           if (data.headers) {
             localStorage.setItem(getHeadersKey(), JSON.stringify(data.headers));
+          } else {
+            localStorage.removeItem(getHeadersKey());
           }
+          
           if (data.extraState) {
             localStorage.setItem(getExtraStateKey(), JSON.stringify(data.extraState));
+          } else {
+            localStorage.removeItem(getExtraStateKey());
           }
         } catch (e) {
-          console.error('Error loading game state from server', e);
+          console.error('[LOAD] Error loading game state from server', e);
         }
       }
 
