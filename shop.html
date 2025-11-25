@@ -426,9 +426,22 @@
                 return localStorage.getItem('tcg_current_group_v1') || 'default';
             }
             
+            // Dynamic storage key getters (must call getCurrentGroup() each time for group isolation)
+            function getStorageKey() { return `tcg_shop_items_v1_${getCurrentGroup()}`; }
+            function getInventoryKey() { return `tcg_player_inventories_v1_${getCurrentGroup()}`; }
+            function getChoresKey() { return `tcg_chores_v1_${getCurrentGroup()}`; }  // Chores from index.html
+            function getPointsKey() { return `tcg_points_v1_${getCurrentGroup()}`; }
+            function getHeadersKey() { return `tcg_column_headers_v1_${getCurrentGroup()}`; }
+            function getExtraStateKey() { return `tcg_extra_cols_v1_${getCurrentGroup()}`; }
+            
+            // Legacy constants (kept for backward compatibility but will be wrong after group switch)
             const currentGroup = getCurrentGroup();
             const STORAGE_KEY = `tcg_shop_items_v1_${currentGroup}`;  // Shop items storage
             const INVENTORY_KEY = `tcg_player_inventories_v1_${currentGroup}`;  // Player inventories
+            const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
+            const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
+            const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
+            
                         // ===================================
             // SERVER SYNC HELPERS (DB persistence)
             // ===================================
@@ -489,44 +502,45 @@
 
             // Pull shop items + inventories from DB into localStorage
             async function loadShopStateFromServer() {
+                const currentGroup = getCurrentGroup();
                 if (!currentGroup || currentGroup === 'default') return;
 
                 // Clear cached shop data first
-                localStorage.removeItem(STORAGE_KEY);
-                localStorage.removeItem(INVENTORY_KEY);
+                localStorage.removeItem(getStorageKey());
+                localStorage.removeItem(getInventoryKey());
                 console.log('[loadShopStateFromServer] Cleared shop state cache for group', currentGroup);
 
                 try {
                     const res = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(currentGroup)}`);
                     if (!res.ok) {
                         // Initialize with empty state
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-                        localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
+                        localStorage.setItem(getStorageKey(), JSON.stringify([]));
+                        localStorage.setItem(getInventoryKey(), JSON.stringify({}));
                         return;
                     }
                     const data = await res.json();
                     if (!data) {
                         // Initialize with empty state
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-                        localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
+                        localStorage.setItem(getStorageKey(), JSON.stringify([]));
+                        localStorage.setItem(getInventoryKey(), JSON.stringify({}));
                         return;
                     }
                     
                     if (Array.isArray(data.items)) {
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.items));
+                        localStorage.setItem(getStorageKey(), JSON.stringify(data.items));
                     } else {
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+                        localStorage.setItem(getStorageKey(), JSON.stringify([]));
                     }
                     if (data.inventories && typeof data.inventories === 'object') {
-                        localStorage.setItem(INVENTORY_KEY, JSON.stringify(data.inventories));
+                        localStorage.setItem(getInventoryKey(), JSON.stringify(data.inventories));
                     } else {
-                        localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
+                        localStorage.setItem(getInventoryKey(), JSON.stringify({}));
                     }
                 } catch (e) {
                     console.error('Error loading shop state from server', e);
                     // Initialize with empty state on error
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-                    localStorage.setItem(INVENTORY_KEY, JSON.stringify({}));
+                    localStorage.setItem(getStorageKey(), JSON.stringify([]));
+                    localStorage.setItem(getInventoryKey(), JSON.stringify({}));
                 }
             }
 
@@ -537,53 +551,54 @@
             async function syncGameStateFromServer() {
                 // Kid-Friendly: Ask the big chore board on the server
                 // what the latest scores and player names are.
+                const currentGroup = getCurrentGroup();
                 if (!currentGroup || currentGroup === 'default') return;
 
                 // Clear cached data first
-                localStorage.removeItem(`tcg_points_v1_${currentGroup}`);
-                localStorage.removeItem(`tcg_column_headers_v1_${currentGroup}`);
-                localStorage.removeItem(`tcg_extra_cols_v1_${currentGroup}`);
+                localStorage.removeItem(getPointsKey());
+                localStorage.removeItem(getHeadersKey());
+                localStorage.removeItem(getExtraStateKey());
                 console.log('[syncGameStateFromServer] Cleared game state cache for group', currentGroup);
 
                 try {
                     const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
                     if (!res.ok) {
                         // Initialize with empty state
-                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
-                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
-                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+                        localStorage.setItem(getPointsKey(), JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+                        localStorage.setItem(getHeadersKey(), JSON.stringify({}));
+                        localStorage.setItem(getExtraStateKey(), JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
                         return;
                     }
                     const data = await res.json();
                     if (!data) {
                         // Initialize with empty state
-                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
-                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
-                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+                        localStorage.setItem(getPointsKey(), JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+                        localStorage.setItem(getHeadersKey(), JSON.stringify({}));
+                        localStorage.setItem(getExtraStateKey(), JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
                         return;
                     }
 
                     if (data.points) {
-                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(data.points));
+                        localStorage.setItem(getPointsKey(), JSON.stringify(data.points));
                     } else {
-                        localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+                        localStorage.setItem(getPointsKey(), JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
                     }
                     if (data.headers) {
-                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify(data.headers));
+                        localStorage.setItem(getHeadersKey(), JSON.stringify(data.headers));
                     } else {
-                        localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
+                        localStorage.setItem(getHeadersKey(), JSON.stringify({}));
                     }
                     if (data.extraState) {
-                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify(data.extraState));
+                        localStorage.setItem(getExtraStateKey(), JSON.stringify(data.extraState));
                     } else {
-                        localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+                        localStorage.setItem(getExtraStateKey(), JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
                     }
                 } catch (e) {
                     console.error('Error syncing game state to shop page', e);
                     // Initialize with empty state on error
-                    localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
-                    localStorage.setItem(`tcg_column_headers_v1_${currentGroup}`, JSON.stringify({}));
-                    localStorage.setItem(`tcg_extra_cols_v1_${currentGroup}`, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+                    localStorage.setItem(getPointsKey(), JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+                    localStorage.setItem(getHeadersKey(), JSON.stringify({}));
+                    localStorage.setItem(getExtraStateKey(), JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
                 }
             }
 
@@ -633,8 +648,7 @@
                 // Kid-Friendly: "Load the scoreboards"
                 // We open the saved box of points. If a player is missing, we give them 0.
                 try {
-                    const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
-                    const raw = localStorage.getItem(POINTS_KEY);
+                    const raw = localStorage.getItem(getPointsKey());
                     const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
                     // ensure extra fields exist for compatibility
                     if (typeof parsed.left !== 'number') parsed.left = 0;
@@ -656,8 +670,7 @@
             // Saves points object to localStorage
             function savePoints(pointsObj) {
                 try {
-                    const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
-                    localStorage.setItem(POINTS_KEY, JSON.stringify(pointsObj));
+                    localStorage.setItem(getPointsKey(), JSON.stringify(pointsObj));
                 } catch (e) {
                     console.error('Error saving points to localStorage', e);
                 }
@@ -705,7 +718,7 @@
             function loadInventories() {
                 // Kid-Friendly: Open each player's candy bag. If no bag yet, give them an empty one.
                 try {
-                    const raw = localStorage.getItem(INVENTORY_KEY);
+                    const raw = localStorage.getItem(getInventoryKey());
                     return raw ? JSON.parse(raw) : {};
                 } catch (e) {
                     return {};
@@ -896,7 +909,7 @@
             function loadItems() {
                 // Kid-Friendly: Look at the candy stand. If it's empty, we set out example candies.
                 try {
-                    const raw = localStorage.getItem(STORAGE_KEY);
+                    const raw = localStorage.getItem(getStorageKey());
                     let items = raw ? JSON.parse(raw) : defaultItems.slice();
 
                     // If we somehow have no items stored ([], null, etc.), use defaults
@@ -1558,7 +1571,7 @@
                     
                     // Deduct points
                     points[payerLoc] = current - contribution;
-                    try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
+                    try { localStorage.setItem(getPointsKey(), JSON.stringify(points)); } catch (e) { }
                     try { renderPoints(); } catch (e) { }
                     // Persist new point totals to the shared game state in the DB
                     queueGamePointsServerSave();
@@ -1605,7 +1618,7 @@
 
                 // deduct and save
                 points[payerLoc] = current - item.price;
-                try { localStorage.setItem(`tcg_points_v1_${currentGroup}`, JSON.stringify(points)); } catch (e) { }
+                try { localStorage.setItem(getPointsKey(), JSON.stringify(points)); } catch (e) { }
                 // update the on-page point displays immediately
                 try { renderPoints(); } catch (e) { }
                 // Persist new point totals to the shared game state in the DB
@@ -1778,7 +1791,7 @@
             function loadPoints() {
                 // Kid-Friendly: Open the allowance box to see how many points everyone has.
                 try {
-                    const raw = localStorage.getItem(`tcg_points_v1_${currentGroup}`);
+                    const raw = localStorage.getItem(getPointsKey());
                     const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
                     // ensure extras exist for compatibility
                     if (typeof parsed.left !== 'number') parsed.left = 0;
@@ -1802,7 +1815,7 @@
             function loadHeaders() {
                 // Kid-Friendly: Get player names so we can label their allowance boxes.
                 try {
-                    const raw = localStorage.getItem(`tcg_column_headers_v1_${currentGroup}`);
+                    const raw = localStorage.getItem(getHeadersKey());
                     const parsed = raw ? JSON.parse(raw) : {};
                     return {
                         left: parsed.left || 'Left Column',
@@ -1835,7 +1848,7 @@
             function loadExtraState() {
                 // Kid-Friendly: Check which extra players are playing so we show their boxes.
                 try {
-                    const raw = localStorage.getItem(`tcg_extra_cols_v1_${currentGroup}`);
+                    const raw = localStorage.getItem(getExtraStateKey());
                     const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
                     return {
                         extra1: !!parsed.extra1,
@@ -2118,13 +2131,13 @@
             window.addEventListener('shopLogoutRequested', async () => {
               try {
                 // Save both game state and shop state before logout
-                const groupId = currentGroup;
+                const groupId = getCurrentGroup();
                 if (groupId && groupId !== 'default') {
                   const fullState = {
-                    chores: JSON.parse(localStorage.getItem(`tcg_chores_v1_${groupId}`) || '[]'),
-                    points: JSON.parse(localStorage.getItem(`tcg_points_v1_${groupId}`) || '{}'),
-                    headers: JSON.parse(localStorage.getItem(`tcg_column_headers_v1_${groupId}`) || '{}'),
-                    extraState: JSON.parse(localStorage.getItem(`tcg_extra_cols_v1_${groupId}`) || '{}')
+                    chores: JSON.parse(localStorage.getItem(getChoresKey()) || '[]'),
+                    points: JSON.parse(localStorage.getItem(getPointsKey()) || '{}'),
+                    headers: JSON.parse(localStorage.getItem(getHeadersKey()) || '{}'),
+                    extraState: JSON.parse(localStorage.getItem(getExtraStateKey()) || '{}')
                   };
 
                   // Save game state to server
@@ -2174,7 +2187,8 @@
             // Watches for points, headers, extra columns, and base player state changes
             window.addEventListener('storage', (e) => {
                 // Kid-Friendly: If another tab changed points or names, update here too.
-                if (e.key === `tcg_points_v1_${currentGroup}` || e.key === `tcg_column_headers_v1_${currentGroup}` || e.key === `tcg_extra_cols_v1_${currentGroup}` || e.key === `base-player-state_${currentGroup}`) {
+                const currentGroup = getCurrentGroup();
+                if (e.key === getPointsKey() || e.key === getHeadersKey() || e.key === getExtraStateKey() || e.key === `base-player-state_${currentGroup}`) {
                     renderPoints();
                     updateShopManagementPosition();
                 }

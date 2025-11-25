@@ -369,11 +369,18 @@
         return localStorage.getItem('tcg_current_group_v1') || 'default';
       }
       
-      const currentGroup = getCurrentGroup();
-      const STORAGE_KEY = `tcg_chores_v1_${currentGroup}`;  // Chores data storage
-      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;  // Player names storage
-      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;  // Points bank storage
-      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;  // Tracks which extra columns are active
+      // Storage keys must be functions to always get fresh group ID
+      function getStorageKey() { return `tcg_chores_v1_${getCurrentGroup()}`; }
+      function getHeadersKey() { return `tcg_column_headers_v1_${getCurrentGroup()}`; }
+      function getPointsKey() { return `tcg_points_v1_${getCurrentGroup()}`; }
+      function getExtraStateKey() { return `tcg_extra_cols_v1_${getCurrentGroup()}`; }
+      
+      // Legacy constants for backward compatibility - but these will be wrong after group switch!
+      // Use the getter functions above instead
+      const STORAGE_KEY = getStorageKey();
+      const HEADERS_KEY = getHeadersKey();
+      const POINTS_KEY = getPointsKey();
+      const EXTRA_STATE_KEY = getExtraStateKey();
 
       const SESSION_KEY_SERVER = 'tcg_session_v1';
 
@@ -455,13 +462,14 @@
       }
 
       async function loadStateFromServer() {
+        const currentGroup = getCurrentGroup();
         if (!currentGroup || currentGroup === 'default') return;
 
         // Always clear localStorage first to ensure fresh load
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(POINTS_KEY);
-        localStorage.removeItem(HEADERS_KEY);
-        localStorage.removeItem(EXTRA_STATE_KEY);
+        localStorage.removeItem(getStorageKey());
+        localStorage.removeItem(getPointsKey());
+        localStorage.removeItem(getHeadersKey());
+        localStorage.removeItem(getExtraStateKey());
 
         try {
           const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`, { credentials: 'same-origin' });
@@ -469,10 +477,10 @@
           if (!res.ok) {
             // Server has no data - initialize empty state
             console.log('[loadStateFromServer] No response from server, initializing empty state');
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-            localStorage.setItem(POINTS_KEY, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
-            localStorage.setItem(HEADERS_KEY, JSON.stringify({}));
-            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+            localStorage.setItem(getStorageKey(), JSON.stringify([]));
+            localStorage.setItem(getPointsKey(), JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+            localStorage.setItem(getHeadersKey(), JSON.stringify({}));
+            localStorage.setItem(getExtraStateKey(), JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
             return;
           }
 
@@ -481,26 +489,26 @@
           if (!data) {
             // No DB state for this group - initialize empty
             console.log('[loadStateFromServer] No data in DB for group', currentGroup, '- initializing empty');
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-            localStorage.setItem(POINTS_KEY, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
-            localStorage.setItem(HEADERS_KEY, JSON.stringify({}));
-            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+            localStorage.setItem(getStorageKey(), JSON.stringify([]));
+            localStorage.setItem(getPointsKey(), JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+            localStorage.setItem(getHeadersKey(), JSON.stringify({}));
+            localStorage.setItem(getExtraStateKey(), JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
             return;
           }
 
           // Server has data - load it
           console.log('[loadStateFromServer] Loaded data from server:', data);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.chores || []));
-          localStorage.setItem(POINTS_KEY, JSON.stringify(data.points || { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
-          localStorage.setItem(HEADERS_KEY, JSON.stringify(data.headers || {}));
-          localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(data.extraState || { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+          localStorage.setItem(getStorageKey(), JSON.stringify(data.chores || []));
+          localStorage.setItem(getPointsKey(), JSON.stringify(data.points || { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+          localStorage.setItem(getHeadersKey(), JSON.stringify(data.headers || {}));
+          localStorage.setItem(getExtraStateKey(), JSON.stringify(data.extraState || { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
         } catch (e) {
           console.error('Error loading game state from server', e);
           // On error, initialize empty state
-          localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-          localStorage.setItem(POINTS_KEY, JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
-          localStorage.setItem(HEADERS_KEY, JSON.stringify({}));
-          localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
+          localStorage.setItem(getStorageKey(), JSON.stringify([]));
+          localStorage.setItem(getPointsKey(), JSON.stringify({ left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 }));
+          localStorage.setItem(getHeadersKey(), JSON.stringify({}));
+          localStorage.setItem(getExtraStateKey(), JSON.stringify({ extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }));
         }
       }
 
@@ -534,16 +542,16 @@
         // If local storage is empty, restore from user account data
         if (!hasLocalChores && !hasLocalPoints) {
           if (userData.chores) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(userData.chores));
+            localStorage.setItem(getStorageKey(), JSON.stringify(userData.chores));
           }
           if (userData.points) {
-            localStorage.setItem(POINTS_KEY, JSON.stringify(userData.points));
+            localStorage.setItem(getPointsKey(), JSON.stringify(userData.points));
           }
           if (userData.headers) {
-            localStorage.setItem(HEADERS_KEY, JSON.stringify(userData.headers));
+            localStorage.setItem(getHeadersKey(), JSON.stringify(userData.headers));
           }
           if (userData.extraState) {
-            localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(userData.extraState));
+            localStorage.setItem(getExtraStateKey(), JSON.stringify(userData.extraState));
           }
           console.log('Restored game data from user account');
         }
@@ -559,7 +567,7 @@
         // Kid-Friendly: "Load the scoreboards"
         // We open the saved box of points. If a player is missing, we give them 0.
         try {
-          const raw = localStorage.getItem(POINTS_KEY);
+          const raw = localStorage.getItem(getPointsKey());
           let parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
           
           // Handle case where points was stored as an array instead of object
@@ -587,8 +595,8 @@
       }
       // Saves points object to localStorage
       function savePoints(p) { 
-        console.log('[savePoints] Saving to localStorage with key:', POINTS_KEY, 'value:', JSON.stringify(p));
-        localStorage.setItem(POINTS_KEY, JSON.stringify(p)); 
+        console.log('[savePoints] Saving to localStorage with key:', getPointsKey(), 'value:', JSON.stringify(p));
+        localStorage.setItem(getPointsKey(), JSON.stringify(p)); 
         console.log('[savePoints] Stored to localStorage, now calling queueServerSave');
         queueServerSave(); 
       }
@@ -633,7 +641,7 @@
       // Tracks which extra player columns (3-10) are currently active
       function loadExtraState() {
         try {
-          const raw = localStorage.getItem(EXTRA_STATE_KEY);
+          const raw = localStorage.getItem(getExtraStateKey());
           const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
           return {
             extra1: !!parsed.extra1,
@@ -650,7 +658,7 @@
         }
       }
       // Saves extra columns state to localStorage
-      function saveExtraState(s) { localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); queueServerSave(); }
+      function saveExtraState(s) { localStorage.setItem(getExtraStateKey(), JSON.stringify(s)); queueServerSave(); }
 
       // ===================================
       // HEADER MANAGEMENT (Player Names)
@@ -658,7 +666,7 @@
       // Loads all column headers (player names) from localStorage
       function loadAllHeaders() {
         try {
-          const raw = localStorage.getItem(HEADERS_KEY);
+          const raw = localStorage.getItem(getHeadersKey());
           return raw ? JSON.parse(raw) : {};
         } catch (e) { return {}; }
       }
@@ -666,7 +674,7 @@
       function saveHeaderField(field, value) {
         const obj = loadAllHeaders();
         obj[field] = value;
-        localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
+        localStorage.setItem(getHeadersKey(), JSON.stringify(obj));
         queueServerSave();
       }
 
@@ -678,7 +686,7 @@
       document.addEventListener('DOMContentLoaded', async () => {
         // IMPORTANT: Check if group has changed since page loaded
         // If so, reload to get fresh data for the new group
-        const pageLoadGroup = currentGroup;
+        const pageLoadGroup = getCurrentGroup();
         const currentPageGroup = localStorage.getItem('tcg_current_group_v1') || 'default';
         if (pageLoadGroup !== currentPageGroup) {
           console.log('[DOMContentLoaded] Group changed from', pageLoadGroup, 'to', currentPageGroup, '- reloading page');
@@ -759,7 +767,7 @@
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
           // Page came back into focus
-          const pageLoadGroup = currentGroup;
+          const pageLoadGroup = getCurrentGroup();
           const currentPageGroup = localStorage.getItem('tcg_current_group_v1') || 'default';
           if (pageLoadGroup !== currentPageGroup) {
             console.log('[visibilitychange] Group changed from', pageLoadGroup, 'to', currentPageGroup, '- reloading page');
@@ -780,7 +788,7 @@
       // Loads left/right player names from localStorage or uses defaults
       function loadHeaders() {
         try {
-          const raw = localStorage.getItem(HEADERS_KEY);
+          const raw = localStorage.getItem(getHeadersKey());
           const parsed = raw ? JSON.parse(raw) : {};
           return {
             left: parsed.left ?? (leftHeaderEl ? leftHeaderEl.textContent.trim() : 'Enter Name Here'),
@@ -801,7 +809,7 @@
         const rightText = (rightHeaderEl.textContent || '').replace(/[\r\n]+/g, '').trim().slice(0, HEADER_MAX);
         const existing = loadAllHeaders();
         const payload = { ...existing, left: leftText, right: rightText };
-        localStorage.setItem(HEADERS_KEY, JSON.stringify(payload));
+        localStorage.setItem(getHeadersKey(), JSON.stringify(payload));
       }
 
       // Apply saved headers immediately on page load
@@ -848,7 +856,7 @@
       // Loads all chores from localStorage
       function loadChores() {
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(getStorageKey());
           return raw ? JSON.parse(raw) : [];
         } catch (e) {
           return [];
@@ -857,7 +865,7 @@
 
       // Saves chores array to localStorage and syncs to server
       function saveChores(chores) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
+        localStorage.setItem(getStorageKey(), JSON.stringify(chores));
         queueServerSave();
       }
 
@@ -2522,7 +2530,8 @@
       }
 
       // Constants and functions needed for getActivePlayers - now group-scoped
-      const BASE_STATE_KEY = `base-player-state_${currentGroup}`;
+      function getBaseStateKey() { return `base-player-state_${getCurrentGroup()}`; }
+      const BASE_STATE_KEY = `base-player-state_${currentGroup}`;  // Legacy - use getter
       const defaultNames = {
         extra1: 'Player 3',
         extra2: 'Player 4',
@@ -2536,7 +2545,7 @@
 
       function loadBasePlayerState() {
         try {
-          const raw = localStorage.getItem(BASE_STATE_KEY);
+          const raw = localStorage.getItem(getBaseStateKey());
           const p = raw ? JSON.parse(raw) : { left: true, right: true };
           return { left: p.left !== false, right: p.right !== false };
         }
@@ -2599,7 +2608,9 @@
       const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
       const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
       const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
-      const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;  // Tracks column order
+      // Position key - tracks column order (must be dynamic for group isolation)
+      function getPositionsKey() { return `tcg_player_positions_v1_${getCurrentGroup()}`; }
+      const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;  // Tracks column order (legacy - use getter)
 
       // Player color scheme for columns 3-10
       const extraColors = {
@@ -2630,18 +2641,18 @@
       // ===================================
       // Local storage helpers for column management module
       function loadAllHeaders() {
-        try { const raw = localStorage.getItem(HEADERS_KEY); return raw ? JSON.parse(raw) : {}; }
+        try { const raw = localStorage.getItem(getHeadersKey()); return raw ? JSON.parse(raw) : {}; }
         catch (e) { return {}; }
       }
       function saveHeaderField(field, value) {
-        const obj = loadAllHeaders(); obj[field] = value; localStorage.setItem(HEADERS_KEY, JSON.stringify(obj));
+        const obj = loadAllHeaders(); obj[field] = value; localStorage.setItem(getHeadersKey(), JSON.stringify(obj));
       }
       function loadExtraState() {
-        try { const raw = localStorage.getItem(EXTRA_STATE_KEY); const p = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }; return { extra1: !!p.extra1, extra2: !!p.extra2, extra3: !!p.extra3, extra4: !!p.extra4, extra5: !!p.extra5, extra6: !!p.extra6, extra7: !!p.extra7, extra8: !!p.extra8 }; }
+        try { const raw = localStorage.getItem(getExtraStateKey()); const p = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }; return { extra1: !!p.extra1, extra2: !!p.extra2, extra3: !!p.extra3, extra4: !!p.extra4, extra5: !!p.extra5, extra6: !!p.extra6, extra7: !!p.extra7, extra8: !!p.extra8 }; }
         catch (e) { return { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false }; }
       }
       function saveExtraState(s) { 
-        localStorage.setItem(EXTRA_STATE_KEY, JSON.stringify(s)); 
+        localStorage.setItem(getExtraStateKey(), JSON.stringify(s)); 
         // Clear saved positions when extra state changes since optimal positions will be different
         clearPositions();
       }
@@ -2649,32 +2660,31 @@
       // Position storage functions
       function loadPositions() {
         try {
-          const raw = localStorage.getItem(POSITIONS_KEY);
+          const raw = localStorage.getItem(getPositionsKey());
           return raw ? JSON.parse(raw) : {};
         } catch (e) { return {}; }
       }
-      function savePositions(positions) { localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions)); }
-      function clearPositions() { localStorage.removeItem(POSITIONS_KEY); }
+      function savePositions(positions) { localStorage.setItem(getPositionsKey(), JSON.stringify(positions)); }
+      function clearPositions() { localStorage.removeItem(getPositionsKey()); }
 
-      // Base player state management - now group-scoped
-      const BASE_STATE_KEY = `base-player-state_${currentGroup}`;
+      // Base player state management - now group-scoped (uses getBaseStateKey)
       function loadBasePlayerState() {
         try {
-          const raw = localStorage.getItem(BASE_STATE_KEY);
+          const raw = localStorage.getItem(getBaseStateKey());
           const p = raw ? JSON.parse(raw) : { left: true, right: true };
           return { left: p.left !== false, right: p.right !== false };
         }
         catch (e) { return { left: true, right: true }; }
       }
       function saveBasePlayerState(s) { 
-        localStorage.setItem(BASE_STATE_KEY, JSON.stringify(s)); 
+        localStorage.setItem(getBaseStateKey(), JSON.stringify(s)); 
         // Clear saved positions when base state changes since optimal positions will be different
         clearPositions();
       }
 
       function loadPoints() {
         try {
-          const raw = localStorage.getItem(POINTS_KEY);
+          const raw = localStorage.getItem(getPointsKey());
           const parsed = raw ? JSON.parse(raw) : { left: 0, right: 0 };
           if (typeof parsed.left !== 'number') parsed.left = 0;
           if (typeof parsed.right !== 'number') parsed.right = 0;
@@ -3473,11 +3483,11 @@
         const headers = loadAllHeaders();
         if (headers && Object.prototype.hasOwnProperty.call(headers, which)) {
           delete headers[which];
-          localStorage.setItem(HEADERS_KEY, JSON.stringify(headers));
+          localStorage.setItem(getHeadersKey(), JSON.stringify(headers));
         }
         const pts = loadPoints();
         pts[which] = 0;
-        localStorage.setItem(POINTS_KEY, JSON.stringify(pts));
+        localStorage.setItem(getPointsKey(), JSON.stringify(pts));
       }
 
       // Helper to clear cached header + points for a base player
@@ -3488,25 +3498,24 @@
           // Reset to default names instead of deleting
           if (which === 'left') headers[which] = 'Player 1';
           else if (which === 'right') headers[which] = 'Player 2';
-          localStorage.setItem(HEADERS_KEY, JSON.stringify(headers));
+          localStorage.setItem(getHeadersKey(), JSON.stringify(headers));
         }
         const pts = loadPoints();
         pts[which] = 0;
-        localStorage.setItem(POINTS_KEY, JSON.stringify(pts));
+        localStorage.setItem(getPointsKey(), JSON.stringify(pts));
       }
 
       // Helper to reassign chores from a removed column back to unchosen
       function reassignChoresFromColumn(loc) {
-        const STORAGE_KEY = 'tcg_chores_v1';
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(getStorageKey());
           if (!raw) return;
           const chores = JSON.parse(raw);
           // Find all chores in this location and set them to unchosen
           chores.forEach(c => {
             if (c.loc === loc) c.loc = 'unchosen';
           });
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(chores));
+          localStorage.setItem(getStorageKey(), JSON.stringify(chores));
         } catch (e) {
           console.error('Error reassigning chores:', e);
         }
