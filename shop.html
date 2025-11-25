@@ -538,28 +538,19 @@
                 const currentGroup = getCurrentGroup();
                 if (!currentGroup || currentGroup === 'default') return;
 
-                // Check if we already have data for this group in localStorage
-                // If so, don't reload from server unless forced
-                if (!forceReload) {
-                    const existingItems = localStorage.getItem(getStorageKey());
-                    const existingInventory = localStorage.getItem(getInventoryKey());
-                    
-                    // If we have any existing data, don't reload from server
-                    if (existingItems || existingInventory) {
-                        return;
-                    }
-                }
-
                 try {
                     const res = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(currentGroup)}`);
                     if (!res.ok) return;
                     const data = await res.json();
+                    
+                    // If there is no DB state yet for this group, it's a new group
                     if (!data) {
-                    localStorage.removeItem(getStorageKey());
-                    localStorage.removeItem(getInventoryKey());
-                    return;
+                        // New group - keep it blank
+                        return;
                     }
                     
+                    // We DO have server data → hydrate localStorage from DB
+                    // This ensures all browsers/devices see the same shop data
                     if (Array.isArray(data.items) && data.items.length > 0) {
                         localStorage.setItem(getStorageKey(), JSON.stringify(data.items));
                     }
