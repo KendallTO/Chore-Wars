@@ -341,11 +341,26 @@
                 // Add logout functionality
                 const logoutBtn = document.getElementById('logout-btn');
                 if (logoutBtn) {
-                  logoutBtn.addEventListener('click', function() {
-                    // Show confirmation dialog
-                    if (confirm('Are you sure you want to logout? You\'ll need to sign in again to access your groups.')) {
-                      // Clear all localStorage data
-                      localStorage.clear();
+                  logoutBtn.addEventListener('click', async function() {
+                    const confirmed = await askLogoutConfirm();
+                    if (confirmed) {
+                      // Dispatch event to save shop state before logout
+                      window.dispatchEvent(new CustomEvent('shopLogoutRequested'));
+                      
+                      // Give time for save to complete
+                      await new Promise(resolve => setTimeout(resolve, 500));
+                      
+                      // Clear session + current group
+                      localStorage.removeItem('tcg_session_v1');
+                      localStorage.removeItem('tcg_current_group_v1');
+
+                      // Clear all chore/shop data cached in this browser
+                      Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('tcg_')) {
+                          localStorage.removeItem(key);
+                        }
+                      });
+                      
                       // Redirect to login
                       window.location.href = 'login.html';
                     }
