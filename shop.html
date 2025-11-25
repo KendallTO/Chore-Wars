@@ -416,6 +416,7 @@
                 try {
                     await fetch('/api/save_shop_state.php', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             groupId: currentGroup,
@@ -508,6 +509,7 @@
 
                     await fetch('/api/save_game_state.php', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             groupId: currentGroup,

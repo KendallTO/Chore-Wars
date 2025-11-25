@@ -242,14 +242,16 @@
               askLogoutConfirm().then(async (confirmed) => {
                   if (confirmed) {
                       // Save current user's game data before logging out (for cross-device sync)
-                      try {
-                          // Dispatch a custom event to signal save to user account
+                        try {
+                          // Dispatch events to save group state AND user data before logout
+                          // The core module listens for these and performs the actual saves.
+                          window.dispatchEvent(new CustomEvent('saveGroupStateBeforeLogout'));
                           window.dispatchEvent(new CustomEvent('saveUserDataBeforeLogout'));
-                          // Give time for the save to complete
-                          await new Promise(resolve => setTimeout(resolve, 500));
-                      } catch (e) {
-                          console.error('Error saving user data before logout:', e);
-                      }
+                          // Give time for the saves to complete
+                          await new Promise(resolve => setTimeout(resolve, 800));
+                        } catch (e) {
+                          console.error('Error saving data before logout:', e);
+                        }
 
                       // Clear session + current group
                       localStorage.removeItem('tcg_session_v1');
@@ -331,6 +333,7 @@
         try {
           await fetch('/api/save_game_state.php', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               groupId: currentGroup,
@@ -360,6 +363,7 @@
         try {
           const response = await fetch('/api/save_user_data.php', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               data: fullState
@@ -383,7 +387,7 @@
         if (!currentGroup || currentGroup === 'default') return;
 
         try {
-          const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`);
+          const res = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(currentGroup)}`, { credentials: 'same-origin' });
           if (!res.ok) return;
 
           const data = await res.json();
@@ -427,7 +431,7 @@
       // Loads user's personal game data from their account (cross-device sync)
       async function loadUserData() {
         try {
-          const res = await fetch('/api/load_user_data.php');
+          const res = await fetch('/api/load_user_data.php', { credentials: 'same-origin' });
           if (!res.ok) return null;
 
           const result = await res.json();
@@ -627,6 +631,16 @@
           render();
         }
         renderPoints();
+      });
+
+      // Listen for logout event to save user data
+      // Save group state when requested before logout
+      window.addEventListener('saveGroupStateBeforeLogout', async () => {
+        try {
+          await saveStateToServer(buildFullGameState());
+        } catch (e) {
+          console.error('Error saving group state before logout:', e);
+        }
       });
 
       // Listen for logout event to save user data

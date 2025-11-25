@@ -405,6 +405,47 @@
         const confirmed = await askLogoutConfirm();
         if (confirmed) {
 
+          // Attempt to persist current group state and user data before clearing
+          try {
+            const groupId = localStorage.getItem(CURRENT_GROUP_KEY);
+            if (groupId && groupId !== 'default') {
+              const fullState = {
+                chores: JSON.parse(localStorage.getItem(`tcg_chores_v1_${groupId}`) || '[]'),
+                points: JSON.parse(localStorage.getItem(`tcg_points_v1_${groupId}`) || '{}'),
+                headers: JSON.parse(localStorage.getItem(`tcg_column_headers_v1_${groupId}`) || '{}'),
+                extraState: JSON.parse(localStorage.getItem(`tcg_extra_cols_v1_${groupId}`) || '{}')
+              };
+
+              // Save group state to server
+              await fetch('/api/save_game_state.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId: groupId, data: fullState })
+              });
+
+              // Save user's personal account data as well (best-effort)
+              const sessionRaw = localStorage.getItem(SESSION_KEY);
+              if (sessionRaw) {
+                try {
+                  await fetch('/api/save_user_data.php', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: fullState })
+                  });
+                } catch (e) {
+                  // ignore user-data save errors
+                }
+              }
+
+              // small delay to allow server round-trip
+              await new Promise(r => setTimeout(r, 300));
+            }
+          } catch (e) {
+            console.error('Error saving state before logout:', e);
+          }
+
           // Clear session-related keys
           localStorage.removeItem(SESSION_KEY);
           localStorage.removeItem(CURRENT_GROUP_KEY);
