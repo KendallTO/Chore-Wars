@@ -2600,17 +2600,7 @@
       // STORAGE KEYS & CONFIGURATION
       // ===================================
       // Group-scoped storage for column management
-      function getCurrentGroup() {
-        return localStorage.getItem('tcg_current_group_v1') || 'default';
-      }
-      
-      const currentGroup = getCurrentGroup();
-      const HEADERS_KEY = `tcg_column_headers_v1_${currentGroup}`;
-      const POINTS_KEY = `tcg_points_v1_${currentGroup}`;
-      const EXTRA_STATE_KEY = `tcg_extra_cols_v1_${currentGroup}`;
-      // Position key - tracks column order (must be dynamic for group isolation)
-      function getPositionsKey() { return `tcg_player_positions_v1_${getCurrentGroup()}`; }
-      const POSITIONS_KEY = `tcg_player_positions_v1_${currentGroup}`;  // Tracks column order (legacy - use getter)
+      // Note: getCurrentGroup() and key getters are defined earlier in the file
 
       // Player color scheme for columns 3-10
       const extraColors = {
