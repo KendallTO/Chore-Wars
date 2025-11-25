@@ -125,6 +125,44 @@ body {
   grid-row: 3/4;
 }
 
+/* Group indicator styling */
+.group-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+  font-size: 0.85rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -40px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.group-indicator .group-label {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.group-indicator .group-name {
+  font-weight: 700;
+  color: var(--text);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-indicator .group-id {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+}
+
 .logo /*img*/ {
   max-width: 17%;
   margin-top: 5px;

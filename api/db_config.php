@@ -12,10 +12,10 @@ defined('DB_CONFIG_LOADED') or define('DB_CONFIG_LOADED', true);
 
 // Database connection settings (UPDATE THESE IF YOUR HOST CHANGES)
 // These constants were previously misnamed; they must match usage below.
-define('DB_HOST', 'db5019042997.hosting-data.io');
-define('DB_NAME', 'dbs14985870');
-define('DB_USER', 'dbu5466581');
-define('DB_PASS', 'passwordfordatabase1');
+define('DB_HOST', 'db5019076560.hosting-data.io');
+define('DB_NAME', 'dbs15003686');
+define('DB_USER', 'dbu3145082');
+define('DB_PASS', 'passwordfordatabase3');
 define('DB_CHARSET', 'utf8mb4');
 
 

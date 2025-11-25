@@ -2,10 +2,10 @@
 // api/db.php
 // Shared PDO connection - do NOT output headers here as it breaks includers
 
-$DB_HOST = 'db5019042997.hosting-data.io';   // e.g. db5019042997.hosting-data.io
-$DB_NAME = 'dbs14985870';   // e.g. dbs14985870
-$DB_USER = 'dbu5466581';   // e.g. dbu1234567
-$DB_PASS = 'passwordfordatabase1';
+$DB_HOST = 'db5019076560.hosting-data.io';   // e.g. db5019042997.hosting-data.io
+$DB_NAME = 'dbs15003686';   // e.g. dbs14985870
+$DB_USER = 'dbu3145082';   // e.g. dbu1234567
+$DB_PASS = 'passwordfordatabase3';
 
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

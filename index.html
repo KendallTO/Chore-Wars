@@ -21,6 +21,11 @@
         <img class src="images/Chore _Wars_logo_title_new.png" href="index.html" alt="The Chore Game">
       </a>
     </div>
+    <div id="group-indicator" class="group-indicator" style="display:none;">
+      <span class="group-label">Current Group:</span>
+      <span id="group-name-display" class="group-name">Loading...</span>
+      <span class="group-id" id="group-id-display"></span>
+    </div>
     <nav class="main-nav">
       <a class="header-btn" href="index.html">Home</a>
       <a class="header-btn" href="shop.html">Shop</a>
@@ -269,6 +274,36 @@
       // Initialize auth check
       const authData = checkAuthAndGroup();
       if (!authData) return;
+      
+      // Fetch and display current group info
+      async function displayCurrentGroup() {
+        const currentGroupId = getCurrentGroup();
+        if (!currentGroupId || currentGroupId === 'default') return;
+        
+        try {
+          const response = await fetch('/api/get_groups.php');
+          if (!response.ok) return;
+          
+          const groups = await response.json();
+          const currentGroup = groups.find(g => String(g.id) === String(currentGroupId));
+          
+          if (currentGroup) {
+            const groupIndicator = document.getElementById('group-indicator');
+            const groupNameDisplay = document.getElementById('group-name-display');
+            const groupIdDisplay = document.getElementById('group-id-display');
+            
+            if (groupIndicator && groupNameDisplay && groupIdDisplay) {
+              groupNameDisplay.textContent = currentGroup.name;
+              groupIdDisplay.textContent = `(ID: ${currentGroup.id})`;
+              groupIndicator.style.display = 'flex';
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching group info:', e);
+        }
+      }
+      
+      displayCurrentGroup();
       
       // Update navigation
       const headerBtns = document.querySelector('.main-nav');
