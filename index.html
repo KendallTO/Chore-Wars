@@ -1660,13 +1660,37 @@
       // ===================================
       // Distributes all unassigned chores randomly across all active players
       // Uses balanced assignment (aims for equal counts, max difference of 1)
-      const randomAssignBtn = document.getElementById('random-assign-btn');
-      if (randomAssignBtn) {
+      
+      // Wait for DOM to ensure button exists
+      document.addEventListener('DOMContentLoaded', function() {
+        const randomAssignBtn = document.getElementById('random-assign-btn');
+        console.log('[RANDOM] DOMContentLoaded - Button element found:', randomAssignBtn);
+        
+        if (!randomAssignBtn) {
+          console.error('[RANDOM] ERROR: random-assign-btn element not found in DOM!');
+          return;
+        }
+        
+        // Test that button is visible and clickable
+        const style = window.getComputedStyle(randomAssignBtn);
+        console.log('[RANDOM] Button display:', style.display);
+        console.log('[RANDOM] Button visibility:', style.visibility);
+        console.log('[RANDOM] Button pointer-events:', style.pointerEvents);
+        
         // balanced assignment: aim for equal counts (difference at most 1)
-        randomAssignBtn.addEventListener('click', function () {
+        randomAssignBtn.addEventListener('click', function (e) {
+          console.log('[RANDOM] Button clicked!', e);
+          e.preventDefault();
+          e.stopPropagation();
+          
           try {
+            console.log('[RANDOM] Starting random assignment...');
             const chores = loadChores();
+            console.log('[RANDOM] Total chores:', chores.length);
+            
             const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
+            console.log('[RANDOM] Unassigned chores:', unchosen.length);
+            
             if (!unchosen.length) {
               notify('No unassigned chores to assign.', 1800);
               return;
@@ -1674,6 +1698,8 @@
 
             // Get all currently active players
             const activePlayers = getActivePlayers();
+            console.log('[RANDOM] Active players:', activePlayers);
+            
             if (activePlayers.length === 0) {
               notify('No active players to assign chores to.', 1800);
               return;
@@ -1681,10 +1707,12 @@
 
             // Extract destination locations from active players
             const destinations = activePlayers.map(player => player.loc);
+            console.log('[RANDOM] Destinations:', destinations);
 
             // counts per destination
             const counts = Object.fromEntries(destinations.map(d => [d, 0]));
             chores.forEach(c => { if (destinations.includes(c.loc)) counts[c.loc]++; });
+            console.log('[RANDOM] Initial counts:', counts);
 
             // shuffle unchosen so distribution is not deterministic
             for (let i = unchosen.length - 1; i > 0; i--) {
@@ -1694,18 +1722,19 @@
 
             // assign each unchosen chore to the destination with the fewest items
             const idsToAssign = new Set(unchosen.map(c => c.id));
-            console.log('About to assign chores:', unchosen.length, 'to destinations:', destinations);
+            console.log('[RANDOM] About to assign', unchosen.length, 'chores to', destinations);
+            
             chores.forEach(c => {
               if (!idsToAssign.has(c.id)) return;
               let min = Infinity;
               destinations.forEach(d => { if (counts[d] < min) min = counts[d]; });
               const mins = destinations.filter(d => counts[d] === min);
               const pick = mins[Math.floor(Math.random() * mins.length)];
-              console.log('Assigning chore', c.name, 'to', pick);
+              console.log('[RANDOM] Assigning', c.name, 'to', pick);
               c.loc = pick;
               counts[pick]++;
             });
-            console.log('Final assignment counts:', counts);
+            console.log('[RANDOM] Final assignment counts:', counts);
 
             // Calculate points based on assignment order
             // First assigned chores get lower points, last assigned gets 50 points
@@ -1732,17 +1761,19 @@
             });
 
             draftMode = false; // Disable manual assignment buttons
-            console.log('About to save chores. Total chores:', chores.length);
-            console.log('Chores by location:', chores.reduce((acc, c) => { acc[c.loc] = (acc[c.loc] || 0) + 1; return acc; }, {}));
+            console.log('[RANDOM] Saving', chores.length, 'chores');
             saveChores(chores);
             render();
-            notify(`Assigned ${unchosen.length} chore(s) (balanced).`, 1800);
+            notify(`Assigned ${unchosen.length} chore(s) evenly across ${activePlayers.length} player(s).`, 2000);
+            console.log('[RANDOM] Random assignment complete!');
           } catch (error) {
-            console.error('Error in random assign:', error);
+            console.error('[RANDOM] Error in random assign:', error);
             notify('Error assigning chores. Please try again.', 1800);
           }
         });
-      }
+        
+        console.log('[RANDOM] Event listener attached successfully');
+      });
 
       // Auction flow helpers
       function askYesNo(message, yesLabel = 'Yes', noLabel = 'No') {
@@ -2582,7 +2613,16 @@
         extra8: 'Player 10'
       };
 
-      // Base player state management functions defined below in column management section
+      // Base player state helper - defined here before getActivePlayers uses it
+      const getBaseStateKey = () => `base-player-state_${getCurrentGroup()}`;
+      function loadBasePlayerState() {
+        try {
+          const raw = localStorage.getItem(getBaseStateKey());
+          const p = raw ? JSON.parse(raw) : { left: true, right: true };
+          return { left: p.left !== false, right: p.right !== false };
+        }
+        catch (e) { return { left: true, right: true }; }
+      }
 
       // Function to get all active players
       function getActivePlayers() {
@@ -2676,16 +2716,8 @@
       function savePositions(positions) { localStorage.setItem(POSITIONS_KEY_GETTER(), JSON.stringify(positions)); }
       function clearPositions() { localStorage.removeItem(POSITIONS_KEY_GETTER()); }
 
-      // Base player state management - now group-scoped
-      const getBaseStateKey = () => `base-player-state_${getCurrentGroup()}`;
-      function loadBasePlayerState() {
-        try {
-          const raw = localStorage.getItem(getBaseStateKey());
-          const p = raw ? JSON.parse(raw) : { left: true, right: true };
-          return { left: p.left !== false, right: p.right !== false };
-        }
-        catch (e) { return { left: true, right: true }; }
-      }
+      // Note: getBaseStateKey() and loadBasePlayerState() are defined earlier in the chore management system
+      // Base player state save function
       function saveBasePlayerState(s) { 
         localStorage.setItem(getBaseStateKey(), JSON.stringify(s)); 
         // Clear saved positions when base state changes since optimal positions will be different
