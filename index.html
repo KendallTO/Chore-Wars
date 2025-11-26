@@ -594,7 +594,13 @@
 
       // Merges user data (from account) with current local data
       // Strategy: Use server data only if local storage is completely empty
+      // DISABLED: This conflicts with group-based data isolation
       async function mergeUserDataIfNeeded() {
+        // User data sync is disabled to prevent data from bleeding between groups
+        // Each group should maintain its own isolated data
+        return;
+        
+        /* Commented out to prevent group data contamination
         const userData = await loadUserData();
         if (!userData) return;
 
@@ -618,6 +624,7 @@
           }
           console.log('Restored game data from user account');
         }
+        */
       }
 
       const HEADER_MAX = 8; // Max characters allowed for left/right headers
