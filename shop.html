@@ -605,9 +605,17 @@
                     // If there is no DB state yet for this group, it's a new group
                     if (!data || data === null) {
                         // New group with no server data yet
-                        // Clear localStorage for this group to start fresh
-                        localStorage.removeItem(getStorageKey());
-                        localStorage.removeItem(getInventoryKey());
+                        // Initialize with fresh empty state
+                        const freshShopState = {
+                            items: [],
+                            inventories: {}
+                        };
+                        
+                        localStorage.setItem(getStorageKey(), JSON.stringify(freshShopState.items));
+                        localStorage.setItem(getInventoryKey(), JSON.stringify(freshShopState.inventories));
+                        
+                        // Save this fresh state to the server immediately
+                        await saveShopStateToServer(freshShopState);
                         return;
                     }
                     

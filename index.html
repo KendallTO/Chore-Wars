@@ -524,13 +524,23 @@
 
           // If there is no DB state yet for this group, it's a new group
           if (!data || data === null) {
-            console.log('[LOAD] No server data for group', currentGroup, '- clearing localStorage');
+            console.log('[LOAD] No server data for group', currentGroup, '- initializing fresh group');
             // New group with no server data yet
-            // Clear localStorage for this group to start fresh
-            localStorage.removeItem(getStorageKey());
-            localStorage.removeItem(getPointsKey());
-            localStorage.removeItem(getHeadersKey());
-            localStorage.removeItem(getExtraStateKey());
+            // Initialize with fresh empty state (all points set to 0)
+            const freshState = {
+              chores: [],
+              points: { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 },
+              headers: { left: 'Player 1', right: 'Player 2' },
+              extraState: { count: 0, names: [] }
+            };
+            
+            localStorage.setItem(getStorageKey(), JSON.stringify(freshState.chores));
+            localStorage.setItem(getPointsKey(), JSON.stringify(freshState.points));
+            localStorage.setItem(getHeadersKey(), JSON.stringify(freshState.headers));
+            localStorage.setItem(getExtraStateKey(), JSON.stringify(freshState.extraState));
+            
+            // Save this fresh state to the server immediately
+            await saveStateToServer(freshState);
             return;
           }
 
