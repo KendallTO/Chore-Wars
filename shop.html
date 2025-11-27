@@ -507,6 +507,9 @@
                 return localStorage.getItem('tcg_current_group_v1') || 'default';
             }
             
+            // Cache current group ID for use throughout the app
+            const currentGroup = getCurrentGroup();
+            
             // Dynamic storage key getters - evaluate group ID on each call
             function getStorageKey() { return `tcg_shop_items_v1_${getCurrentGroup()}`; }
             function getInventoryKey() { return `tcg_player_inventories_v1_${getCurrentGroup()}`; }
@@ -2127,13 +2130,33 @@
                 setInterval(() => {
                     const currentGroup = getCurrentGroup();
                     if (currentGroup && currentGroup !== 'default') {
+                        // Save shop state (items and inventories)
                         const shopState = {
                             items: loadItems(),
                             inventories: loadInventories()
                         };
                         saveShopStateToServer(shopState);
+                        
+                        // Also save game points to ensure cross-device sync
+                        saveUpdatedPointsToServerFromShop();
                     }
                 }, 30000);
+
+                // Periodic sync FROM server every 15 seconds (pulls updates from other devices)
+                setInterval(async () => {
+                    const currentGroup = getCurrentGroup();
+                    if (currentGroup && currentGroup !== 'default') {
+                        // Sync game state (points, player names, extra columns) from server
+                        await syncGameStateFromServer();
+                        
+                        // Sync shop state from server
+                        await loadShopStateFromServer();
+                        
+                        // Re-render to show updated data
+                        render();
+                        renderPoints();
+                    }
+                }, 15000);
 
                 // 6) Now that everything is ready, show the app
                 const root = document.getElementById('shop-app-root');

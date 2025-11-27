@@ -822,6 +822,23 @@
         }
       }, 30000);
 
+      // Periodic sync FROM server every 15 seconds (enables cross-device synchronization)
+      // Pulls latest game state from server and re-renders to show updates from other devices
+      setInterval(() => {
+        const currentGroup = getCurrentGroup();
+        if (currentGroup && currentGroup !== 'default') {
+          loadStateFromServer()
+            .then(() => {
+              render();
+              renderPoints();
+              console.log('[Index Sync] Synced from server at', new Date().toLocaleTimeString());
+            })
+            .catch(err => {
+              console.error('[Index Sync] Failed to sync from server:', err);
+            });
+        }
+      }, 15000);
+
       // ===================================
       // EDITABLE HEADERS (Player 1 & 2)
       // ===================================
@@ -2702,9 +2719,118 @@
       // ===================================
       // HELPER FUNCTIONS
       // ===================================
-      // Note: Core storage functions (loadAllHeaders, saveHeaderField, loadExtraState, saveExtraState, 
-      // loadPoints, renderPoints, loadBasePlayerState, saveBasePlayerState) are defined in the main 
-      // chore management system above. This column management module reuses those functions.
+      // Local copies of storage functions needed by this module
+      
+      // Get current group ID
+      function getCurrentGroup() {
+        return localStorage.getItem('tcg_current_group_v1') || 'default';
+      }
+
+      // Storage key getters
+      const getHeadersKey = () => `tcg_column_headers_v1_${getCurrentGroup()}`;
+      const getPointsKey = () => `tcg_points_v1_${getCurrentGroup()}`;
+      const getExtraStateKey = () => `tcg_extra_cols_v1_${getCurrentGroup()}`;
+      const getStorageKey = () => `tcg_chores_v1_${getCurrentGroup()}`;
+      const getBaseStateKey = () => `base-player-state_${getCurrentGroup()}`;
+
+      // Load functions
+      function loadAllHeaders() {
+        try {
+          const raw = localStorage.getItem(getHeadersKey());
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+
+      function loadPoints() {
+        try {
+          const raw = localStorage.getItem(getPointsKey());
+          const parsed = raw ? JSON.parse(raw) : {};
+          if (typeof parsed.left !== 'number') parsed.left = 0;
+          if (typeof parsed.right !== 'number') parsed.right = 0;
+          if (typeof parsed.extra1 !== 'number') parsed.extra1 = 0;
+          if (typeof parsed.extra2 !== 'number') parsed.extra2 = 0;
+          if (typeof parsed.extra3 !== 'number') parsed.extra3 = 0;
+          if (typeof parsed.extra4 !== 'number') parsed.extra4 = 0;
+          if (typeof parsed.extra5 !== 'number') parsed.extra5 = 0;
+          if (typeof parsed.extra6 !== 'number') parsed.extra6 = 0;
+          if (typeof parsed.extra7 !== 'number') parsed.extra7 = 0;
+          if (typeof parsed.extra8 !== 'number') parsed.extra8 = 0;
+          return parsed;
+        } catch (e) {
+          return { left: 0, right: 0, extra1: 0, extra2: 0, extra3: 0, extra4: 0, extra5: 0, extra6: 0, extra7: 0, extra8: 0 };
+        }
+      }
+
+      function loadExtraState() {
+        try {
+          const raw = localStorage.getItem(getExtraStateKey());
+          const parsed = raw ? JSON.parse(raw) : { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
+          return {
+            extra1: !!parsed.extra1,
+            extra2: !!parsed.extra2,
+            extra3: !!parsed.extra3,
+            extra4: !!parsed.extra4,
+            extra5: !!parsed.extra5,
+            extra6: !!parsed.extra6,
+            extra7: !!parsed.extra7,
+            extra8: !!parsed.extra8
+          };
+        } catch (e) {
+          return { extra1: false, extra2: false, extra3: false, extra4: false, extra5: false, extra6: false, extra7: false, extra8: false };
+        }
+      }
+
+      function loadBasePlayerState() {
+        try {
+          const raw = localStorage.getItem(getBaseStateKey());
+          const p = raw ? JSON.parse(raw) : { left: true, right: true };
+          return { left: p.left !== false, right: p.right !== false };
+        } catch (e) { 
+          return { left: true, right: true }; 
+        }
+      }
+
+      // Save functions
+      function saveHeaderField(field, value) {
+        const obj = loadAllHeaders();
+        obj[field] = value;
+        localStorage.setItem(getHeadersKey(), JSON.stringify(obj));
+      }
+
+      function saveExtraState(s) { 
+        localStorage.setItem(getExtraStateKey(), JSON.stringify(s)); 
+      }
+
+      function saveBasePlayerState(s) { 
+        localStorage.setItem(getBaseStateKey(), JSON.stringify(s)); 
+        // Clear saved positions when base state changes since optimal positions will be different
+        clearPositions();
+      }
+
+      // Render points - updates all point displays on the page
+      function renderPoints() {
+        const p = loadPoints();
+        const leftEl = document.getElementById('left-points');
+        const rightEl = document.getElementById('right-points');
+        const extra1El = document.getElementById('extra1-points');
+        const extra2El = document.getElementById('extra2-points');
+        const extra3El = document.getElementById('extra3-points');
+        const extra4El = document.getElementById('extra4-points');
+        const extra5El = document.getElementById('extra5-points');
+        const extra6El = document.getElementById('extra6-points');
+        const extra7El = document.getElementById('extra7-points');
+        const extra8El = document.getElementById('extra8-points');
+        if (leftEl) leftEl.textContent = String(p.left || 0);
+        if (rightEl) rightEl.textContent = String(p.right || 0);
+        if (extra1El) extra1El.textContent = String(p.extra1 || 0);
+        if (extra2El) extra2El.textContent = String(p.extra2 || 0);
+        if (extra3El) extra3El.textContent = String(p.extra3 || 0);
+        if (extra4El) extra4El.textContent = String(p.extra4 || 0);
+        if (extra5El) extra5El.textContent = String(p.extra5 || 0);
+        if (extra6El) extra6El.textContent = String(p.extra6 || 0);
+        if (extra7El) extra7El.textContent = String(p.extra7 || 0);
+        if (extra8El) extra8El.textContent = String(p.extra8 || 0);
+      }
 
       // Position storage functions
       function loadPositions() {
@@ -2715,16 +2841,6 @@
       }
       function savePositions(positions) { localStorage.setItem(POSITIONS_KEY_GETTER(), JSON.stringify(positions)); }
       function clearPositions() { localStorage.removeItem(POSITIONS_KEY_GETTER()); }
-
-      // Note: getBaseStateKey() and loadBasePlayerState() are defined earlier in the chore management system
-      // Base player state save function
-      function saveBasePlayerState(s) { 
-        localStorage.setItem(getBaseStateKey(), JSON.stringify(s)); 
-        // Clear saved positions when base state changes since optimal positions will be different
-        clearPositions();
-      }
-
-      // Note: loadPoints() and renderPoints() are defined in the main chore management system above
 
       function updateAddButtonState() {
         if (!addColumnBtn) return;
