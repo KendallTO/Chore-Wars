@@ -318,6 +318,15 @@
   word-break: break-word;
   overflow-wrap: break-word;
   box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Hover effect for chore cards */
+.card.chore:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(43, 108, 176, 0.2);
+  border-color: var(--accent);
+  border-style: solid;
 }
 
 /*Chore Name Add thing*/

@@ -892,7 +892,7 @@
       const msgEl = document.getElementById('chore-msg');
 
       // Track whether we're in draft mode (enables manual assign buttons on chores)
-      let draftMode = false;
+
 
       // ===================================
       // NOTIFICATION HELPER
@@ -1001,133 +1001,7 @@
 
         // action buttons depend on location
         if (!chore.loc || chore.loc === 'unchosen') {
-          // Only show assign buttons if in draft mode AND chore has difficulty rating
-          if (draftMode && (chore.difficulty === 'easy' || chore.difficulty === 'difficult')) {
-            // Mark card as having manual assign buttons for CSS styling
-            art.dataset.hasButtons = 'true';
-            
-            const assignLeft = document.createElement('button');
-            assignLeft.type = 'button';
-            assignLeft.className = 'btn';
-            assignLeft.innerHTML = `Assign → <span style="color: #66CED6; font-weight: bold;">${leftHeaderText.toUpperCase()}</span>`;
-            assignLeft.dataset.action = 'assign-left';
-            actions.appendChild(assignLeft);
-
-            const assignRight = document.createElement('button');
-            assignRight.type = 'button';
-            assignRight.className = 'btn';
-            assignRight.innerHTML = `Assign → <span style="color: #FF4242; font-weight: bold;">${rightHeaderText.toUpperCase()}</span>`;
-            assignRight.dataset.action = 'assign-right';
-            actions.appendChild(assignRight);
-
-            // Add extra column buttons if they exist
-            if (extra1HeaderText) {
-              const assignExtra1 = document.createElement('button');
-              assignExtra1.type = 'button';
-              assignExtra1.className = 'btn';
-              assignExtra1.innerHTML = `Assign → <span style="color: orange; font-weight: bold;">${extra1HeaderText.toUpperCase()}</span>`;
-              assignExtra1.dataset.action = 'assign-extra1';
-              actions.appendChild(assignExtra1);
-            }
-
-            if (extra2HeaderText) {
-              const assignExtra2 = document.createElement('button');
-              assignExtra2.type = 'button';
-              assignExtra2.className = 'btn';
-              assignExtra2.innerHTML = `Assign → <span style="color: limegreen; font-weight: bold;">${extra2HeaderText.toUpperCase()}</span>`;
-              assignExtra2.dataset.action = 'assign-extra2';
-              actions.appendChild(assignExtra2);
-            }
-
-            if (extra3HeaderText) {
-              const assignExtra3 = document.createElement('button');
-              assignExtra3.type = 'button';
-              assignExtra3.className = 'btn';
-              assignExtra3.innerHTML = `Assign → <span style="color: purple; font-weight: bold;">${extra3HeaderText.toUpperCase()}</span>`;
-              assignExtra3.dataset.action = 'assign-extra3';
-              actions.appendChild(assignExtra3);
-            }
-
-            if (extra4HeaderText) {
-              const assignExtra4 = document.createElement('button');
-              assignExtra4.type = 'button';
-              assignExtra4.className = 'btn';
-              assignExtra4.innerHTML = `Assign → <span style="color: yellow; font-weight: bold;">${extra4HeaderText.toUpperCase()}</span>`;
-              assignExtra4.dataset.action = 'assign-extra4';
-              actions.appendChild(assignExtra4);
-            }
-
-            if (extra5HeaderText) {
-              const assignExtra5 = document.createElement('button');
-              assignExtra5.type = 'button';
-              assignExtra5.className = 'btn';
-              assignExtra5.innerHTML = `Assign → <span style="color: pink; font-weight: bold;">${extra5HeaderText.toUpperCase()}</span>`;
-              assignExtra5.dataset.action = 'assign-extra5';
-              actions.appendChild(assignExtra5);
-            }
-
-            if (extra6HeaderText) {
-              const assignExtra6 = document.createElement('button');
-              assignExtra6.type = 'button';
-              assignExtra6.className = 'btn';
-              assignExtra6.innerHTML = `Assign → <span style="color: brown; font-weight: bold;">${extra6HeaderText.toUpperCase()}</span>`;
-              assignExtra6.dataset.action = 'assign-extra6';
-              actions.appendChild(assignExtra6);
-            }
-
-            if (extra7HeaderText) {
-              const assignExtra7 = document.createElement('button');
-              assignExtra7.type = 'button';
-              assignExtra7.className = 'btn';
-              assignExtra7.innerHTML = `Assign → <span style="color: gray; font-weight: bold;">${extra7HeaderText.toUpperCase()}</span>`;
-              assignExtra7.dataset.action = 'assign-extra7';
-              actions.appendChild(assignExtra7);
-            }
-
-            if (extra8HeaderText) {
-              const assignExtra8 = document.createElement('button');
-              assignExtra8.type = 'button';
-              assignExtra8.className = 'btn';
-              assignExtra8.innerHTML = `Assign → <span style="color: teal; font-weight: bold;">${extra8HeaderText.toUpperCase()}</span>`;
-              assignExtra8.dataset.action = 'assign-extra8';
-              actions.appendChild(assignExtra8);
-            }
-
-            // Count total buttons for sizing and add appropriate data attribute
-            const buttonCount = actions.children.length;
-            if (buttonCount >= 9) {
-              art.dataset.buttonCount = 'many'; // 9-10 buttons (nearly all or all players)
-            } else if (buttonCount >= 6) {
-              art.dataset.buttonCount = 'medium'; // 6-8 buttons (many players)
-            }
-            // 2-5 buttons get default styling (no extra attribute needed)
-            
-            // Debug: Log button count for verification
-            console.log(`Chore "${chore.name}" has ${buttonCount} manual assign buttons`);
-
-            // In draft mode, show delete button separately at bottom center
-            wrap.appendChild(actions);
-
-            const delWrap = document.createElement('div');
-            delWrap.style.marginTop = '12px';
-            delWrap.style.display = 'flex';
-            delWrap.style.justifyContent = 'center';
-            delWrap.style.width = '100%';
-
-            const del = document.createElement('button');
-            del.type = 'button';
-            del.className = 'btn btn-delete';
-            del.textContent = 'Delete';
-            del.dataset.action = 'delete';
-            delWrap.appendChild(del);
-            wrap.appendChild(delWrap);
-
-            art.appendChild(wrap);
-            return art;
-          } else {
-            // Mark card as NOT having manual assign buttons for CSS styling
-            art.dataset.hasButtons = 'false';
-          }
+          // Unchosen chores use drag-and-drop for assignment
         } else {
           // show complete button for assigned chores
           const completeBtn = document.createElement('button');
@@ -1214,7 +1088,7 @@
           const chore = chores.find(c => String(c.id) === id);
           if (!chore) return;
           const loc = zone.dataset.loc || 'unchosen';
-          if (loc === 'unchosen') { chore.loc = 'unchosen'; draftMode = true; } else { chore.loc = loc; }
+          chore.loc = loc;
           // Kid-Friendly: We moved the card to a new shelf (or back to the pile). Then we redraw everything so it looks right.
           saveChores(chores);
           render();
@@ -1504,7 +1378,7 @@
         const newChore = { id: Date.now(), name, points: Math.floor(points), loc: 'unchosen' };
         chores.push(newChore);
         saveChores(chores);
-        draftMode = false; // Disable manual assign buttons when adding new chore
+
         render();
         form.reset();
       });
@@ -1588,70 +1462,9 @@
         // ASSIGN ACTIONS (Manual Assignment in Draft Mode)
         // ===================================
         // Assigns chore to specific player column
-        if (action === 'assign-left') {
-          chores[idx].loc = 'left';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-right') {
-          chores[idx].loc = 'right';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra1') {
-          chores[idx].loc = 'extra1';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra2') {
-          chores[idx].loc = 'extra2';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra3') {
-          chores[idx].loc = 'extra3';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra4') {
-          chores[idx].loc = 'extra4';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra5') {
-          chores[idx].loc = 'extra5';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra6') {
-          chores[idx].loc = 'extra6';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra7') {
-          chores[idx].loc = 'extra7';
-          saveChores(chores);
-          render();
-          return;
-        }
-        if (action === 'assign-extra8') {
-          chores[idx].loc = 'extra8';
-          saveChores(chores);
-          render();
-          return;
-        }
-        // Unassigns chore back to unchosen column and enables draft mode
+        // Unassigns chore back to unchosen column
         if (action === 'unassign') {
           chores[idx].loc = 'unchosen';
-          draftMode = true; // Enable draft mode so manual assign buttons appear
           saveChores(chores);
           render();
           return;
@@ -1777,7 +1590,6 @@
               }
             });
 
-            draftMode = false; // Disable manual assignment buttons
             console.log('[RANDOM] Saving', chores.length, 'chores');
             saveChores(chores);
             render();
@@ -2386,7 +2198,6 @@
         if (aborted) {
           try { notify('Auction cancelled.'); } catch (e) { }
         }
-        draftMode = false; // Disable manual assignment buttons
       }
 
       // ===================================
@@ -2402,9 +2213,11 @@
       // ===================================
       // DRAFT BUTTON & SYSTEM
       // ===================================
+      // DRAFT SYSTEM
+      // ===================================
       // Draft mode: For each chore, asks if it's High or Low difficulty
-      // Assigns random points (15-25 for High, 5-10 for Low) in multiples of 5
-      // Marks chores with difficulty rating for manual assignment later
+      // Assigns random points (35-50 for High, 10-30 for Low) in multiples of 5
+      // Players then use drag-and-drop to assign chores to themselves
       function randomInRange(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
@@ -2416,7 +2229,7 @@
       async function runDraft() {
         // Kid-Friendly: Draft = we look at each chore and say "Easy" or "Hard".
         // Easy chores give smaller points. Hard chores give bigger points.
-        // After rating them, we can manually give them to players.
+        // After rating them, players drag-and-drop to assign chores.
         const chores = loadChores();
         const unchosen = chores.filter(c => !c.loc || c.loc === 'unchosen');
         if (!unchosen.length) {
@@ -2430,12 +2243,11 @@
           
           // Handle quit option
           if (choice === 'quit') {
-            // If we've drafted at least one chore, enable manual assignment for those
+            // Save any progress made so far
             if (draftedCount > 0) {
-              draftMode = true; // Enable manual assignment buttons for drafted chores
-              saveChores(chores); // Save progress so far
-              render(); // Re-render to show manual assign buttons
-              try { notify(`Draft cancelled. ${draftedCount} chore(s) drafted - manual assignment enabled.`); } catch (e) { }
+              saveChores(chores);
+              render();
+              try { notify(`Draft cancelled. ${draftedCount} chore(s) drafted with point values.`); } catch (e) { }
             } else {
               try { notify('Draft cancelled.'); } catch (e) { }
             }
@@ -2454,10 +2266,9 @@
           draftedCount++;
         }
 
-        draftMode = true; // Enable manual assignment buttons
         saveChores(chores);
         render();
-        notify(`Drafted ${draftedCount} chore(s) with point values.`, 1800);
+        notify(`Drafted ${draftedCount} chore(s) with point values. Use drag-and-drop to assign.`, 2000);
       }
 
       const draftBtn = document.getElementById('draft-btn');
@@ -2611,7 +2422,6 @@
             }
           });
 
-          draftMode = false; // Disable manual assignment buttons
           saveChores(chores);
           render();
           notify(`Unassigned ${assigned.length} chore(s).`, 1800);
