@@ -495,6 +495,53 @@
            const newGroup = await createGroup(groupName, description);
            if (!newGroup) return;
 
+           // Seed example chores and basic state for the new group to help onboarding
+           try {
+             const groupId = String(newGroup.id);
+             // Minimal default headers and points for Left/Right players
+             const defaultHeaders = { left: 'Player 1', right: 'Player 2' };
+             const defaultPoints = { left: 0, right: 0 };
+             const defaultExtra = {}; // no extra players enabled by default
+
+             // Starter chores (unassigned)
+             const starterChores = [
+               { id: Date.now(), name: 'Take out trash', points: 10, loc: 'unchosen' },
+               { id: Date.now() + 1, name: 'Load dishwasher', points: 15, loc: 'unchosen' },
+               { id: Date.now() + 2, name: 'Vacuum living room', points: 20, loc: 'unchosen' },
+               { id: Date.now() + 3, name: 'Fold laundry', points: 15, loc: 'unchosen' },
+               { id: Date.now() + 4, name: 'Wipe kitchen counters', points: 10, loc: 'unchosen' }
+             ];
+
+             // Write to group-scoped localStorage keys
+             localStorage.setItem(`tcg_column_headers_v1_${groupId}`, JSON.stringify(defaultHeaders));
+             localStorage.setItem(`tcg_points_v1_${groupId}`, JSON.stringify(defaultPoints));
+             localStorage.setItem(`tcg_extra_cols_v1_${groupId}`, JSON.stringify(defaultExtra));
+             localStorage.setItem(`tcg_chores_v1_${groupId}`, JSON.stringify(starterChores));
+
+             // Best-effort: persist initial game state to server so it syncs across devices
+             try {
+               await fetch('/api/save_game_state.php', {
+                 method: 'POST',
+                 credentials: 'same-origin',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({
+                   groupId,
+                   data: {
+                     headers: defaultHeaders,
+                     points: defaultPoints,
+                     extraState: defaultExtra,
+                     chores: starterChores
+                   }
+                 })
+               });
+             } catch (e) {
+               // Non-blocking: ignore server save errors
+             }
+           } catch (seedErr) {
+             // Non-blocking: seeding should not prevent group creation flow
+             console.warn('Starter chore seeding failed:', seedErr);
+           }
+
            showMessage('Group created successfully!');
            createGroupForm.classList.add('hidden');
            groupForm.reset();
