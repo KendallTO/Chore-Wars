@@ -21,11 +21,6 @@
         <img class src="images/Chore _Wars_logo_title_new.png" href="index.html" alt="The Chore Game">
       </a>
     </div>
-    <div id="group-indicator" class="group-indicator" style="display:none;">
-      <span class="group-label">Current Group:</span>
-      <span id="group-name-display" class="group-name">Loading...</span>
-      <span class="group-id" id="group-id-display"></span>
-    </div>
     <nav class="main-nav">
       <a class="header-btn" href="index.html">Home</a>
       <a class="header-btn" href="shop.html">Shop</a>
@@ -105,7 +100,11 @@
   <footer class="site-footer">
     <div class="container">
       <p>© <span id="year"></span> Chore Wars: Made By: Sean Heiner, Parker Dragovich, Cole Popejoy, John Wendt, & Kendall Olson!</p>
-      <p id="group-display" style="margin-top: 8px; font-size: 0.9em; opacity: 0.8;"></p>
+      <div id="group-indicator" class="group-indicator" style="display:none; margin-top: 8px; font-size: 0.9em; opacity: 0.8; justify-content: center;">
+        <span class="group-label">Current Group:</span>
+        <span id="group-name-display" class="group-name">Loading...</span>
+        <span class="group-id" id="group-id-display"></span>
+      </div>
     </div>
   </footer>
 
@@ -1362,7 +1361,9 @@
       // ===================================
       // Handles chore creation from the form
       // Creates chore with default 10 points and unique ID
-      // Disables draft mode when new chore is added
+      // Enforces 200 chore limit to prevent system overload
+      const MAX_CHORES = 200;
+      
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -1375,6 +1376,13 @@
         }
 
         const chores = loadChores();
+        
+        // Check chore limit
+        if (chores.length >= MAX_CHORES) {
+          notify(`Chore limit reached! Maximum ${MAX_CHORES} chores allowed.`, 3000);
+          return;
+        }
+        
         const newChore = { id: Date.now(), name, points: Math.floor(points), loc: 'unchosen' };
         chores.push(newChore);
         saveChores(chores);
