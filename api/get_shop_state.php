@@ -39,9 +39,26 @@ if ($row) {
         'inventories' => json_decode($row['inventories_json'], true),
     ]);
 } else {
-    // No saved state yet for this (group, user)
-    echo json_encode([
-        'items'       => [],
-        'inventories' => [],
-    ]);
+    // Fallback: try any existing record for this group (shared baseline)
+    $stmt2 = $pdo->prepare('
+        SELECT items_json, inventories_json
+        FROM shop_state
+        WHERE group_id = :group_id
+        LIMIT 1
+    ');
+    $stmt2->execute([':group_id' => $groupId]);
+    $row2 = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+    if ($row2) {
+        echo json_encode([
+            'items'       => json_decode($row2['items_json'], true),
+            'inventories' => json_decode($row2['inventories_json'], true),
+        ]);
+    } else {
+        // No saved state yet for this group at all
+        echo json_encode([
+            'items'       => [],
+            'inventories' => [],
+        ]);
+    }
 }

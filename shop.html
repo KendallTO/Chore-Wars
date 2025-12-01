@@ -583,6 +583,7 @@
             }
 
             // Pull shop items + inventories from DB into localStorage
+            // Non-destructive hydration: never wipe local when server is empty
             async function loadShopStateFromServer(forceReload = false) {
                 const currentGroup = getCurrentGroup();
                 if (!currentGroup || currentGroup === 'default') return;
@@ -593,38 +594,34 @@
                         console.error('Failed to load shop state from server:', res.status);
                         return;
                     }
-                    
+
                     const data = await res.json();
-                    
-                    // If there is no DB state yet for this group, it's a new group
-                    if (!data || data === null) {
-                        // New group with no server data yet
-                        // Initialize with fresh empty state
-                        const freshShopState = {
-                            items: [],
-                            inventories: {}
-                        };
-                        
-                        localStorage.setItem(getStorageKey(), JSON.stringify(freshShopState.items));
-                        localStorage.setItem(getInventoryKey(), JSON.stringify(freshShopState.inventories));
-                        
-                        // Save this fresh state to the server immediately
-                        await saveShopStateToServer(freshShopState);
+
+                    const hasServerItems = data && Array.isArray(data.items) && data.items.length > 0;
+                    const hasServerInventories = data && data.inventories && Object.keys(data.inventories).length > 0;
+
+                    // If no server record yet, push any local state up, but don't wipe local
+                    if (!hasServerItems && !hasServerInventories) {
+                        try {
+                            const localItems = JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+                            const localInv   = JSON.parse(localStorage.getItem(getInventoryKey()) || '{}');
+                            const hasLocal = (Array.isArray(localItems) && localItems.length > 0) ||
+                                             (localInv && Object.keys(localInv).length > 0);
+                            if (hasLocal) {
+                                await saveShopStateToServer({ items: localItems, inventories: localInv });
+                            }
+                        } catch (e) {
+                            // ignore local parse errors
+                        }
                         return;
                     }
-                    
-                    // We DO have server data → hydrate localStorage from DB
-                    // This ensures all browsers/devices see the same shop data
-                    if (Array.isArray(data.items) && data.items.length > 0) {
+
+                    // Non-destructive hydration from server
+                    if (hasServerItems) {
                         localStorage.setItem(getStorageKey(), JSON.stringify(data.items));
-                    } else {
-                        localStorage.removeItem(getStorageKey());
                     }
-                    
-                    if (data.inventories && Object.keys(data.inventories).length > 0) {
+                    if (hasServerInventories) {
                         localStorage.setItem(getInventoryKey(), JSON.stringify(data.inventories));
-                    } else {
-                        localStorage.removeItem(getInventoryKey());
                     }
                 } catch (e) {
                     console.error('Error loading shop state from server', e);
