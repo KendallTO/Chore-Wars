@@ -957,6 +957,103 @@
           art.classList.remove('dragging');
         });
 
+        // Touch events for mobile/touchscreen support
+        let touchStartX, touchStartY, touchElement, touchClone, currentDropZone;
+        
+        art.addEventListener('touchstart', (e) => {
+          // Store initial touch position and create visual clone for dragging
+          const touch = e.touches[0];
+          touchStartX = touch.clientX;
+          touchStartY = touch.clientY;
+          touchElement = art;
+          
+          // Create a visual clone that follows the finger
+          touchClone = art.cloneNode(true);
+          touchClone.style.position = 'fixed';
+          touchClone.style.pointerEvents = 'none';
+          touchClone.style.opacity = '0.8';
+          touchClone.style.zIndex = '1000';
+          touchClone.style.width = art.offsetWidth + 'px';
+          touchClone.style.left = (touch.clientX - art.offsetWidth / 2) + 'px';
+          touchClone.style.top = (touch.clientY - art.offsetHeight / 2) + 'px';
+          touchClone.classList.add('dragging');
+          document.body.appendChild(touchClone);
+          
+          art.style.opacity = '0.3';
+          e.preventDefault();
+        }, { passive: false });
+        
+        art.addEventListener('touchmove', (e) => {
+          if (!touchClone) return;
+          const touch = e.touches[0];
+          
+          // Move the clone with the finger
+          touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+          touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+          
+          // Find drop zone under the finger
+          const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+          const newDropZone = elementUnder?.closest('.chore-dropzone');
+          
+          // Update drop zone highlight
+          if (currentDropZone && currentDropZone !== newDropZone) {
+            currentDropZone.classList.remove('drop-target');
+          }
+          if (newDropZone && newDropZone !== currentDropZone) {
+            newDropZone.classList.add('drop-target');
+          }
+          currentDropZone = newDropZone;
+          
+          e.preventDefault();
+        }, { passive: false });
+        
+        art.addEventListener('touchend', (e) => {
+          if (!touchClone) return;
+          
+          // Get final drop position
+          const touch = e.changedTouches[0];
+          const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+          const dropZone = elementUnder?.closest('.chore-dropzone');
+          
+          // Clean up
+          if (currentDropZone) {
+            currentDropZone.classList.remove('drop-target');
+          }
+          if (touchClone && touchClone.parentNode) {
+            touchClone.parentNode.removeChild(touchClone);
+          }
+          art.style.opacity = '1';
+          touchClone = null;
+          currentDropZone = null;
+          
+          // Process drop if valid
+          if (dropZone) {
+            const chores = loadChores();
+            const chore = chores.find(c => String(c.id) === String(art.dataset.id));
+            if (chore) {
+              const loc = dropZone.dataset.loc || 'unchosen';
+              chore.loc = loc;
+              saveChores(chores);
+              render();
+            }
+          }
+          
+          e.preventDefault();
+        }, { passive: false });
+        
+        art.addEventListener('touchcancel', (e) => {
+          // Clean up if touch is cancelled
+          if (currentDropZone) {
+            currentDropZone.classList.remove('drop-target');
+          }
+          if (touchClone && touchClone.parentNode) {
+            touchClone.parentNode.removeChild(touchClone);
+          }
+          art.style.opacity = '1';
+          touchClone = null;
+          currentDropZone = null;
+        });
+
       
 
         const wrap = document.createElement('div');
