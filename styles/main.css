@@ -322,7 +322,7 @@ body {
 /* Center the delete button on chore cards in the unassigned (middle) column */
 #chores-column .card .btn-delete {
   display: block;
-  margin: 8px auto 0;
+  /* margin: 8px auto 0; */
 }
 
 /*when user clicks the button*/
