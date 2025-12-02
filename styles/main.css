@@ -88,7 +88,7 @@ body {
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
-  margin-left: 12px;
+  margin: 0 10px; /* symmetric horizontal spacing so centering works */
   padding: 8px 10px;
   border-radius: 6px;
 }
@@ -196,6 +196,11 @@ body {
 .main-nav {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  justify-content: center; /* center nav buttons in header */
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap; /* keep in one line until they must wrap */
 }
 
 .main-nav a {
@@ -404,9 +409,10 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
   .main-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
+    display: flex; /* keep flex model */
+    justify-content: center; /* center when space reduces */
+    flex-wrap: wrap; /* allow wrapping only after very narrow widths */
+    gap: 10px;
   }
 }
 
@@ -414,51 +420,48 @@ body {
 @media (max-width: 750px) {
   .site-header .container {
     flex-direction: column;
-    align-items: flex-start;
-    padding: 20px 50px;
+    align-items: center; /* center entire header stack */
+    padding: 10px 0px;
   }
-  
+
   .logo {
     max-width: 60px;
     min-width: 50px;
     width: 60px;
     display: none;
   }
-  
+
   .main-nav {
-    width:100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    width: 100%;
+    justify-content: center; /* center nav horizontally */
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
   }
+
   .header-btn {
-    padding: 6px 12px;
+    padding: 6px 14px;
     text-align: center;
     font-size: 0.9rem;
+    margin: 4px 8px; /* consistent spacing when wrapping */
   }
+
   .user-welcome {
     font-size: 0.8rem;
-    margin-right: 8px;
+    margin: 4px 0 8px 0;
     width: 100%;
     text-align: center;
-    margin-bottom: 8px;
   }
-  
+
   #logout-btn {
-    padding: 6px 12px;
+    padding: 6px 14px;
     font-size: 0.9rem;
-    margin-left: 4px;
   }
+
   .container-logo img {
     width: 300px;
-    /* left:unset;
-    right:50px; */
-    /* transform: translate(0, -135%); */
-    align-self: center;
-    /* width: 100%; */
-    margin-top: 100px;
+    left:unset;
+    right:50px;
+    transform: translate(0, -135%);
   }
 
   .grid-3 {
@@ -466,8 +469,7 @@ body {
   }
 
   .main-nav a {
-    margin-left: 0;
-    margin-right: 4px;
+    margin: 0 4px;
   }
 
   .main-nav{

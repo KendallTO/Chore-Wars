@@ -452,12 +452,52 @@
        // ===================================================================
        // GROUP ACTIONS
        // ===================================================================
-       function enterGroup(groupId) {
+       async function enterGroup(groupId) {
          setCurrentGroup(groupId);
          showMessage('Entering group...');
-         setTimeout(() => {
-           window.location.href = 'index.html';
-         }, 500);
+
+         // Proactively hydrate localStorage from server so next page doesn't need a refresh
+         try {
+           // Game state: chores, points, headers, extras
+           const gsRes = await fetch(`/api/get_game_state.php?groupId=${encodeURIComponent(groupId)}`);
+           if (gsRes.ok) {
+             const gs = await gsRes.json();
+             if (gs && typeof gs === 'object') {
+               if (gs.chores) {
+                 localStorage.setItem(`tcg_chores_v1_${groupId}`, JSON.stringify(gs.chores));
+               }
+               if (gs.points) {
+                 localStorage.setItem(`tcg_points_v1_${groupId}`, JSON.stringify(gs.points));
+               }
+               if (gs.headers) {
+                 localStorage.setItem(`tcg_column_headers_v1_${groupId}`, JSON.stringify(gs.headers));
+               }
+               if (gs.extraState) {
+                 localStorage.setItem(`tcg_extra_cols_v1_${groupId}`, JSON.stringify(gs.extraState));
+               }
+             }
+           }
+
+           // Shop state: items + inventories
+           const ssRes = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(groupId)}`);
+           if (ssRes.ok) {
+             const ss = await ssRes.json();
+             if (ss && typeof ss === 'object') {
+               if (Array.isArray(ss.items)) {
+                 localStorage.setItem(`tcg_shop_items_v1_${groupId}`, JSON.stringify(ss.items));
+               }
+               if (ss.inventories && typeof ss.inventories === 'object') {
+                 localStorage.setItem(`tcg_player_inventories_v1_${groupId}`, JSON.stringify(ss.inventories));
+               }
+             }
+           }
+         } catch (e) {
+           // Non-blocking: if hydration fails, next page will still fetch
+           console.warn('Preload group state failed:', e);
+         }
+
+         // Navigate once hydrated
+         window.location.href = 'index.html';
        }
 
        // expose for inline HTML if needed
