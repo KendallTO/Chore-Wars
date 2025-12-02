@@ -1458,9 +1458,7 @@
       // ===================================
       // Handles chore creation from the form
       // Creates chore with default 10 points and unique ID
-      // Enforces 200 chore limit to prevent system overload
-      const MAX_CHORES = 200;
-      
+      // Enforces chore limit: 30 × number of current players
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
@@ -1473,13 +1471,16 @@
         }
 
         const chores = loadChores();
-        
+        // Get current player count
+        const playerCount = (typeof getActivePlayers === 'function') ? getActivePlayers().length : 2;
+        const maxChores = 30 * Math.max(1, playerCount);
+
         // Check chore limit
-        if (chores.length >= MAX_CHORES) {
-          notify(`Chore limit reached! Maximum ${MAX_CHORES} chores allowed.`, 3000);
+        if (chores.length >= maxChores) {
+          notify(`Chore limit reached! Maximum ${maxChores} chores allowed (${playerCount} player${playerCount !== 1 ? 's' : ''}).`, 3000);
           return;
         }
-        
+
         const newChore = { id: Date.now(), name, points: Math.floor(points), loc: 'unchosen' };
         chores.push(newChore);
         saveChores(chores);
@@ -1526,6 +1527,7 @@
           chores[idx].loc = null;
           saveChores(chores);
           render();
+          if (typeof queueServerSave === 'function') queueServerSave();
 
           // Friendly target name
           let targetName = loc;
@@ -1572,11 +1574,22 @@
           chores[idx].loc = 'unchosen';
           saveChores(chores);
           render();
+          if (typeof queueServerSave === 'function') queueServerSave();
           return;
         }
         // Opens edit modal for the chore
         if (action === 'edit') {
           editChore(id);
+          return;
+        }
+        // Assign chore to a player column (manual assign in draft mode)
+        if (action && action.startsWith('assign-')) {
+          // Example: action === 'assign-left', 'assign-right', 'assign-extra1', etc.
+          const loc = action.replace('assign-', '');
+          chores[idx].loc = loc;
+          saveChores(chores);
+          render();
+          if (typeof queueServerSave === 'function') queueServerSave();
           return;
         }
         // Deletes chore immediately without confirmation
@@ -1586,6 +1599,7 @@
           saveChores(chores);
           render();
           notify('Chore deleted.', 1400);
+          if (typeof queueServerSave === 'function') queueServerSave();
           return;
         }
       });
@@ -2459,6 +2473,7 @@
       // Re-render when extra columns are removed to update assign buttons
       window.addEventListener('extraColumnRemoved', () => {
         render();
+        if (typeof queueServerSave === 'function') queueServerSave();
       });
 
       // Re-render when extra columns are added to update assign buttons
@@ -3611,6 +3626,7 @@
 
         // Trigger re-render to add assign buttons for this column
         window.dispatchEvent(new CustomEvent('extraColumnAdded'));
+        if (typeof queueServerSave === 'function') queueServerSave();
       });
 
       // Confirmation helper for removing player

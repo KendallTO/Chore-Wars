@@ -765,6 +765,7 @@
                 
                 saveInventories(inventories);
                 renderInventory(playerLoc);
+                if (typeof queueShopServerSave === 'function') queueShopServerSave();
             }
             
             // ===================================
@@ -1561,6 +1562,7 @@
                     try { renderPoints(); } catch (e) { }
                     // Persist new point totals to the shared game state in the DB
                     queueGamePointsServerSave();
+                    if (typeof queueShopServerSave === 'function') queueShopServerSave();
 
 
                     // Add contribution to item
@@ -1572,6 +1574,7 @@
                         item.isComplete = true;
                         saveItems(items);
                         render();
+                        if (typeof queueShopServerSave === 'function') queueShopServerSave();
                         msgEl.textContent = `🎉 GROUP GOAL COMPLETE! ${item.name} has been fully funded!`;
                         setTimeout(() => msgEl.textContent = '', 4000);
                     } else {
@@ -1626,6 +1629,7 @@
                     }
                     saveItems(items);
                     render();
+                    if (typeof queueShopServerSave === 'function') queueShopServerSave();
                 } else {
                     msgEl.textContent = `Purchased. Added to ${payer.name}'s inventory.`;
                 }
@@ -1765,6 +1769,7 @@
                 items.splice(idx, 1);
                 saveItems(items);
                 render();
+                if (typeof queueShopServerSave === 'function') queueShopServerSave();
                 msgEl.textContent = 'Item deleted.';
                 setTimeout(() => msgEl.textContent = '', 2000);
             }
