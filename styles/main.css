@@ -459,9 +459,11 @@ body {
 
   .container-logo img {
     width: 300px;
-    left:unset;
+    /* left:unset;
     right:50px;
-    transform: translate(0, -135%);
+    transform: translate(0, -135%); */
+    margin-top: 40px;
+
   }
 
   .grid-3 {
@@ -474,5 +476,6 @@ body {
 
   .main-nav{
     margin-top: 80px;
+    max-height: 50px;
   }
 }
