@@ -542,6 +542,8 @@
                     return;
                 }
 
+                isSavingShopToServer = true;
+                shopShowSaving();
                 console.log('[SHOP SAVE] Saving to server for group:', currentGroup);
                 console.log('[SHOP SAVE] Full state:', fullState);
 
@@ -559,19 +561,111 @@
                     if (!response.ok) {
                         const errorText = await response.text();
                         console.error('[SHOP SAVE] Server error:', response.status, errorText);
+                        shopShowError('Save failed');
+                        if (shopSaveRetryCount < 5) {
+                            const delay = Math.min(shopBackoffMs * Math.pow(2, shopSaveRetryCount), 20000);
+                            shopSaveRetryCount++;
+                            setTimeout(() => saveShopStateToServer(fullState), delay);
+                        } else {
+                            // retries exhausted - prompt user
+                            shopShowSaveFailureModal();
+                        }
+                        isSavingShopToServer = false;
                         return;
                     }
 
                     const result = await response.json();
                     console.log('[SHOP SAVE] Save successful:', result);
+                    isSavingShopToServer = false;
+                    shopSaveRetryCount = 0;
+                    suppressShopLoadsUntilTs = Date.now() + 1500;
+                    shopShowSaved();
                 } catch (e) {
                     console.error('Error saving shop state to server', e);
+                    shopShowError('Save failed');
+                    if (shopSaveRetryCount < 5) {
+                        const delay = Math.min(shopBackoffMs * Math.pow(2, shopSaveRetryCount), 20000);
+                        shopSaveRetryCount++;
+                        setTimeout(() => saveShopStateToServer(fullState), delay);
+                    } else {
+                        // retries exhausted - prompt user
+                        shopShowSaveFailureModal();
+                    }
+                    isSavingShopToServer = false;
                 }
             }
 
             let shopSaveTimeoutId = null;
+            let isSavingShopToServer = false;
+            let shopSaveRetryCount = 0;
+            let shopBackoffMs = 1000;
+            let lastShopMutationTs = 0;
+            let suppressShopLoadsUntilTs = 0;
+
+            function getShopSyncIndicatorEl() {
+                let el = document.getElementById('sync-indicator');
+                if (!el) {
+                    const footerContainer = document.querySelector('.site-footer .container');
+                    if (footerContainer) {
+                        el = document.createElement('span');
+                        el.id = 'sync-indicator';
+                        el.style.marginLeft = '12px';
+                        el.style.fontSize = '0.85em';
+                        el.style.opacity = '0.8';
+                        el.textContent = '';
+                        footerContainer.appendChild(el);
+                    }
+                }
+                return el;
+            }
+            function shopShowSaving() {
+                const el = getShopSyncIndicatorEl();
+                if (el) { el.textContent = 'Saving…'; el.style.color = ''; }
+            }
+            function shopShowSaved() {
+                const el = getShopSyncIndicatorEl();
+                if (el) { el.textContent = 'Saved'; el.style.color = ''; }
+            }
+            function shopShowError(msg) {
+                const el = getShopSyncIndicatorEl();
+                if (el) { el.textContent = msg || 'Save failed'; el.style.color = '#c0392b'; }
+            }
+
+            function shopShowSaveFailureModal() {
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tcg-modal-overlay';
+
+                    const modal = document.createElement('div');
+                    modal.className = 'tcg-modal';
+
+                    modal.innerHTML = `
+                        <p><strong>Save Failed</strong></p>
+                        <p>We're having trouble saving your shop changes to the server. This may be due to a session timeout or network issue.</p>
+                        <p><strong>Please logout and login again to refresh your session.</strong></p>
+                        <div class="tcg-modal-actions">
+                            <button class="btn-confirm">Okay</button>
+                        </div>
+                    `;
+
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+
+                    function cleanup() {
+                        document.body.removeChild(overlay);
+                        resolve();
+                    }
+
+                    modal.querySelector('.btn-confirm').addEventListener('click', cleanup);
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) cleanup();
+                    });
+                });
+            }
+
             function queueShopServerSave() {
                 const state = buildShopState();
+                lastShopMutationTs = Date.now();
                 console.log('[SHOP QUEUE] Queuing server save with state:', state);
                 if (shopSaveTimeoutId) {
                     clearTimeout(shopSaveTimeoutId);
@@ -587,6 +681,22 @@
             async function loadShopStateFromServer(forceReload = false) {
                 const currentGroup = getCurrentGroup();
                 if (!currentGroup || currentGroup === 'default') return;
+
+                const now = Date.now();
+                if (!forceReload) {
+                    if (isSavingShopToServer) {
+                        console.log('[SHOP LOAD] Skipping pull: currently saving');
+                        return;
+                    }
+                    if (now - lastShopMutationTs < 1500) {
+                        console.log('[SHOP LOAD] Skipping pull: recent local edits');
+                        return;
+                    }
+                    if (now < suppressShopLoadsUntilTs) {
+                        console.log('[SHOP LOAD] Skipping pull: suppressed until', new Date(suppressShopLoadsUntilTs).toISOString());
+                        return;
+                    }
+                }
 
                 try {
                     const res = await fetch(`/api/get_shop_state.php?groupId=${encodeURIComponent(currentGroup)}`);

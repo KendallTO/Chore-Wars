@@ -438,6 +438,8 @@
           return;
         }
 
+        isSavingToServer = true;
+        showSaving();
         console.log('[SAVE] Saving to server for group:', currentGroup);
         console.log('[SAVE] Full state:', fullState);
 
@@ -448,26 +450,132 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               groupId: currentGroup,
-              data: fullState
+              data: fullState,
+              clientTs: Date.now()
             })
           });
 
           if (!response.ok) {
             const errorText = await response.text();
             console.error('[SAVE] Server error:', response.status, errorText);
+            showSyncError('Save failed');
+            // backoff retry
+            if (saveRetryCount < 5) {
+              const delay = Math.min(saveBackoffMs * Math.pow(2, saveRetryCount), 20000);
+              saveRetryCount++;
+              setTimeout(() => saveStateToServer(fullState), delay);
+            } else {
+              // retries exhausted - prompt user
+              showSaveFailureModal();
+            }
+            isSavingToServer = false;
             return;
           }
 
           const result = await response.json();
+          if (result && result.ok === false && result.reason === 'stale_update') {
+            console.warn('[SAVE] Stale update rejected by server; refreshing state');
+            showSyncError('Updated elsewhere. Refreshing…');
+            // pull latest state to reconcile
+            await loadStateFromServer(true);
+            isSavingToServer = false;
+            saveRetryCount = 0;
+            suppressLoadsUntilTs = Date.now() + 1500;
+            showSaved();
+            return;
+          }
+
           console.log('[SAVE] Save successful:', result);
+          isSavingToServer = false;
+          saveRetryCount = 0;
+          suppressLoadsUntilTs = Date.now() + 1500; // avoid an immediate pull clobber
+          showSaved();
         } catch (e) {
           console.error('Error saving game state to server', e);
+          showSyncError('Save failed');
+          if (saveRetryCount < 5) {
+            const delay = Math.min(saveBackoffMs * Math.pow(2, saveRetryCount), 20000);
+            saveRetryCount++;
+            setTimeout(() => saveStateToServer(fullState), delay);
+          } else {
+            // retries exhausted - prompt user
+            showSaveFailureModal();
+          }
+          isSavingToServer = false;
         }
       }
 
       let serverSaveTimeoutId = null;
+      let isSavingToServer = false;
+      let saveRetryCount = 0;
+      let saveBackoffMs = 1000; // starts at 1s
+      let lastLocalMutationTs = 0;
+      let suppressLoadsUntilTs = 0;
+
+      function getSyncIndicatorEl() {
+        let el = document.getElementById('sync-indicator');
+        if (!el) {
+          const footerContainer = document.querySelector('.site-footer .container');
+          if (footerContainer) {
+            el = document.createElement('span');
+            el.id = 'sync-indicator';
+            el.style.marginLeft = '12px';
+            el.style.fontSize = '0.85em';
+            el.style.opacity = '0.8';
+            el.textContent = '';
+            footerContainer.appendChild(el);
+          }
+        }
+        return el;
+      }
+      function showSaving() {
+        const el = getSyncIndicatorEl();
+        if (el) { el.textContent = 'Saving…'; el.style.color = ''; }
+      }
+      function showSaved() {
+        const el = getSyncIndicatorEl();
+        if (el) { el.textContent = 'Saved'; el.style.color = ''; }
+      }
+      function showSyncError(msg) {
+        const el = getSyncIndicatorEl();
+        if (el) { el.textContent = msg || 'Save failed'; el.style.color = '#c0392b'; }
+      }
+
+      function showSaveFailureModal() {
+        return new Promise((resolve) => {
+          const overlay = document.createElement('div');
+          overlay.className = 'tcg-modal-overlay';
+
+          const modal = document.createElement('div');
+          modal.className = 'tcg-modal';
+
+          modal.innerHTML = `
+            <p><strong>Save Failed</strong></p>
+            <p>We're having trouble saving your changes to the server. This may be due to a session timeout or network issue.</p>
+            <p><strong>Please logout and login again to refresh your session.</strong></p>
+            <div class="tcg-modal-actions">
+              <button class="btn-confirm">Okay</button>
+            </div>
+          `;
+
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+
+          function cleanup() {
+            document.body.removeChild(overlay);
+            resolve();
+          }
+
+          modal.querySelector('.btn-confirm').addEventListener('click', cleanup);
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) cleanup();
+          });
+        });
+      }
+
       function queueServerSave() {
         const state = buildFullGameState();
+        lastLocalMutationTs = Date.now();
         console.log('[QUEUE] Queuing server save with state:', state);
         if (serverSaveTimeoutId) {
           clearTimeout(serverSaveTimeoutId);
@@ -508,6 +616,23 @@
       async function loadStateFromServer(forceReload = false) {
         const currentGroup = getCurrentGroup();
         if (!currentGroup || currentGroup === 'default') return;
+
+        const now = Date.now();
+        // Guard: avoid pulling while saving or immediately after local edits
+        if (!forceReload) {
+          if (isSavingToServer) {
+            console.log('[LOAD] Skipping pull: currently saving');
+            return;
+          }
+          if (now - lastLocalMutationTs < 1500) {
+            console.log('[LOAD] Skipping pull: recent local edits');
+            return;
+          }
+          if (now < suppressLoadsUntilTs) {
+            console.log('[LOAD] Skipping pull: suppressed until', new Date(suppressLoadsUntilTs).toISOString());
+            return;
+          }
+        }
 
         console.log('[LOAD] Loading game state for group:', currentGroup);
 
@@ -959,42 +1084,66 @@
 
         // Touch events for mobile/touchscreen support
         let touchStartX, touchStartY, touchElement, touchClone, currentDropZone;
+        let isTouchDragging = false;
+        let touchStartOnButton = false;
         
         art.addEventListener('touchstart', (e) => {
-          // Store initial touch position and create visual clone for dragging
           const touch = e.touches[0];
+          if (!touch) return;
+          // If touch begins on a button inside the chore card, allow native tap
+          const target = e.target;
+          touchStartOnButton = !!(target && (/** @type {Element} */(target)).closest && (/** @type {Element} */(target)).closest('button'));
+          if (touchStartOnButton) {
+            isTouchDragging = false;
+            // Do not preventDefault; let button tap work
+            return;
+          }
+
+          // Store initial touch position for potential drag
           touchStartX = touch.clientX;
           touchStartY = touch.clientY;
           touchElement = art;
-          
-          // Create a visual clone that follows the finger
-          touchClone = art.cloneNode(true);
-          touchClone.style.position = 'fixed';
-          touchClone.style.pointerEvents = 'none';
-          touchClone.style.opacity = '0.8';
-          touchClone.style.zIndex = '1000';
-          touchClone.style.width = art.offsetWidth + 'px';
-          touchClone.style.left = (touch.clientX - art.offsetWidth / 2) + 'px';
-          touchClone.style.top = (touch.clientY - art.offsetHeight / 2) + 'px';
-          touchClone.classList.add('dragging');
-          document.body.appendChild(touchClone);
-          
-          art.style.opacity = '0.3';
+          isTouchDragging = false;
+          // Do not create clone yet; wait until movement threshold exceeded
+          // Prevent scrolling to prepare for possible drag
           e.preventDefault();
         }, { passive: false });
         
         art.addEventListener('touchmove', (e) => {
-          if (!touchClone) return;
           const touch = e.touches[0];
-          
+          if (!touch) return;
+          if (touchStartOnButton) return; // ignore drag logic when starting on a button
+
+          // Determine if movement exceeds threshold to start drag
+          const dx = Math.abs(touch.clientX - (touchStartX || 0));
+          const dy = Math.abs(touch.clientY - (touchStartY || 0));
+          const dragThreshold = 6; // pixels
+          if (!isTouchDragging && (dx > dragThreshold || dy > dragThreshold)) {
+            isTouchDragging = true;
+            // Create clone at drag start
+            touchClone = /** @type {HTMLElement} */(art.cloneNode(true));
+            touchClone.style.position = 'fixed';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.zIndex = '1000';
+            touchClone.style.width = art.offsetWidth + 'px';
+            touchClone.style.left = (touch.clientX - art.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - art.offsetHeight / 2) + 'px';
+            touchClone.classList.add('dragging');
+            document.body.appendChild(touchClone);
+            art.style.opacity = '0.3';
+          }
+
+          if (!isTouchDragging || !touchClone) return;
+
           // Move the clone with the finger
           touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
           touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
-          
+
           // Find drop zone under the finger
           const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-          const newDropZone = elementUnder?.closest('.chore-dropzone');
-          
+          const newDropZone = elementUnder && elementUnder.closest ? elementUnder.closest('.chore-dropzone') : null;
+
           // Update drop zone highlight
           if (currentDropZone && currentDropZone !== newDropZone) {
             currentDropZone.classList.remove('drop-target');
@@ -1003,18 +1152,30 @@
             newDropZone.classList.add('drop-target');
           }
           currentDropZone = newDropZone;
-          
+
+          // Prevent scrolling while dragging
           e.preventDefault();
         }, { passive: false });
         
         art.addEventListener('touchend', (e) => {
+          // If touch started on a button, let native click happen
+          if (touchStartOnButton) {
+            touchStartOnButton = false;
+            isTouchDragging = false;
+            return;
+          }
+
+          // If no drag occurred, treat as a tap on the card; no special handling
+          if (!isTouchDragging) {
+            return;
+          }
+
           if (!touchClone) return;
-          
           // Get final drop position
           const touch = e.changedTouches[0];
           const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-          const dropZone = elementUnder?.closest('.chore-dropzone');
-          
+          const dropZone = elementUnder && elementUnder.closest ? elementUnder.closest('.chore-dropzone') : null;
+
           // Clean up
           if (currentDropZone) {
             currentDropZone.classList.remove('drop-target');
@@ -1025,19 +1186,21 @@
           art.style.opacity = '1';
           touchClone = null;
           currentDropZone = null;
-          
+          isTouchDragging = false;
+
           // Process drop if valid
           if (dropZone) {
             const chores = loadChores();
-            const chore = chores.find(c => String(c.id) === String(art.dataset.id));
-            if (chore) {
+            const choreItem = chores.find(c => String(c.id) === String(art.dataset.id));
+            if (choreItem) {
               const loc = dropZone.dataset.loc || 'unchosen';
-              chore.loc = loc;
+              choreItem.loc = loc;
               saveChores(chores);
               render();
             }
           }
-          
+
+          // Prevent default when we handled a drag-drop
           e.preventDefault();
         }, { passive: false });
         
@@ -1052,6 +1215,8 @@
           art.style.opacity = '1';
           touchClone = null;
           currentDropZone = null;
+          touchStartOnButton = false;
+          isTouchDragging = false;
         });
 
       
