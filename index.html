@@ -3162,13 +3162,19 @@
         // Check if any extra players are in column 1 (left)
         const hasExtraInLeftColumn = getActiveExtraPlayers().some(p => {
           const col = document.getElementById(`column-${p.key}`);
-          return col && col.style.gridColumn === '1';
+          if (!col) return false;
+          const cs = window.getComputedStyle(col);
+          const start = cs.getPropertyValue('grid-column-start');
+          return start === '1' || col.style.gridColumn === '1';
         });
         
         // Check if any extra players are in column 3 (right)
         const hasExtraInRightColumn = getActiveExtraPlayers().some(p => {
           const col = document.getElementById(`column-${p.key}`);
-          return col && col.style.gridColumn === '3';
+          if (!col) return false;
+          const cs = window.getComputedStyle(col);
+          const start = cs.getPropertyValue('grid-column-start');
+          return start === '3' || col.style.gridColumn === '3';
         });
         
         // Only show placeholder if base player is removed AND no extra players in that column
@@ -3820,17 +3826,18 @@
       // initialize from saved state (if any)
       initFromStorage();
 
-      addColumnBtn.addEventListener('click', async function () {
+      addColumnBtn.addEventListener('click', function () {
         // Get available players to add
         const availablePlayers = getAvailablePlayersToAdd();
         if (availablePlayers.length === 0) return; // No players to add
 
-        // Ask user which player to add
-        const playerLoc = await askPlayerToAdd(availablePlayers);
-        if (!playerLoc) return; // User cancelled
-
-        const player = availablePlayers.find(p => p.loc === playerLoc);
-        if (!player) return; // Invalid selection
+        // Prefer base players first: left -> right -> extras 1..8
+        const preferenceOrder = ['left', 'right', 'extra1', 'extra2', 'extra3', 'extra4', 'extra5', 'extra6', 'extra7', 'extra8'];
+        const player = preferenceOrder
+          .map(loc => availablePlayers.find(p => p.loc === loc))
+          .find(Boolean);
+        if (!player) return;
+        const playerLoc = player.loc;
 
         if (player.isBase) {
           // Re-enable base player
