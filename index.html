@@ -7,6 +7,7 @@
   <title>The Chore Game - Home</title>
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/index.css">
+  <link rel="stylesheet" href="styles/player-placeholder.css">
 </head>
 
 <body>
@@ -3106,6 +3107,33 @@
       // Function to reposition all extra columns to eliminate gaps
       function repositionAllExtraColumns() {
         const positions = calculateOptimalPositions();
+        const baseState = loadBasePlayerState();
+
+        // Ensure base columns maintain correct grid positions (always visible)
+        const leftColumn = document.getElementById('column-left');
+        const rightColumn = document.getElementById('column-right');
+        const choresColumn = document.getElementById('chores-column');
+        
+        if (leftColumn) {
+          leftColumn.style.gridColumn = '1';
+          leftColumn.style.gridRow = '1';
+          leftColumn.style.display = '';
+          leftColumn.style.visibility = 'visible';
+        }
+        
+        if (choresColumn) {
+          choresColumn.style.gridColumn = '2';
+          choresColumn.style.gridRow = 'auto';
+          choresColumn.style.display = '';
+          choresColumn.style.visibility = 'visible';
+        }
+        
+        if (rightColumn) {
+          rightColumn.style.gridColumn = '3';
+          rightColumn.style.gridRow = '1';
+          rightColumn.style.display = '';
+          rightColumn.style.visibility = 'visible';
+        }
 
         // Update all existing extra columns with their new positions
         Object.keys(positions).forEach(extraKey => {
@@ -3118,31 +3146,77 @@
           }
         });
 
+        // Update placeholder visibility based on whether extra players occupy base column positions
+        updatePlaceholderVisibility();
+
         // Save the calculated positions to localStorage
         savePositions(positions);
+      }
+
+      // Function to update placeholder visibility - only show when column is truly empty
+      function updatePlaceholderVisibility() {
+        const baseState = loadBasePlayerState();
+        const leftColumn = document.getElementById('column-left');
+        const rightColumn = document.getElementById('column-right');
+        
+        // Check if any extra players are in column 1 (left)
+        const hasExtraInLeftColumn = getActiveExtraPlayers().some(p => {
+          const col = document.getElementById(`column-${p.key}`);
+          return col && col.style.gridColumn === '1';
+        });
+        
+        // Check if any extra players are in column 3 (right)
+        const hasExtraInRightColumn = getActiveExtraPlayers().some(p => {
+          const col = document.getElementById(`column-${p.key}`);
+          return col && col.style.gridColumn === '3';
+        });
+        
+        // Only show placeholder if base player is removed AND no extra players in that column
+        if (leftColumn) {
+          if (baseState.left === false && !hasExtraInLeftColumn) {
+            leftColumn.classList.add('player-removed');
+          } else {
+            leftColumn.classList.remove('player-removed');
+          }
+        }
+        
+        if (rightColumn) {
+          if (baseState.right === false && !hasExtraInRightColumn) {
+            rightColumn.classList.add('player-removed');
+          } else {
+            rightColumn.classList.remove('player-removed');
+          }
+        }
       }
 
       // Function to restore players to their original positions (when both base players are active)
       function restoreOriginalPositions() {
         const baseState = loadBasePlayerState();
         
-        // Ensure base players are properly positioned and visible
-        if (baseState.left) {
-          const leftColumn = document.getElementById('column-left');
-          if (leftColumn) {
-            leftColumn.style.gridColumn = '1';
-            leftColumn.style.gridRow = '1';
-            leftColumn.style.display = ''; // Ensure visibility
-          }
+        // Ensure base players are properly positioned (always visible)
+        const leftColumn = document.getElementById('column-left');
+        const rightColumn = document.getElementById('column-right');
+        const choresColumn = document.getElementById('chores-column');
+        
+        if (leftColumn) {
+          leftColumn.style.gridColumn = '1';
+          leftColumn.style.gridRow = '1';
+          leftColumn.style.display = '';
+          leftColumn.style.visibility = 'visible';
         }
         
-        if (baseState.right) {
-          const rightColumn = document.getElementById('column-right');
-          if (rightColumn) {
-            rightColumn.style.gridColumn = '3';
-            rightColumn.style.gridRow = '1';
-            rightColumn.style.display = ''; // Ensure visibility
-          }
+        if (choresColumn) {
+          choresColumn.style.gridColumn = '2';
+          choresColumn.style.gridRow = 'auto';
+          choresColumn.style.display = '';
+          choresColumn.style.visibility = 'visible';
+        }
+        
+        if (rightColumn) {
+          rightColumn.style.gridColumn = '3';
+          rightColumn.style.gridRow = '1';
+          rightColumn.style.display = '';
+          rightColumn.style.visibility = 'visible';
         }
 
         // Restore extra players to their original alternating pattern, filling gaps
@@ -3182,6 +3256,9 @@
             column.style.display = ''; // Ensure visibility
           }
         });
+        
+        // Update placeholder visibility after repositioning
+        updatePlaceholderVisibility();
       }
 
       // Function to balance players after removal
@@ -3619,27 +3696,28 @@
         // Handle base player visibility and ensure proper positioning
         const leftColumn = document.getElementById('column-left');
         const rightColumn = document.getElementById('column-right');
+        const choresColumn = document.getElementById('chores-column');
         
-        if (baseState.left === false) {
-          if (leftColumn) leftColumn.style.display = 'none';
-        } else {
-          // Ensure Player 1 is properly positioned and visible
-          if (leftColumn) {
-            leftColumn.style.display = '';
-            leftColumn.style.gridColumn = '1';
-            leftColumn.style.gridRow = '1';
-          }
+        // Always ensure chores column is in the middle
+        if (choresColumn) {
+          choresColumn.style.gridColumn = '2';
+          choresColumn.style.gridRow = 'auto';
         }
         
-        if (baseState.right === false) {
-          if (rightColumn) rightColumn.style.display = 'none';
-        } else {
-          // Ensure Player 2 is properly positioned and visible
-          if (rightColumn) {
-            rightColumn.style.display = '';
-            rightColumn.style.gridColumn = '3';
-            rightColumn.style.gridRow = '1';
-          }
+        // Ensure Player 1 is properly positioned (always visible)
+        if (leftColumn) {
+          leftColumn.style.display = '';
+          leftColumn.style.gridColumn = '1';
+          leftColumn.style.gridRow = '1';
+          leftColumn.style.visibility = 'visible';
+        }
+        
+        // Ensure Player 2 is properly positioned (always visible)
+        if (rightColumn) {
+          rightColumn.style.display = '';
+          rightColumn.style.gridColumn = '3';
+          rightColumn.style.gridRow = '1';
+          rightColumn.style.visibility = 'visible';
         }
 
         // Count how many extras are enabled and create them
@@ -3666,6 +3744,10 @@
               column.style.display = '';
             }
           });
+          // Update placeholder visibility after restoring saved positions
+          if (typeof updatePlaceholderVisibility === 'function') {
+            updatePlaceholderVisibility();
+          }
         } else {
           // No saved positions, calculate from scratch
           if (currentBaseState.left && currentBaseState.right) {
@@ -3760,6 +3842,7 @@
           const columnToShow = document.getElementById(`column-${playerLoc}`);
           if (columnToShow) {
             columnToShow.style.display = '';
+            columnToShow.style.visibility = 'visible';
             // Ensure proper grid positioning
             if (playerLoc === 'left') {
               columnToShow.style.gridColumn = '1';
@@ -3769,6 +3852,9 @@
               columnToShow.style.gridRow = '1';
             }
           }
+          
+          // Reposition all columns to ensure proper layout (this will update placeholders)
+          repositionAllExtraColumns();
         } else {
           // Add extra player
           // Clear cache for the extra column before creating it
@@ -3873,10 +3959,12 @@
           if (!confirmed) return;
 
           if (player.isBase) {
-            // Handle base player removal - hide the column
-            const columnToHide = document.getElementById(`column-${playerLoc}`);
-            if (columnToHide) {
-              columnToHide.style.display = 'none';
+            // Handle base player removal - repositioning will handle placeholder
+            const columnToUpdate = document.getElementById(`column-${playerLoc}`);
+            if (columnToUpdate) {
+              // Ensure grid position is maintained
+              columnToUpdate.style.gridColumn = playerLoc === 'left' ? '1' : '3';
+              columnToUpdate.style.gridRow = '1';
             }
 
             // Update base player state
@@ -3886,6 +3974,9 @@
 
             // Clear base player cached data
             clearBaseStorage(playerLoc);
+            
+            // Reposition all columns to ensure proper layout (this will update placeholders)
+            repositionAllExtraColumns();
           } else {
             // Handle extra player removal - actually remove the column
             const columnToRemove = document.getElementById(`column-${playerLoc}`);

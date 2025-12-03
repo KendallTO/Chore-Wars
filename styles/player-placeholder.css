@@ -1,0 +1,36 @@
+/* Player removed placeholder styles */
+.column.player-removed .column-header {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.column.player-removed .points-bank {
+  opacity: 0.3;
+}
+
+.column.player-removed .chore-dropzone {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Add placeholder message for removed players */
+.column.player-removed::after {
+  content: 'Player Removed\A\AClick "Add Player" to restore';
+  white-space: pre;
+  display: block;
+  text-align: center;
+  padding: 20px;
+  margin: 10px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 2px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Ensure the after element appears in the column */
+.column.player-removed {
+  position: relative;
+}
