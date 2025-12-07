@@ -178,7 +178,7 @@ body {
   width: 42vw;
   max-height: 100px;
   transform: translate(-50%, -50%);
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   pointer-events: none;
   overflow: hidden;
   object-fit: contain;
