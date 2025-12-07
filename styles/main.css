@@ -2,13 +2,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Hachi+Maru+Pop&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Yusei+Magic&display=swap');
 
 :root {
-  --player2_color: #FF4242;
-  --player1_color: #66CED6;
-  --center_column: #ded666;
-  --header_footer: #adadad;
+  --player2_color: #9b4e6b;
+  --player1_color: #778899;
+  --center_column: #eeeeee;
+  --header_footer: #efc580;
   --button_back: #B8D0EB;
   --button_hover: #5D707F;
-  --background_color: #e7e7e7;
+  --background_color: #2c3e50;
   --header_btn_back: #e7e7e7;
   --header_btn_hover: #B8D0EB;
   --extra1_color: orange;

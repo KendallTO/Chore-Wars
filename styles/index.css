@@ -647,7 +647,7 @@
   }
 
   #chores-column {
-    border: solid 6px var(--header_footer);
+    border: solid 6px #eee;
   }
 
   /* Further scale down the title for very small screens */
