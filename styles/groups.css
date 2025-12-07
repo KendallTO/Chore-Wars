@@ -30,7 +30,7 @@
 /*"Your Groups"*/
 .groups-header h1 {
     margin: 15px;
-    color: var(--text);
+    color: #fff;
     font-family: var(--header_font);
     font-size: 2rem;
     position: relative;

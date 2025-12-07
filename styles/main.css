@@ -164,6 +164,8 @@ body {
 .logo /*img*/ {
   max-width: 17%;
   margin-top: 5px;
+  margin-bottom: 10px;
+  margin-left: 20px;
   position: relative;
   z-index: 1;
   flex-shrink: 0;
