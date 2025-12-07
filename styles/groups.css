@@ -373,8 +373,9 @@
     }
     
     .container-logo img {
-        width: 345px;
-        max-height: 58px;
+        width: 501px;
+        max-height: 85px;
+        margin-bottom: 10px;
         left: unset;
         right: 50px;
         transform: translate(0, -135%);

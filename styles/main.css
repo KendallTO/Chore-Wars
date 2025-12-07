@@ -173,10 +173,10 @@ body {
 .container-logo img {
   position: absolute;
   left: 50%;
-  width: 28.75vw;
-  max-height: 69px;
+  width: 42vw;
+  max-height: 100px;
   transform: translate(-50%, -50%);
-  margin-top: 0.5vw;
+  margin-bottom: 10px;
   pointer-events: none;
   overflow: hidden;
   object-fit: contain;
@@ -460,12 +460,12 @@ body {
   }
 
   .container-logo img {
-    width: 345px;
-    max-height: 58px;
+    width: 501px;
+    max-height: 85px;
+    margin-bottom: 10px;
     /* left:unset;
     right:50px;
     transform: translate(0, -135%); */
-    margin-top: 40px;
     object-fit: contain;
   }
 
