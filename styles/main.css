@@ -173,11 +173,13 @@ body {
 .container-logo img {
   position: absolute;
   left: 50%;
-  width: 25vw;
+  width: 28.75vw;
+  max-height: 69px;
   transform: translate(-50%, -50%);
   margin-top: 0.5vw;
   pointer-events: none;
   overflow: hidden;
+  object-fit: contain;
 }
 
 /*.j this is unused*/
@@ -458,12 +460,13 @@ body {
   }
 
   .container-logo img {
-    width: 300px;
+    width: 345px;
+    max-height: 58px;
     /* left:unset;
     right:50px;
     transform: translate(0, -135%); */
     margin-top: 40px;
-
+    object-fit: contain;
   }
 
   .grid-3 {

@@ -373,10 +373,12 @@
     }
     
     .container-logo img {
-        width: 300px;
+        width: 345px;
+        max-height: 58px;
         left: unset;
         right: 50px;
         transform: translate(0, -135%);
+        object-fit: contain;
     }
     
     .groups-container {
