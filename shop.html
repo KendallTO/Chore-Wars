@@ -514,6 +514,33 @@
 
             const SESSION_KEY_SERVER = 'tcg_session_v1';
 
+            // ===================================
+            // PLAYER COLOR HELPER
+            // ===================================
+            // Gets player color from CSS variables in main.css
+            function getPlayerColor(playerLoc) {
+              const colors = {
+                'left': 'var(--player1_color)',
+                'right': 'var(--player2_color)',
+                'extra1': 'var(--extra1_color)',
+                'extra2': 'var(--extra2_color)',
+                'extra3': 'var(--extra3_color)',
+                'extra4': 'var(--extra4_color)',
+                'extra5': 'var(--extra5_color)',
+                'extra6': 'var(--extra6_color)',
+                'extra7': 'var(--extra7_color)',
+                'extra8': 'var(--extra8_color)'
+              };
+              // Get the color variable and resolve it to actual value
+              const colorVar = colors[playerLoc] || 'var(--accent)';
+              const style = getComputedStyle(document.documentElement);
+              if (colorVar.startsWith('var(')) {
+                const varName = colorVar.match(/var\(--([^)]+)\)/)[1];
+                return style.getPropertyValue('--' + varName).trim();
+              }
+              return colorVar;
+            }
+
             function getSessionForServer() {
                 try {
                     const raw = localStorage.getItem(SESSION_KEY_SERVER);
@@ -1346,28 +1373,12 @@
                         btn.style.textAlign = 'center';
                         btn.style.wordWrap = 'break-word';
 
-                        // Apply background color based on player location
-                        if (player.loc === 'left') {
-                            btn.style.backgroundColor = '#66CED6'; // Blue for left
-                        } else if (player.loc === 'right') {
-                            btn.style.backgroundColor = '#FF4242'; // Red for right
-                        } else if (player.loc === 'extra1') {
-                            btn.style.backgroundColor = 'orange'; // Orange for Player 3
-                        } else if (player.loc === 'extra2') {
-                            btn.style.backgroundColor = 'limegreen'; // Limegreen for Player 4
-                        } else if (player.loc === 'extra3') {
-                            btn.style.backgroundColor = 'purple'; // Purple for Player 5
-                        } else if (player.loc === 'extra4') {
-                            btn.style.backgroundColor = 'gold'; // Gold for Player 6 (better contrast than yellow)
-                            btn.style.color = 'black'; // Better readability on gold
-                        } else if (player.loc === 'extra5') {
-                            btn.style.backgroundColor = 'hotpink'; // Hot pink for Player 7
-                        } else if (player.loc === 'extra6') {
-                            btn.style.backgroundColor = '#8B4513'; // Saddle brown for Player 8
-                        } else if (player.loc === 'extra7') {
-                            btn.style.backgroundColor = '#696969'; // Dim gray for Player 9
-                        } else if (player.loc === 'extra8') {
-                            btn.style.backgroundColor = 'teal'; // Teal for Player 10
+                        // Apply background color from CSS variables
+                        btn.style.backgroundColor = getPlayerColor(player.loc);
+
+                        // Special styling for extra4 (yellow) text
+                        if (player.loc === 'extra4') {
+                            btn.style.color = 'black'; // Better readability on yellow
                         }
 
                         // Add hover effects

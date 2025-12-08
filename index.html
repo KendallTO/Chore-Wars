@@ -2772,6 +2772,35 @@
 
   <script>
     // ===================================
+    // GLOBAL HELPER FUNCTIONS
+    // ===================================
+    // Player color helper - accessible to all script blocks
+    window.getPlayerColor = function(playerLoc) {
+      const colors = {
+        'left': 'var(--player1_color)',
+        'right': 'var(--player2_color)',
+        'extra1': 'var(--extra1_color)',
+        'extra2': 'var(--extra2_color)',
+        'extra3': 'var(--extra3_color)',
+        'extra4': 'var(--extra4_color)',
+        'extra5': 'var(--extra5_color)',
+        'extra6': 'var(--extra6_color)',
+        'extra7': 'var(--extra7_color)',
+        'extra8': 'var(--extra8_color)'
+      };
+      // Get the color variable and resolve it to actual value
+      const colorVar = colors[playerLoc] || 'var(--accent)';
+      const style = getComputedStyle(document.documentElement);
+      if (colorVar.startsWith('var(')) {
+        const varName = colorVar.match(/var\(--([^)]+)\)/)[1];
+        return style.getPropertyValue('--' + varName).trim();
+      }
+      return colorVar;
+    };
+  </script>
+
+  <script>
+    // ===================================
     // ADD/REMOVE PLAYER COLUMN SYSTEM
     // ===================================
     // Manages dynamic player columns (Players 3-10)
@@ -3381,19 +3410,10 @@
             btn.style.fontWeight = 'bold';
             btn.style.fontSize = '0.9rem';
 
-            // Apply player color
-            if (player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
-            else if (player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
-            else if (player.loc === 'extra1') btn.style.backgroundColor = 'orange';
-            else if (player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
-            else if (player.loc === 'extra3') btn.style.backgroundColor = 'purple';
-            else if (player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
-            else if (player.loc === 'extra5') btn.style.backgroundColor = 'pink';
-            else if (player.loc === 'extra6') btn.style.backgroundColor = 'brown';
-            else if (player.loc === 'extra7') btn.style.backgroundColor = 'gray';
-            else if (player.loc === 'extra8') btn.style.backgroundColor = 'teal';
+            // Apply player color from CSS variables
+            btn.style.backgroundColor = getPlayerColor(player.loc);
 
-            // Special styling for yellow text
+            // Special styling for extra4 (yellow) text
             if (player.loc === 'extra4') btn.style.color = 'black';
 
             playerGrid.appendChild(btn);
@@ -3467,19 +3487,10 @@
             btn.style.fontWeight = 'bold';
             btn.style.fontSize = '0.9rem';
 
-            // Apply player color
-            if (player.loc === 'left') btn.style.backgroundColor = '#2196F3'; // Blue for Player 1
-            else if (player.loc === 'right') btn.style.backgroundColor = '#E53E3E'; // Red for Player 2
-            else if (player.loc === 'extra1') btn.style.backgroundColor = 'orange';
-            else if (player.loc === 'extra2') btn.style.backgroundColor = 'limegreen';
-            else if (player.loc === 'extra3') btn.style.backgroundColor = 'purple';
-            else if (player.loc === 'extra4') btn.style.backgroundColor = 'yellow';
-            else if (player.loc === 'extra5') btn.style.backgroundColor = 'pink';
-            else if (player.loc === 'extra6') btn.style.backgroundColor = 'brown';
-            else if (player.loc === 'extra7') btn.style.backgroundColor = 'gray';
-            else if (player.loc === 'extra8') btn.style.backgroundColor = 'teal';
+            // Apply player color from CSS variables
+            btn.style.backgroundColor = getPlayerColor(player.loc);
 
-            // Special styling for yellow text
+            // Special styling for extra4 (yellow) text
             if (player.loc === 'extra4') btn.style.color = 'black';
 
             playerGrid.appendChild(btn);
@@ -3958,10 +3969,7 @@
           if (!player) return; // Invalid selection
 
           // Ask for confirmation
-          let playerColor = 'gray';
-          if (player.loc === 'left') playerColor = '#2196F3';
-          else if (player.loc === 'right') playerColor = '#E53E3E';
-          else playerColor = extraColors[playerLoc] || 'gray';
+          const playerColor = getPlayerColor(player.loc);
 
           const confirmed = await askConfirmRemove(player.name, playerColor);
           if (!confirmed) return;
