@@ -2166,18 +2166,8 @@
           const playerElements = new Map();
 
           bidders.forEach(bidder => {
-            // Get player color
-            let playerColor = 'gray';
-            if (bidder.loc === 'left') playerColor = '#2196F3';
-            else if (bidder.loc === 'right') playerColor = '#E53E3E';
-            else if (bidder.loc === 'extra1') playerColor = 'orange';
-            else if (bidder.loc === 'extra2') playerColor = 'limegreen';
-            else if (bidder.loc === 'extra3') playerColor = 'purple';
-            else if (bidder.loc === 'extra4') playerColor = 'yellow';
-            else if (bidder.loc === 'extra5') playerColor = 'pink';
-            else if (bidder.loc === 'extra6') playerColor = 'brown';
-            else if (bidder.loc === 'extra7') playerColor = 'gray';
-            else if (bidder.loc === 'extra8') playerColor = 'teal';
+            // Get player color from CSS variables
+            const playerColor = window.getPlayerColor(bidder.loc);
 
             const playerCard = document.createElement('div');
             playerCard.style.border = `3px solid ${playerColor}`;
