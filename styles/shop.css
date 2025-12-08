@@ -246,17 +246,36 @@
   background: #f8fafc;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 20px;
+  padding: 20px 16px;
   margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .shop-management {
+    padding: 20px 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shop-management {
+    padding: 20px 48px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .shop-management {
+    padding: 20px 64px;
+  }
 }
 
 /*container for Shop Management Add Item+*/
 .shop-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
   margin-bottom: 24px;
   font-family: var(--header_font);
+  gap: 16px;
 }
 
 /*opens up the new item form*/

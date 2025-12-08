@@ -1,0 +1,88 @@
+/* =========================================
+   WELCOME PAGE STYLES
+   ========================================= */
+
+.landing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    text-align: center;
+    padding: 20px;
+}
+
+.landing-logo {
+    max-width: 300px;
+    margin-bottom: 20px;
+}
+
+.landing-title {
+    font-family: var(--header_font);
+    font-size: 2.5rem;
+    color: #ffffff;
+    margin: 0 0 16px 0;
+}
+
+.landing-subtitle {
+    font-size: 1.2rem;
+    color: #ffffff;
+    margin: 0 0 40px 0;
+    max-width: 600px;
+    line-height: 1.5;
+}
+
+.landing-actions {
+    display: flex;
+    gap: 20px;
+}
+
+.landing-btn {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-large {
+    background: var(--accent);
+    color: #fff;
+}
+
+.btn-primary-large:hover {
+    background: #1e56a0;
+    transform: translateY(-2px);
+}
+
+.btn-secondary-large {
+    background: #f3f4f6;
+    color: var(--text);
+    border: 2px solid #e5e7eb;
+}
+
+.btn-secondary-large:hover {
+    background: #e5e7eb;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 580px) {
+    .landing-title {
+        font-size: 2rem;
+    }
+    
+    .landing-subtitle {
+        font-size: 1rem;
+    }
+    
+    .landing-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .landing-btn {
+        width: 200px;
+        text-align: center;
+    }
+}
