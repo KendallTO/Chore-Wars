@@ -676,5 +676,14 @@
     min-height: 50px;
     padding: 4px;
   }
+  .container-logo{
+    margin-top: 20px;
+  }
+  header{
+    max-height: 150px;
+  }
+  .main-nav{
+    margin-top: 33px;
+  }
 }
 
