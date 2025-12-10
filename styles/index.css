@@ -653,10 +653,6 @@
     gap: 6px;
   }
 
-  #chores-column {
-    border: solid 6px #eee;
-  }
-
   /* Further scale down the title for very small screens */
   #chores-column h3 {
     font-size: clamp(0.6rem, 3vw, 0.8rem);
