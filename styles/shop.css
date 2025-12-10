@@ -548,6 +548,15 @@
     margin-top: 80px;
     max-height: 50px;
   }
+  .container-logo{
+    margin-top: 20px;
+  }
+  header{
+    max-height: 150px;
+  }
+  .main-nav{
+    margin-top: 33px;
+  }
 }
 
 /* Mobile layout: Single column with shop management on top */
