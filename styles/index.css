@@ -646,6 +646,15 @@
     background: rgba(43,108,176,0.08);
     transition: outline 0.15s ease, background 0.15s ease;
   }
+  .container-logo{
+    margin-top: 20px;
+  }
+  header{
+    max-height: 150px;
+  }
+  .main-nav{
+    margin-top: 33px;
+  }
 
 /* Extra small screens - maintain two-column but with even tighter spacing */
 @media (max-width: 480px) {
