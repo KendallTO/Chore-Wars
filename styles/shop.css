@@ -520,4 +520,13 @@
   .points-box h3 {
     font-size: clamp(1rem, 5vw, 1.5rem) !important;
   }
+  .container-logo{
+    margin-top: 20px;
+  }
+  header{
+    max-height: 150px;
+  }
+  .main-nav{
+    margin-top: 33px;
+  }
 }
