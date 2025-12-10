@@ -495,3 +495,29 @@
   /* amber/dark orange to indicate limited availability */
   font-weight: 600;
 }
+
+/* Mobile layout: Single column with shop management on top */
+@media (max-width: 580px) {
+  .points-display {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  /* Shop management appears first */
+  .shop-management {
+    order: -1;
+    width: 100%;
+  }
+  
+  /* All point boxes appear below in order */
+  .points-box {
+    order: 0;
+    width: 100%;
+  }
+  
+  /* Ensure player names scale properly on mobile */
+  .points-box h3 {
+    font-size: clamp(1rem, 5vw, 1.5rem) !important;
+  }
+}
