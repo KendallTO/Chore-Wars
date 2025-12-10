@@ -173,4 +173,21 @@
     .auth-subtitle {
         font-size: 0.9rem;
     }
+    .site-footer{
+        display: none;
+    }
+    .site-header{
+        height: 80px;
+    }
+    .container{
+        Overflow-x: visible;
+    }
+   *{
+        max-width: 100%;
+
+   }
+   .container-logo{
+    margin-top: 10px;
+   }
+    
 }
